@@ -2,7 +2,7 @@
 #include "idt.h"
 #include "./../drivers/screen.h"
 #include "./../drivers/keyboard.h"
-#include "./../libc/string.h"
+#include "./../libc/include/string.h"
 #include "timer.h"
 #include "ports.h"
 
@@ -136,7 +136,7 @@ void irq_handler(registers_t *r){
 }
 
 void irq_install(){
-  asm volatile("sti");
+  __asm__ __volatile__("sti");
   init_timer(50);
   init_keyboard();
 }

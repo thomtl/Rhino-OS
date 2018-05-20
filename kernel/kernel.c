@@ -1,7 +1,7 @@
 #include "../drivers/screen.h"
 #include "./../cpu/isr.h"
 #include "kernel.h"
-#include "./../libc/string.h"
+#include "./../libc/include/string.h"
 #include <stdint.h>
 void kernel_main() {
   isr_install();
@@ -11,7 +11,7 @@ void kernel_main() {
 void user_input(char *input){
   if(strcmp(input, "END") == 0){
     kprint("Stopping BootOS Bye :(");
-    asm volatile("hlt");
+    __asm__ __volatile__("hlt");
   }
   kprint("You said: ");
   kprint(input);
