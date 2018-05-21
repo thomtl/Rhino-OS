@@ -20,9 +20,9 @@ jmp $
 %include "bootsect/16/bootsect-print-16.asm"
 %include "bootsect/16/bootsect-printhex-16.asm"
 %include "bootsect/16/bootsect-readdisk-16.asm"
-%include "bootsect/32/gdt-32.asm"
-%include "bootsect/32/print-32.asm"
-%include "bootsect/32/loadgdt-32.asm"
+%include "bootsect/32/bootsect-gdt-32.asm"
+%include "bootsect/32/bootsect-print-32.asm"
+%include "bootsect/32/bootsect-enableprot-32.asm"
 
 [bits 16]
 load_kernel:
