@@ -2,11 +2,13 @@
 #include "./../cpu/isr.h"
 #include "kernel.h"
 #include "./../libc/include/string.h"
+#include "./../libc/include/stdlib.h"
 #include <stdint.h>
 void kernel_main() {
   isr_install();
   irq_install();
-  kprint("Type something ffs");
+  kprint("Type something ffs\n >");
+  malloc(50);
 }
 void user_input(char *input){
   if(strcmp(input, "END") == 0){

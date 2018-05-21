@@ -7,32 +7,35 @@ typedef struct {
   uint32_t size;
 } memoryBlockHeader;
 
-uint32_t* findLastHeader();
+memoryBlockHeader* findLastHeader();
 
 
 const uint32_t memoryBlockHeaderSize = sizeof(memoryBlockHeader);
-uint32_t* memoryAddress = (uint32_t*) 0x7ffff;
+const uint32_t* memoryAddress = (uint32_t*) 0x7ffff;
 
 void* malloc(size_t size){
-  uint32_t totalBlockSize = size + memoryBlockHeaderSize;
+  uint32_t totalBlockSize = memoryBlockHeaderSize + size;
+  memoryBlockHeader* lastHeader = findLastHeader();
+  uint32_t* lastBlock = (uint32_t*)(lastHeader + ((*lastHeader).size));
   memoryBlockHeader block;
-  block.start = (uint32_t*)(memoryAddress + totalBlockSize);
+  block.start = (uint32_t*)((*lastHeader).end);
   block.size = totalBlockSize;
   block.end = (uint32_t*)(block.start + block.size);
-  uint32_t* valueAddress = (uint32_t*)(block.start - memoryBlockHeaderSize);
-  //memoryAddress += totalBlockSize; not good
+  uint32_t* valueAddress = (uint32_t*)(block.start + memoryBlockHeaderSize);
+  uint32_t* headerAddress = lastBlock;
+  *headerAddress = block;
   return valueAddress;
 }
 
-uint32_t* findLastHeader(){
+memoryBlockHeader* findLastHeader(){ // make it found or something
   uint32_t* localAddress = memoryAddress;
   uint8_t isFound = 0;
   while(isFound == 0){
-    if(*localAddress.nextBlock == NULL){
-        localAddress += *localAddress.size;
+    if((memoryBlockHeader*)((*localAddress).nextBlock) == NULL){
+        localAddress += (memoryBlockHeader*)((*localAddress).size);
     } else {
-      return localAddress;
+      return (memoryBlockHeader*)localAddress;
     }
   }
-  return NULL;
+  return (memoryBlockHeader*)NULL;
 }
