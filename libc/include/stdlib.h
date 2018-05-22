@@ -6,4 +6,5 @@
 __attribute__ ((__noreturn__))
 void abort(void);
 void* malloc(size_t size);
+void InitializeMemoryManager();
 #endif

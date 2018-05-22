@@ -1,4 +1,5 @@
 #include "../include/stdlib.h"
+#include "../include/stdio.h"
 #include "../include/string.h"
 typedef struct {
   uint32_t* start;
@@ -9,8 +10,7 @@ typedef struct {
 
 memoryBlockHeader* findLastHeader();
 
-
-uint32_t memoryBlockHeaderSize = sizeof(memoryBlockHeader);
+const uint32_t memoryBlockHeaderSize = sizeof(memoryBlockHeader);
 const uint32_t* memoryAddress = (uint32_t*) 0x7ffff;
 
 void* malloc(size_t size){
@@ -18,13 +18,14 @@ void* malloc(size_t size){
   memoryBlockHeader* lastHeader = findLastHeader();
   uint32_t* lastBlock = (uint32_t*)(lastHeader + ((*lastHeader).size));
   memoryBlockHeader block;
-  block.start = (uint32_t*)((*lastHeader).end);
+  block.start = (uint32_t*)0xFACE;//(uint32_t*)((*lastHeader).end);
   block.size = totalBlockSize;
   block.end = (uint32_t*)(block.start + block.size);
+  block.nextBlock = NULL;
   uint32_t* valueAddress = (uint32_t*)(block.start + memoryBlockHeaderSize);
   uint32_t* headerAddress = lastBlock;
   /*memcpy((headerAddress), (&memoryBlockHeader), (sizeof(memoryBlockHeader)));*/
-  memcpy((headerAddress), (&block), (sizeof(memoryBlockHeader)));
+  memcpy((headerAddress), (&block), (sizeof(block)));
   return valueAddress;
 }
 
@@ -34,9 +35,20 @@ memoryBlockHeader* findLastHeader(){ // make it found or something
   while(isFound == 0){
     if((memoryBlockHeader*)((*localAddress).nextBlock) == NULL){
         localAddress += (uint32_t)((*localAddress).size);
+        if((*localAddress).size == sizeof(memoryBlockHeader)){
+          return (memoryBlockHeader*)localAddress;
+        }
     } else {
       return (memoryBlockHeader*)localAddress;
     }
   }
   return (memoryBlockHeader*)NULL;
+}
+void InitializeMemoryManager(){
+  memoryBlockHeader m;
+  m.size = sizeof(memoryBlockHeader);
+  m.start = (uint32_t*)0x7ffff;
+  m.end = (uint32_t*)0x8000f;
+  m.nextBlock = NULL;
+  memcpy((uint32_t*)0x7ffff, &m, sizeof(m));
 }
