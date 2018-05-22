@@ -7,8 +7,11 @@
 void kernel_main() {
   isr_install();
   irq_install();
+  int32_t* p = malloc(50);
+  char s[10];
+  hex_to_ascii(*p, s);
+  kprint(s);
   kprint("Type something ffs\n >");
-  malloc(50);
 }
 void user_input(char *input){
   if(strcmp(input, "END") == 0){

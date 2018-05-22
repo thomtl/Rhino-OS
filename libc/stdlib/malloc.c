@@ -1,5 +1,5 @@
 #include "../include/stdlib.h"
-
+#include "../include/string.h"
 typedef struct {
   uint32_t* start;
   uint32_t* end;
@@ -10,7 +10,7 @@ typedef struct {
 memoryBlockHeader* findLastHeader();
 
 
-const uint32_t memoryBlockHeaderSize = sizeof(memoryBlockHeader);
+uint32_t memoryBlockHeaderSize = sizeof(memoryBlockHeader);
 const uint32_t* memoryAddress = (uint32_t*) 0x7ffff;
 
 void* malloc(size_t size){
@@ -23,16 +23,17 @@ void* malloc(size_t size){
   block.end = (uint32_t*)(block.start + block.size);
   uint32_t* valueAddress = (uint32_t*)(block.start + memoryBlockHeaderSize);
   uint32_t* headerAddress = lastBlock;
-  *headerAddress = block;
+  /*memcpy((headerAddress), (&memoryBlockHeader), (sizeof(memoryBlockHeader)));*/
+  memcpy((headerAddress), (&block), (sizeof(memoryBlockHeader)));
   return valueAddress;
 }
 
 memoryBlockHeader* findLastHeader(){ // make it found or something
-  uint32_t* localAddress = memoryAddress;
+  memoryBlockHeader* localAddress = (memoryBlockHeader*) 0x7ffff;
   uint8_t isFound = 0;
   while(isFound == 0){
     if((memoryBlockHeader*)((*localAddress).nextBlock) == NULL){
-        localAddress += (memoryBlockHeader*)((*localAddress).size);
+        localAddress += (uint32_t)((*localAddress).size);
     } else {
       return (memoryBlockHeader*)localAddress;
     }
