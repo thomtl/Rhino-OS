@@ -16,12 +16,13 @@ const uint32_t* memoryAddress = (uint32_t*) 0x7ffff;
 void* malloc(size_t size){
   uint32_t totalBlockSize = memoryBlockHeaderSize + size;
   memoryBlockHeader* lastHeader = findLastHeader();
-  uint32_t* lastBlock = (uint32_t*)(lastHeader + ((*lastHeader).size));
+  uint32_t* lastBlock = (*lastHeader).end;
   memoryBlockHeader block;
-  block.start = (uint32_t*)0xFACE;//(uint32_t*)((*lastHeader).end);
+  block.start = lastBlock;
   block.size = totalBlockSize;
   block.end = (uint32_t*)(block.start + block.size);
   block.nextBlock = NULL;
+  (*lastHeader).nextBlock = block.start;
   uint32_t* valueAddress = (uint32_t*)(block.start + memoryBlockHeaderSize);
   uint32_t* headerAddress = lastBlock;
   /*memcpy((headerAddress), (&memoryBlockHeader), (sizeof(memoryBlockHeader)));*/
@@ -33,14 +34,13 @@ memoryBlockHeader* findLastHeader(){ // make it found or something
   memoryBlockHeader* localAddress = (memoryBlockHeader*) 0x7ffff;
   uint8_t isFound = 0;
   while(isFound == 0){
-    if((memoryBlockHeader*)((*localAddress).nextBlock) == NULL){
-        localAddress += (uint32_t)((*localAddress).size);
-        if((*localAddress).size == sizeof(memoryBlockHeader)){
-          return (memoryBlockHeader*)localAddress;
-        }
-    } else {
-      return (memoryBlockHeader*)localAddress;
-    }
+      if((memoryBlockHeader*)((*localAddress).nextBlock) == NULL){
+          localAddress += (uint32_t)((*localAddress).size);
+          if((*localAddress).size == sizeof(memoryBlockHeader)){
+            return (memoryBlockHeader*)(*localAddress).start;
+          }
+          return (memoryBlockHeader*)(*localAddress).start;
+      }
   }
   return (memoryBlockHeader*)NULL;
 }

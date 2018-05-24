@@ -9,7 +9,7 @@ void kernel_main() {
   irq_install();
   InitializeMemoryManager();
   kprint("Type something ffs\n >");
-  int32_t* p = malloc(50);
+  uint32_t* p = malloc(50);
   char s[10];
   hex_to_ascii(*p, s);
   kprint(s);
