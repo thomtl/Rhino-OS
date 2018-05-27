@@ -4,13 +4,22 @@
 #include "./../libc/include/string.h"
 #include <stdint.h>
 #include "memory/kmalloc.h"
-
+//#include "paging/paging.h"
 void kernel_main() {
+  clear_screen();
+  kprint("Starting Rhino Copyright 2018 Thomas Woertman, The Netherlands\n");
+  kprint("Installing Interrupts..");
   isr_install();
   irq_install();
+  kprint("done\n");
+  kprint("Starting Memory Manager..");
   initialize_memory_manager();
-  kprint("Type something ffs\n >");
-  uint32_t* p = kmalloc(16);
+  kprint("done\n");
+  kprint("Boot successfull!");
+  clear_screen();
+  //starttt();
+  kprint("Rhino Shell version 0.0.0\n$");
+  /*uint32_t* p = kmalloc(16);
   char s[10];
   hex_to_ascii((uint32_t)p, s);
   kprint(s);
@@ -18,14 +27,15 @@ void kernel_main() {
   uint32_t* a = kmalloc(16);
   char d[10];
   hex_to_ascii((uint32_t)a, d);
-  kprint(d);
+  kprint(d);*/
 }
 void user_input(char *input){
   if(strcmp(input, "END") == 0){
-    kprint("Stopping BootOS Bye :(");
+    clear_screen();
+    kprint("Shutting down Rhino");
     __asm__ __volatile__("hlt");
   }
-  kprint("You said: ");
   kprint(input);
-  kprint("\n> ");
+  kprint(" is not an executable program.");
+  kprint("\n$");
 }
