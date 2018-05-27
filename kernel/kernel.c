@@ -4,7 +4,7 @@
 #include "./../libc/include/string.h"
 #include <stdint.h>
 #include "memory/kmalloc.h"
-//#include "paging/paging.h"
+
 void kernel_main() {
   clear_screen();
   kprint("Starting Rhino Copyright 2018 Thomas Woertman, The Netherlands\n");
@@ -17,7 +17,6 @@ void kernel_main() {
   kprint("done\n");
   kprint("Boot successfull!");
   clear_screen();
-  //starttt();
   kprint("Rhino Shell version 0.0.0\n$");
   /*uint32_t* p = kmalloc(16);
   char s[10];

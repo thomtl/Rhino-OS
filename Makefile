@@ -1,5 +1,5 @@
-C_SOURCES = $(wildcard kernel/*.c kernel/memory/*.c kernel/paging/*.c drivers/*.c cpu/*.c libc/*.c libc/string/*.c libc/stdio/*.c libc/stdlib/*.c)
-HEADERS = $(wildcard kernel/*.h kernel/memory/*.h kernel/paging/*.h drivers/*.h cpu/*.h libc/*.h libc/include/*.h libc/include/sys/*.h)
+C_SOURCES = $(wildcard kernel/*.c kernel/memory/*.c drivers/*.c cpu/*.c libc/*.c libc/string/*.c libc/stdio/*.c libc/stdlib/*.c)
+HEADERS = $(wildcard kernel/*.h kernel/memory/*.h drivers/*.h cpu/*.h libc/*.h libc/include/*.h libc/include/sys/*.h)
 
 # Nice syntax for file extension replacement
 OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o kernel/paging/paging-enable.o}

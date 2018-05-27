@@ -9,6 +9,6 @@ void starttt(){
     page_table[i] = (i * 0x1000) | 3;
   }
   page_directory[0] = ((uint32_t)page_table) | 3;
-  loadPageDirectory(page_directory);
-  enablePaging();
+  //loadPageDirectory(page_directory);
+  //enablePaging();
 }
