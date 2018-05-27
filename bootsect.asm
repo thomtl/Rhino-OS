@@ -11,7 +11,6 @@ call print_bootsec_nl
 mov bx, MSG_REAL_MODE
 call print_bootsec
 call print_bootsec_nl
-
 call load_kernel
 call switch_to_pm
 
