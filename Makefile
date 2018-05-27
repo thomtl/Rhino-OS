@@ -1,5 +1,5 @@
-C_SOURCES = $(wildcard kernel/*.c kernel/memory/*.c drivers/*.c cpu/*.c libc/*.c libc/string/*.c libc/stdio/*.c libc/stdlib/*.c)
-HEADERS = $(wildcard kernel/*.h kernel/memory/*.h drivers/*.h cpu/*.h libc/*.h libc/include/*.h libc/include/sys/*.h)
+C_SOURCES = $(wildcard kernel/*.c kernel/memory/*.c kernel/heap/*.c drivers/*.c cpu/*.c libc/*.c libc/string/*.c libc/stdio/*.c libc/stdlib/*.c)
+HEADERS = $(wildcard kernel/*.h kernel/memory/*.h kernel/heap/*.h drivers/*.h cpu/*.h libc/*.h libc/include/*.h libc/include/sys/*.h)
 
 # Nice syntax for file extension replacement
 OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o kernel/paging/paging-enable.o}
@@ -45,4 +45,4 @@ debug: os-image.bin kernel.elf
 
 clean:
 	rm -rf *.bin *.dis *.o os-image.bin *.elf
-	rm -rf kernel/*.o kernel/memory/*.o boot/*.bin drivers/*.o boot/*.o cpu/*.o libc/*.o libc/string/*.o libc/stdio/*.o libc/stdlib/*.o bootsect/*.o
+	rm -rf kernel/*.o kernel/memory/*.o kernel/heap/*.o boot/*.bin drivers/*.o boot/*.o cpu/*.o libc/*.o libc/string/*.o libc/stdio/*.o libc/stdlib/*.o bootsect/*.o

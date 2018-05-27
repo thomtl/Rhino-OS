@@ -4,6 +4,9 @@
 #include "./../libc/include/string.h"
 #include <stdint.h>
 #include "memory/kmalloc.h"
+#include "heap/heap.h"
+
+KHEAPBM kheap;
 
 void kernel_main() {
   clear_screen();
@@ -11,6 +14,10 @@ void kernel_main() {
   kprint("Installing Interrupts..");
   isr_install();
   irq_install();
+  kprint("done\n");
+  kprint("Creating Heap..");
+  k_heapBMInit(&kheap);
+  k_heapBMAddBlock(&kheap, 0x100000, 0x100000, 16);
   kprint("done\n");
   kprint("Starting Memory Manager..");
   initialize_memory_manager();
@@ -33,6 +40,16 @@ void user_input(char *input){
     clear_screen();
     kprint("Shutting down Rhino");
     __asm__ __volatile__("hlt");
+  }
+  if(strcmp(input, "MEM") == 0){
+    kprint("creating mem\n");
+    char *j = "";
+    char *ptr = (char*)k_heapBMAlloc(&kheap, 265);
+    kprint("successfully allocated 265 bytes at ");
+    hex_to_ascii((uint32_t)ptr, j);
+    kprint(j);
+    kprint("\n$");
+    return;
   }
   kprint(input);
   kprint(" is not an executable program.");
