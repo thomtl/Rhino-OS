@@ -9,7 +9,7 @@
 KHEAPBM kheap;
 
 void kernel_main() {
-  clear_screen();
+  //clear_screen();
   kprint("Starting Rhino Copyright 2018 Thomas Woertman, The Netherlands\n");
   kprint("Installing Interrupts..");
   isr_install();
@@ -23,7 +23,7 @@ void kernel_main() {
   initialize_memory_manager();
   kprint("done\n");
   kprint("Boot successfull!");
-  clear_screen();
+  //clear_screen();
   kprint("Rhino Shell version 0.0.0\n$");
   /*uint32_t* p = kmalloc(16);
   char s[10];

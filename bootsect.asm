@@ -11,11 +11,35 @@ call print_bootsec_nl
 mov bx, MSG_REAL_MODE
 call print_bootsec
 call print_bootsec_nl
-call load_kernel
-call switch_to_pm
+
+;jmp a20_failed
+;call check_a20
+;cmp ax, 1
+;je a20_enabled
+
+;in al, 0x92
+;or al, 2
+;out 0x92, al
+
+;call check_a20
+;cmp ax, 1
+;je a20_enabled
+;jmp a20_failed
+
+in al, 0x92
+test al, 2
+jnz a20_enabled
+or al, 2
+and al, 0xFE
+out 0x92, al
+jmp a20_enabled
+
+a20_enabled:
+	call load_kernel
+	call switch_to_pm
 
 jmp $
-
+;%include "bootsect/16/bootsect-checka20-16.asm"
 %include "bootsect/16/bootsect-print-16.asm"
 %include "bootsect/16/bootsect-printhex-16.asm"
 %include "bootsect/16/bootsect-readdisk-16.asm"
@@ -52,5 +76,7 @@ MSG_BOOTING:
 	db 'Booting BOOTOS', 0
 MSG_LOADING_KERNEL:
 	db "Loading kernel", 0
+MSG_A20_ERROR:
+	db "Error Enabling A20 Line", 0
 times 510-($-$$) db 0
 dw 0xaa55
