@@ -2,13 +2,16 @@
 
 [global _kernel_early]
 _kernel_early:
+  ; Print that we have successfully jumped to the kernel
   [extern kprint]
   push KERNEL_ENTER_COMPLETE
   call kprint
   pop eax
   mov eax, 0
+  ; Jump to the C Kernel
   [extern kernel_main]
   call kernel_main
+  ; Critical Error the kernel returned print an error on the display and hlt the PC
   push KERNEL_EXIT_ERROR
   call kprint
   pop eax
