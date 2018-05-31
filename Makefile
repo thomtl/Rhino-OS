@@ -2,7 +2,7 @@ C_SOURCES = $(wildcard kernel/*.c kernel/memory/*.c kernel/heap/*.c drivers/*.c 
 HEADERS = $(wildcard kernel/*.h kernel/memory/*.h kernel/heap/*.h drivers/*.h cpu/*.h libc/*.h libc/include/*.h libc/include/sys/*.h)
 
 # Nice syntax for file extension replacement
-OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o kernel/paging/paging-enable.o}
+OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o kernel/kernel_early.o}
 
 # Change this if your cross-compiler is somewhere else
 CC = i686-elf-gcc
@@ -18,11 +18,11 @@ os-image.bin: bootsect.bin kernel.bin
 # '--oformat binary' deletes all symbols as a collateral, so we don't need
 # to 'strip' them manually on this case
 kernel.bin: bootsect/kernel_entry.o ${OBJ}
-	i686-elf-ld -o $@ -Ttext 0x1000 $^ --oformat binary
+	i686-elf-ld -T linker.ld -o $@ -Ttext 0x1000 $^ --oformat binary
 
 # Used for debugging purposes
 kernel.elf: bootsect/kernel_entry.o ${OBJ}
-	i686-elf-ld -o $@ -Ttext 0x1000 $^
+	i686-elf-ld -T linker.ld -o $@ -Ttext 0x1000 $^
 
 run: os-image.bin
 	DISPLAY=:0 qemu-system-i386 -fda os-image.bin

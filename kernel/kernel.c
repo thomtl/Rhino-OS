@@ -34,6 +34,7 @@ void kernel_main() {
   char d[10];
   hex_to_ascii((uint32_t)a, d);
   kprint(d);*/
+  while(1){}
 }
 void user_input(char *input){
   if(strcmp(input, "END") == 0){
