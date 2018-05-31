@@ -18,7 +18,7 @@ os-image.bin: bootsect.bin kernel.bin
 # '--oformat binary' deletes all symbols as a collateral, so we don't need
 # to 'strip' them manually on this case
 kernel.bin: bootsect/kernel_entry.o ${OBJ}
-	i686-elf-ld -T linker.ld -o $@ -Ttext 0x1000 $^ --oformat binary
+	i686-elf-ld -T linker.ld -o $@ -Ttext 0x1000 $^ #--oformat binary
 
 # Used for debugging purposes
 kernel.elf: bootsect/kernel_entry.o ${OBJ}

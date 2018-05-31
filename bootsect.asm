@@ -63,6 +63,8 @@ load_kernel:
 BEGIN_PM:
 	mov ebx, MSG_PROT_MODE
 	call print
+	mov ebx, KERNEL_OFFSET
+	call print
 	call KERNEL_OFFSET
 	jmp $
 

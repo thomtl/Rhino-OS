@@ -41,7 +41,7 @@ void kprint(char *message){
 void clear_screen(){
   int screen_size = MAX_COLS * MAX_ROWS;
   int i;
-  char *screen = VIDEO_ADDRESS;
+  uint16_t *screen = VIDEO_ADDRESS;
   for(i = 0; i < screen_size; i++){
     screen[i*2] = ' ';
     screen[i*2+1] = WHITE_ON_BLACK;
@@ -61,7 +61,7 @@ void kprint_backspace(){
 
 
 int print_char(char c, int col, int row, char attr){
-  unsigned char *vidmem = (unsigned char*) VIDEO_ADDRESS;
+  uint16_t *vidmem = (uint16_t*) VIDEO_ADDRESS;
   if(!attr) attr = WHITE_ON_BLACK;
 
 
@@ -89,9 +89,9 @@ int print_char(char c, int col, int row, char attr){
   if(offset >= MAX_ROWS * MAX_COLS * 2){
     for(int i = 1; i < MAX_ROWS; i++){
 
-      memcpy((uint8_t*)(get_offset(0,i-1) + VIDEO_ADDRESS), (uint8_t*)(get_offset(0,i) + VIDEO_ADDRESS), (size_t)(MAX_COLS * 2));
+      memcpy((uint16_t*)(get_offset(0,i-1) + VIDEO_ADDRESS), (uint16_t*)(get_offset(0,i) + VIDEO_ADDRESS), (size_t)(MAX_COLS * 2));
     }
-    char *last_line = (char*)(get_offset(0, MAX_ROWS - 1) + (uint8_t*)VIDEO_ADDRESS);
+    char *last_line = (char*)(get_offset(0, MAX_ROWS - 1) + (uint16_t*)VIDEO_ADDRESS);
     for(int i = 0; i < MAX_COLS * 2; i++) last_line[i] = 0;
 
     offset -= 2 * MAX_COLS;

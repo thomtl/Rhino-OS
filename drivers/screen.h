@@ -1,7 +1,7 @@
 #ifndef SCREEN_H
 #define SCREEN_H
-
-#define VIDEO_ADDRESS (char*)0xb8000
+#include <stdint.h>
+#define VIDEO_ADDRESS (uint16_t*) 0xC03FF000
 #define MAX_ROWS 25
 #define MAX_COLS 80
 #define WHITE_ON_BLACK 0x0f
