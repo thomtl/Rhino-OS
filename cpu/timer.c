@@ -2,11 +2,13 @@
 #include "isr.h"
 #include "ports.h"
 #include "./../libc/function.h"
+#include "./../kernel/kernel.h"
 
 uint32_t tick = 0;
 
 static void timer_callback(registers_t *regs){
   tick++;
+  kernel_timer_callback();
   UNUSED(regs);
 }
 

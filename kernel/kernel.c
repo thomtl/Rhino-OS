@@ -10,6 +10,10 @@
 //#include "heap/heap.h"
 
 //KHEAPBM kheap;
+
+uint8_t shouldExit = 0; //set this to 1 to exit the kernel
+uint32_t uptime = 0;
+
 void kernel_main() {
   #ifndef DEBUG
   clear_screen();
@@ -29,7 +33,7 @@ void kernel_main() {
   kprint("Starting Memory Manager..");
   //initialize_memory_manager();
   kprint("done\n");
-  kprint("Boot successfull!");
+  kprint("Boot successfull!\n");
   #ifndef DEBUG
   clear_screen();
   #endif
@@ -43,13 +47,34 @@ void kernel_main() {
   char d[10];
   hex_to_ascii((uint32_t)a, d);
   kprint(d);*/
-  while(1){}
+  while(1)
+  {
+      	if(shouldExit == 1){
+          return;
+        }
+  }
 }
 void user_input(char *input){
-  if(strcmp(input, "END") == 0){
+  if(strcmp(input, "EXIT") == 0){
     clear_screen();
     kprint("Shutting down Rhino");
-    __asm__ __volatile__("hlt");
+    shouldExit = 1;
+    return;
+  }
+  if(strcmp(input, "HELP") == 0){
+    kprint("Showing Commands:\n");
+    kprint("-------------------------------\n");
+    kprint("EXIT: Exit the Kernel\n");
+    kprint("HELP: To show this Page\n");
+    kprint("CLEAR: To clear the screen\n");
+    kprint("-------------------------------\n");
+    kprint("$");
+    return;
+  }
+  if(strcmp(input, "CLEAR") == 0){
+    clear_screen();
+    kprint("$");
+    return;
   }
   /*
   if(strcmp(input, "MEM") == 0){
@@ -65,4 +90,8 @@ void user_input(char *input){
   kprint(input);
   kprint(" is not an executable program.");
   kprint("\n$");
+}
+
+void kernel_timer_callback(){
+  uptime++;
 }
