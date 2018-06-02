@@ -15,9 +15,7 @@ uint8_t shouldExit = 0; //set this to 1 to exit the kernel
 uint32_t uptime = 0;
 
 void kernel_main() {
-  #ifndef DEBUG
-  clear_screen();
-  #endif
+  //clear_screen();
   kprint("Starting Rhino Copyright 2018 Thomas Woertman, The Netherlands\n");
   kprint("Installing GDT..");
   gdt_install();
@@ -26,13 +24,13 @@ void kernel_main() {
   isr_install();
   irq_install();
   kprint("done\n");
-  kprint("Creating Heap..");
+  /*kprint("Creating Heap..");
   //k_heapBMInit(&kheap);
   //k_heapBMAddBlock(&kheap, 0x100000, 0x100000, 16);
   kprint("done\n");
   kprint("Starting Memory Manager..");
   //initialize_memory_manager();
-  kprint("done\n");
+  kprint("done\n");*/
   kprint("Boot successfull!\n");
   #ifndef DEBUG
   clear_screen();
