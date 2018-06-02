@@ -28,6 +28,7 @@ kernel.elf: ${OBJ}
 
 run:
 	DISPLAY=:0 qemu-system-i386 -cdrom rhino.iso
+	rm -rf build/sys
 
 # Open the connection to qemu and load our kernel-object file with symbols
 debug: os-image.bin kernel.elf

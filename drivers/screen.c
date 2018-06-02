@@ -61,7 +61,7 @@ void kprint_backspace(){
 
 
 int print_char(char c, int col, int row, char attr){
-  unsigned char *vidmem = (unsigned char*) VIDEO_ADDRESS;
+  char *vidmem = VIDEO_ADDRESS;
   if(!attr) attr = WHITE_ON_BLACK;
 
 
@@ -91,7 +91,7 @@ int print_char(char c, int col, int row, char attr){
 
       memcpy((uint8_t*)(get_offset(0,i-1) + VIDEO_ADDRESS), (uint8_t*)(get_offset(0,i) + VIDEO_ADDRESS), (size_t)(MAX_COLS * 2));
     }
-    char *last_line = (char*)(get_offset(0, MAX_ROWS - 1) + (uint8_t*)VIDEO_ADDRESS);
+    char *last_line = (char*)(get_offset(0, MAX_ROWS - 1) + VIDEO_ADDRESS);
     for(int i = 0; i < MAX_COLS * 2; i++) last_line[i] = 0;
 
     offset -= 2 * MAX_COLS;
