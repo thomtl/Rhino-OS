@@ -62,6 +62,11 @@ _load_kernel:
 	; Setup the stack
 	mov esp, stack_top
 
+	;Send the multiboot stuff to the kernel
+	push eax
+	add ebx, KERNEL_VIRTUAL_BASE
+	push ebx
+
 	; Jump to the C Kernel
 	[extern kernel_main]
 
