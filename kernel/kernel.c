@@ -19,9 +19,9 @@ uint8_t shouldExit = 0; //set this to 1 to exit the kernel
 uint32_t uptime = 0;
 multiboot_info_t* multibootInfo;
 uint32_t ramAmount = 0; // in MegaBytes
-uint32_t* KERNEL_START = (uint32_t*)0xC0100000;
+//uint32_t* KERNEL_START = (uint32_t*)0xC0100000;
 void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
-  char kernelVirtualBaseString[25] = "";
+  /*char kernelVirtualBaseString[25] = "";
   hex_to_ascii((uint32_t)KERNEL_START, kernelVirtualBaseString);
   kprint("KERNEL VIRTUAL BASE: ");
   kprint(kernelVirtualBaseString);
@@ -30,7 +30,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   hex_to_ascii((uint32_t)KERNEL_START - KERNEL_VBASE, kernelPhysicalBaseString);
   kprint("KERNEL PHYSICAL BASE: ");
   kprint(kernelPhysicalBaseString);
-  kprint("\n");
+  kprint("\n");*/
   if(magic == MULTIBOOT_BOOTLOADER_MAGIC){
     kprint("Multiboot boot successfull\n");
   } else {

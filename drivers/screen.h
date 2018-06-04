@@ -2,7 +2,7 @@
 #define SCREEN_H
 #include <stdint.h>
 #include "./../kernel/common.h"
-#define VIDEO_ADDRESS (char*)(0xB8000 + KERNEL_VBASE)
+#define VIDEO_ADDRESS (char*)(0xB8000)
 #define MAX_ROWS 25
 #define MAX_COLS 80
 #define WHITE_ON_BLACK 0x0f
