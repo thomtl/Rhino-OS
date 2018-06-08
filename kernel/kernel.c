@@ -2,6 +2,7 @@
 
 #include "common.h"
 #include "multiboot.h"
+#include "paging/paging.h"
 #include "../drivers/screen.h"
 #include "./../cpu/isr.h"
 #include "./../cpu/gdt.h"
@@ -56,27 +57,21 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   kprint("Detected Memory: ");
   kprint(ramString);
   kprint("MB\n");
-  /*kprint("Creating Heap..");
-  //k_heapBMInit(&kheap);
-  //k_heapBMAddBlock(&kheap, 0x100000, 0x100000, 16);
+  kprint("Enabling Paging..");
+  initialise_paging();
   kprint("done\n");
-  kprint("Starting Memory Manager..");
-  //initialize_memory_manager();
-  kprint("done\n");*/
+  kprint("Page Directory: ");
+  uint32_t cr0;
+  __asm__ __volatile__("mov %%cr3, %0": "=r"(cr0));
+  char h[25] = "";
+  hex_to_ascii(cr0, h);
+  kprint(h);
+  kprint("\n");
   kprint("Boot successfull!\n");
   #ifndef DEBUG
   clear_screen();
   #endif
-  kprint("Rhino Shell version 0.0.0\n$");
-  /*uint32_t* p = kmalloc(16);
-  char s[10];
-  hex_to_ascii((uint32_t)p, s);
-  kprint(s);
-  kprint("\n");
-  uint32_t* a = kmalloc(16);
-  char d[10];
-  hex_to_ascii((uint32_t)a, d);
-  kprint(d);*/
+  kprint("Rhino Shell version 0.0.1\n$");
   while(1)
   {
       	if(shouldExit == 1){
@@ -97,6 +92,10 @@ void user_input(char *input){
     kprint("EXIT: Exit the Kernel\n");
     kprint("HELP: To show this Page\n");
     kprint("CLEAR: To clear the screen\n");
+    #ifdef DEBUG
+    kprint("Debug commands:\n");
+    kprint("PAGEFAULT: Do a Page fault and Panic\n");
+    #endif
     kprint("-------------------------------\n");
     kprint("$");
     return;
@@ -105,6 +104,11 @@ void user_input(char *input){
     clear_screen();
     kprint("$");
     return;
+  }
+  if(strcmp(input, "PAGEFAULT") == 0){
+    uint32_t* ptr = (uint32_t*)0xc0000000;
+    uint32_t pf = *ptr;
+    UNUSED(pf);
   }
   /*
   if(strcmp(input, "MEM") == 0){

@@ -15,12 +15,12 @@ isr_common_stub:
 	mov gs, ax
 	push esp ; registers_t *r
     ; 2. Call C handler
-    cld ; C code following the sysV ABI requires DF to be clear on function entry
+  cld ; C code following the sysV ABI requires DF to be clear on function entry
 	call isr_handler
 
     ; 3. Restore state
 	pop eax
-    pop eax
+  pop eax
 	mov ds, ax
 	mov es, ax
 	mov fs, ax

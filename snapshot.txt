@@ -1,0 +1,25 @@
+Multiboot boot successfull
+Starting Rhino Copyright 2018 Thomas Woertman, The Netherlands
+Installing GDT..done
+Installing Interrupts..done
+Detected Memory: 16MB
+Enabling Paging..done
+Page Directory: 0x10:000
+Boot successfull!
+Hello Paging World!
+Rhino Shell version 0.0.1
+$ß
+
+
+
+
+
+
+
+
+
+
+
+
+
+

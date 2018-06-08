@@ -2,9 +2,14 @@
 #define KMALLOC_H
 #include <stdint.h>
 #include <stddef.h>
-void initialize_memory_manager();
-void* kmalloc(size_t size);
-void* kmalloc_a(size_t size);
-void* kmalloc_p(size_t size, uint32_t* phys);
-void* kmalloc_ap(size_t size, uint32_t* phys);
+extern uint32_t end;
+uint32_t kmalloc_int(uint32_t sz, int align, uint32_t *phys);
+
+uint32_t kmalloc_a(uint32_t sz);
+
+uint32_t kmalloc_p(uint32_t sz, uint32_t *phys);
+
+uint32_t kmalloc_ap(uint32_t sz, uint32_t *phys);
+
+uint32_t kmalloc(uint32_t sz);
 #endif

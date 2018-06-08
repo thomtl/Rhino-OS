@@ -2,5 +2,5 @@
 #include "../../kernel/heap/kheap.h"
 
 void* malloc(size_t size){
-  return kmalloc_a(size);
+  return (void*)kmalloc_a(size);
 }

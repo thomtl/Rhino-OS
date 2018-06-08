@@ -6,8 +6,8 @@
 #include "timer.h"
 #include "ports.h"
 
-isr_t interrupt_handlers[265];
-void page_fault(registers_t *regs);
+isr_t interrupt_handlers[256];
+
 void isr_install() {
     set_idt_gate(0, (uint32_t)isr0);
     set_idt_gate(1, (uint32_t)isr1);
@@ -112,39 +112,18 @@ char *exception_messages[] = {
 };
 
 void isr_handler(registers_t *r){
-  kprint("received interrupt: ");
-  char s[3];
-  int_to_ascii(r->int_no, s);
-  kprint(s);
-  kprint("\n");
-  kprint(exception_messages[r->int_no]);
-  kprint("\n");
-  if(r->int_no == 14){
-    page_fault(r);
+  if(interrupt_handlers[r->int_no] != 0){
+    isr_t handler = interrupt_handlers[r->int_no];
+    handler(r);
+  } else {
+    kprint("received interrupt: ");
+    char s[3];
+    int_to_ascii(r->int_no, s);
+    kprint(s);
+    kprint("\n");
+    kprint(exception_messages[r->int_no]);
+    kprint("\n");
   }
-}
-
-void page_fault(registers_t *regs){
-  uint32_t faulting_address;
-  __asm__ ("mov %%cr2, %0" : "=r" (faulting_address));
-
-  int present   = !(regs->err_code & 0x1); // Page not present
-  int rw = regs->err_code & 0x2;           // Write operation?
-  int us = regs->err_code & 0x4;           // Processor was in user-mode?
-  int reserved = regs->err_code & 0x8;     // Overwritten CPU-reserved bits of page entry?
-
-  // Output an error message.
-  kprint("Page fault! ( ");
-  if (present) {kprint("present ");}
-  if (rw) {kprint("read-only ");}
-  if (us) {kprint("user-mode ");}
-  if (reserved) {kprint("reserved ");}
-  kprint(") at 0x");
-  char address[35] = "HELLO WORLD";
-  hex_to_ascii(faulting_address, address);
-  kprint(address);
-  kprint("\n");
-  panic_m("Page Fault");
 }
 
 void register_interrupt_handler(uint8_t n, isr_t handler){
