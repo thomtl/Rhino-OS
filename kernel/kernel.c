@@ -3,6 +3,7 @@
 #include "common.h"
 #include "multiboot.h"
 #include "paging/paging.h"
+#include "multitasking/task.h"
 #include "fs/vfs.h"
 #include "fs/initrd.h"
 #include "../drivers/screen.h"
@@ -71,6 +72,10 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   kprint("done\n");
   kprint("Initializing Ramdisk..");
   fs_root = initialise_initrd(initrd_location);
+  kprint("done\n");
+  kprint("Enabling Multitasking..");
+  initTasking();
+  kprint("done\n");
   kprint("Boot successfull!\n");
   #ifndef DEBUG
   clear_screen();
@@ -146,6 +151,11 @@ void user_input(char *input){
   if(strcmp(input, "STACKSMASH") == 0){
     do_smash("BLUBBLUBBLUBBLUBLUB");
     return;
+  }
+  if(strcmp(input, "TASK") == 0){
+    kprint("Switching to other task");
+    yield();
+    kprint("ready");
   }
   /*
   if(strcmp(input, "MEM") == 0){
