@@ -60,13 +60,6 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   kprint("Enabling Paging..");
   initialise_paging();
   kprint("done\n");
-  kprint("Page Directory: ");
-  uint32_t cr0;
-  __asm__ __volatile__("mov %%cr3, %0": "=r"(cr0));
-  char h[25] = "";
-  hex_to_ascii(cr0, h);
-  kprint(h);
-  kprint("\n");
   kprint("Boot successfull!\n");
   #ifndef DEBUG
   clear_screen();
@@ -94,7 +87,7 @@ void user_input(char *input){
     kprint("CLEAR: To clear the screen\n");
     #ifdef DEBUG
     kprint("Debug commands:\n");
-    kprint("PAGEFAULT: Do a Page fault and Panic\n");
+    kprint("PANIC: Panic the kernel\n");
     #endif
     kprint("-------------------------------\n");
     kprint("$");
@@ -105,10 +98,8 @@ void user_input(char *input){
     kprint("$");
     return;
   }
-  if(strcmp(input, "PAGEFAULT") == 0){
-    uint32_t* ptr = (uint32_t*)0xc0000000;
-    uint32_t pf = *ptr;
-    UNUSED(pf);
+  if(strcmp(input, "PANIC") == 0){
+    panic_m("Deliberate Kernel Panic");
   }
   /*
   if(strcmp(input, "MEM") == 0){
