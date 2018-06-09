@@ -1,21 +1,24 @@
-#define DEBUG
+//#define DEBUG
 
 #include "common.h"
 #include "multiboot.h"
 #include "paging/paging.h"
+#include "fs/vfs.h"
+#include "fs/initrd.h"
 #include "../drivers/screen.h"
 #include "./../cpu/isr.h"
 #include "./../cpu/gdt.h"
 #include "kernel.h"
 #include "panic.h"
 #include "./../libc/include/string.h"
+#include "./../libc/include/stdio.h"
 #include "./../libc/function.h"
 #include <stdint.h>
 //#include "memory/kmalloc.h"
 //#include "heap/heap.h"
 
 //KHEAPBM kheap;
-
+extern uint32_t placement_address;
 uint8_t shouldExit = 0; //set this to 1 to exit the kernel
 uint32_t uptime = 0;
 multiboot_info_t* multibootInfo;
@@ -52,14 +55,22 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   isr_install();
   irq_install();
   kprint("done\n");
-  char ramString[25] = "HELLO WORLD";
+  char ramString[25] = "";
   int_to_ascii(ramAmount, ramString);
   kprint("Detected Memory: ");
   kprint(ramString);
   kprint("MB\n");
+  kprint("Loading Ramdisk..");
+  ASSERT(mbd->mods_count == 1);
+  uint32_t initrd_location = *((uint32_t*)mbd->mods_addr);
+  uint32_t initrd_end = *(uint32_t*)(mbd->mods_addr+4);
+  placement_address = initrd_end;
+  kprint("done\n");
   kprint("Enabling Paging..");
   initialise_paging();
   kprint("done\n");
+  kprint("Initializing Ramdisk..");
+  fs_root = initialise_initrd(initrd_location);
   kprint("Boot successfull!\n");
   #ifndef DEBUG
   clear_screen();
@@ -100,6 +111,35 @@ void user_input(char *input){
   }
   if(strcmp(input, "PANIC") == 0){
     panic_m("Deliberate Kernel Panic");
+  }
+  if(strcmp(input, "INIT") == 0){
+    int i = 0;
+    struct dirent *node = 0;
+    while ( (node = readdir_fs(fs_root, i)) != 0)
+    {
+      kprint("Found file ");
+      kprint(node->name);
+      fs_node_t *fsnode = finddir_fs(fs_root, node->name);
+
+      if ((fsnode->flags&0x7) == FS_DIRECTORY){
+        kprint("\n\t(directory)\n");
+      } else {
+        kprint("\n\t contents: \"");
+        uint8_t buf[256];
+        int sz = read_fs(fsnode, 0, 256, buf);
+        int j;
+        for (j = 0; j < sz; j++){
+          char hgh[2] = {(buf[j]), '\0'};
+          kprint(hgh);
+        }
+
+
+        kprint("\"\n");
+      }
+      i++;
+    }
+    kprint("$");
+    return;
   }
   /*
   if(strcmp(input, "MEM") == 0){

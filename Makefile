@@ -1,5 +1,5 @@
-C_SOURCES = $(wildcard kernel/*.c kernel/heap/*.c kernel/paging/*.c kernel/types/*.c drivers/*.c cpu/*.c libc/*.c libc/string/*.c libc/stdio/*.c libc/stdlib/*.c)
-HEADERS = $(wildcard kernel/*.h kernel/heap/*.h kernel/paging/*.h  kernel/types/*.h drivers/*.h cpu/*.h libc/*.h libc/include/*.h libc/include/sys/*.h)
+C_SOURCES = $(wildcard kernel/*.c kernel/heap/*.c kernel/paging/*.c kernel/types/*.c kernel/fs/*.c drivers/*.c cpu/*.c libc/*.c libc/string/*.c libc/stdio/*.c libc/stdlib/*.c)
+HEADERS = $(wildcard kernel/*.h kernel/heap/*.h kernel/paging/*.h  kernel/types/*.h kernel/fs/*.h drivers/*.h cpu/*.h libc/*.h libc/include/*.h libc/include/sys/*.h)
 
 # Nice syntax for file extension replacement
 OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o cpu/gdtlow.o kernel/paging/paginglow.o}
@@ -20,6 +20,7 @@ all: rhino.iso run
 rhino.iso: kernel.bin
 	mkdir -p build/sys/boot/grub
 	cp kernel.bin build/sys/boot/kernel.bin
+	cp initrd.img build/sys/boot/initrd.img
 	cp build/grub.cfg build/sys/boot/grub/grub.cfg
 	grub-mkrescue -o ./rhino.iso build/sys --verbose
 
@@ -28,7 +29,7 @@ kernel.bin: kernel/kernel_early.o ${OBJ}
 	i686-elf-gcc -T linker.ld -o $@ -ffreestanding -O2 -nostdlib $^ -lgcc
 
 run:
-	DISPLAY=:0 qemu-system-i386 -cdrom rhino.iso -m 16M -d cpu_reset -D old/qemulog
+	DISPLAY=:0 qemu-system-i386 -m 16M -cdrom rhino.iso -d cpu_reset -D old/qemulog
 	rm -rf build/sys
 
 # Generic rules for wildcards
@@ -44,5 +45,5 @@ run:
 
 clean:
 	rm -rf *.bin *.dis *.o os-image.bin *.elf *.iso
-	rm -rf kernel/*.o kernel/heap/*.o kernel/paging/*.o kernel/types/*.o boot/*.bin drivers/*.o boot/*.o cpu/*.o libc/*.o libc/string/*.o libc/stdio/*.o libc/stdlib/*.o bootsect/*.o
+	rm -rf kernel/*.o kernel/heap/*.o kernel/paging/*.o kernel/types/*.o kernel/fs/*.o boot/*.bin drivers/*.o boot/*.o cpu/*.o libc/*.o libc/string/*.o libc/stdio/*.o libc/stdlib/*.o bootsect/*.o
 	rm -rf build/sys

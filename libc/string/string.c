@@ -1,5 +1,10 @@
 #include "../include/string.h"
-
+char * strcpy(char *strDest, char *strSrc)
+{
+    char *temp = strDest;
+    while((*strDest++ = *strSrc++)); // or while((*strDest++=*strSrc++) != '\0');
+    return temp;
+}
 void int_to_ascii(int n, char str[]){
   int i, sign;
   if((sign = n) < 0) n = -n;

@@ -100,17 +100,11 @@ void initialise_paging(){
   i = 0;
   while(i < placement_address+0x1000){
     page_t* usepage = get_page(i, 1, kernel_directory);
-    if(usepage == 0){
-      panic_m("get_page errord");
-    }
     alloc_frame(usepage, 0, 0);
     i += 0x1000;
   }
   for(i = KHEAP_START; i < KHEAP_START+KHEAP_INITIAL_SIZE; i += 0x1000){
     page_t* usepage = get_page(i, 1, kernel_directory);
-    if(usepage == 0){
-      panic_m("get_page errord");
-    }
     alloc_frame(usepage, 0, 0);
   }
   register_interrupt_handler(14, page_fault);
