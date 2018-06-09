@@ -100,7 +100,7 @@ void user_input(char *input){
     kprint("Debug commands:\n");
     kprint("PANIC: Panic the kernel\n");
     kprint("INIT: To show the files on the initrd\n");
-    kprint("STACKSMASH: To smash the stack and test the stack smash protection");
+    kprint("STACKSMASH: To smash the stack and test the stack smash protection\n");
     #endif
     kprint("-------------------------------\n");
     kprint("$");
