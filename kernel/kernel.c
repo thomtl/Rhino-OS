@@ -1,4 +1,4 @@
-//#define DEBUG
+#define DEBUG
 
 #include "common.h"
 #include "multiboot.h"
@@ -99,6 +99,8 @@ void user_input(char *input){
     #ifdef DEBUG
     kprint("Debug commands:\n");
     kprint("PANIC: Panic the kernel\n");
+    kprint("INIT: To show the files on the initrd\n");
+    kprint("STACKSMASH: To smash the stack and test the stack smash protection");
     #endif
     kprint("-------------------------------\n");
     kprint("$");
@@ -141,6 +143,10 @@ void user_input(char *input){
     kprint("$");
     return;
   }
+  if(strcmp(input, "STACKSMASH") == 0){
+    do_smash("BLUBBLUBBLUBBLUBLUB");
+    return;
+  }
   /*
   if(strcmp(input, "MEM") == 0){
     kprint("creating mem\n");
@@ -159,4 +165,9 @@ void user_input(char *input){
 
 void kernel_timer_callback(){
   uptime++;
+}
+void do_smash(char *bar){
+  char  c[12];
+
+  strcpy(c, bar);
 }

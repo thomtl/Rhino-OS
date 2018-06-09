@@ -1,5 +1,5 @@
 #include "panic.h"
-
+__attribute__((noreturn))
 void panic(){
   clear_screen();
   kprint("KERNEL PANIC!\n");
@@ -9,7 +9,7 @@ void panic(){
   }
 }
 
-
+__attribute__((noreturn))
 void panic_m(char* m){
   //clear_screen();
   kprint("KERNEL PANIC!\n");
