@@ -38,8 +38,9 @@ run:
 	${CC} ${CFLAGS} -ffreestanding -c $< -o $@
 
 %.o: %.asm
-	nasm $< -f elf -o $@
-
+	yasm $< -f elf -o $@ -p nasm
+%.o: %.s
+	yasm $< -f elf -o $@ -p gas
 %.bin: %.asm
 	nasm $< -f elf -o $@
 

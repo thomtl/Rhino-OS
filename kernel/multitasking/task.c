@@ -12,9 +12,9 @@ static void otherMain(){
 }
 
 void initTasking(){
-  __asm__ __volatile__ ("movl %%cr3, %%eax; movl %%eax, %0;":"=m"(mainTask.regs.cr3)::"%eax");
-  __asm__ __volatile__ ("pushfl; movl (%%esp), %%eax; movl %%eax, %0; popfl;":"=m"(mainTask.regs.eflags)::"%eax");
-  __asm__ __volatile__ ("movl %%esp, %0":"=m"(mainTask.regs.esp));
+  __asm__ __volatile__("movl %%cr3, %%eax; movl %%eax, %0;":"=m"(mainTask.regs.cr3)::"%eax");
+  __asm__ __volatile__("pushfl; movl (%%esp), %%eax; movl %%eax, %0; popfl;":"=m"(mainTask.regs.eflags)::"%eax");
+  //__asm__ __volatile__ ("movl %%esp, %0":"=m"(mainTask.regs.esp));
 
   createTask(&otherTask, otherMain, mainTask.regs.eflags, (uint32_t*)mainTask.regs.cr3);
   mainTask.next = &otherTask;
@@ -33,7 +33,7 @@ void createTask(task_t *task, void(*main)(), uint32_t flags, uint32_t *pagedir){
   task->regs.eflags = flags;
   task->regs.eip = (uint32_t)main;
   task->regs.cr3 = (uint32_t) pagedir;
-  task->regs.esp = (uint32_t)kmalloc_a(0x1000) + 0x1000;
+  task->regs.esp = (uint32_t)kmalloc_a(0x4000) + 0x4000;
   task->next = 0;
 }
 
