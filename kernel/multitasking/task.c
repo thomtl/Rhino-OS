@@ -8,8 +8,10 @@ static task_t mainTask;
 static task_t otherTask;
 
 static void otherMain(){
-  kprint("Hello multitasking world!\n");
-  yield();
+  while(1){
+    kprint("Hello multitasking world!\n");
+    yield();
+  }
 }
 
 void initTasking(){

@@ -3,5 +3,4 @@
 void user_input(char *input);
 void kernel_timer_callback();
 void do_smash(char *bar);
-void doit();
 #endif

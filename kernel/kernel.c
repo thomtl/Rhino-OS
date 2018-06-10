@@ -153,7 +153,8 @@ void user_input(char *input){
     return;
   }
   if(strcmp(input, "TASK") == 0){
-    doit();
+    kprint("Switching to other task\n");
+    yield();
     kprint("ready\n$");
     return;
   }
@@ -176,10 +177,7 @@ void user_input(char *input){
 void kernel_timer_callback(){
   uptime++;
 }
-void doit(){
-  kprint("Switching to other task\n");
-  yield();
-}
+
 void do_smash(char *bar){
   char  c[12];
 
