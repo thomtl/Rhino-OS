@@ -2,7 +2,7 @@ C_SOURCES = $(wildcard kernel/*.c kernel/heap/*.c kernel/paging/*.c kernel/types
 HEADERS = $(wildcard kernel/*.h kernel/heap/*.h kernel/paging/*.h  kernel/types/*.h kernel/fs/*.h kernel/security/*.h kernel/multitasking/*.h drivers/*.h cpu/*.h libc/*.h libc/include/*.h libc/include/sys/*.h)
 
 # Nice syntax for file extension replacement
-OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o cpu/gdtlow.o kernel/paging/paginglow.o kernel/multitasking/switch.o}
+OBJ = ${C_SOURCES:.c=.o cpu/interrupt.o cpu/gdtlow.o kernel/multitasking/switch.o}
 
 # Change this if your cross-compiler is somewhere else
 CC = i686-elf-gcc
