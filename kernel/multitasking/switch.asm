@@ -17,7 +17,7 @@ switchTask:
     add edx, 4
     mov esi, [esp + 16]
     mov edi, [esp + 4]
-    mov eax, ebx
+    mov [eax], ebx
     mov [eax + 24], edx
     mov [eax + 28], esi
     mov [eax + 32], ecx
@@ -44,6 +44,6 @@ switchTask:
     pop eax
     push eax
     mov eax, [eax + 32]
-    xchg eax, esp
-    mov eax, eax
+    xchg eax, [esp]
+    mov eax, [eax]
     ret

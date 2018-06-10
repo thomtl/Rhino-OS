@@ -153,9 +153,10 @@ void user_input(char *input){
     return;
   }
   if(strcmp(input, "TASK") == 0){
-    kprint("Switching to other task");
+    kprint("Switching to other task\n");
     yield();
-    kprint("ready");
+    kprint("ready\n$");
+    return;
   }
   /*
   if(strcmp(input, "MEM") == 0){

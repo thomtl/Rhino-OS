@@ -117,7 +117,7 @@ void switch_page_directory(page_directory_t *dir){
   __asm__ __volatile__("mov %0, %%cr3":: "r"(&dir->tablesPhysical));
   uint32_t cr0;
   __asm__ __volatile__("mov %%cr0, %0": "=r"(cr0));
-  cr0 |= 0x80000000; // Enable paging!
+  cr0 |= 0x80000001;//0x80000000; // Enable paging!
   __asm__ __volatile__("mov %0, %%cr0":: "r"(cr0));
 }
 
