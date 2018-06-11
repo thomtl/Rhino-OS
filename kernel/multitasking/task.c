@@ -6,12 +6,24 @@
 static task_t *runningTask;
 static task_t mainTask;
 static task_t otherTask;
+static task_t diffrentTask;
 
 static void otherMain(){
-  while(1){
-    kprint("Hello multitasking world!\n");
+  for(uint32_t i = 0; i < 256; i++){
+    kprint("A");
     yield();
   }
+  kprint("\n$");
+  while(1);
+}
+
+static void diffrentMain(){
+  for(uint32_t i = 0; i < 256; i++){
+    kprint("B");
+    yield();
+  }
+  kprint("\n$");
+  while(1);
 }
 
 void initTasking(){
@@ -19,8 +31,10 @@ void initTasking(){
   __asm__ __volatile__("pushfl; movl (%%esp), %%eax; movl %%eax, %0; popfl;":"=m"(mainTask.regs.eflags)::"%eax");
 
   createTask(&otherTask, otherMain, mainTask.regs.eflags, (uint32_t*)mainTask.regs.cr3);
+  createTask(&diffrentTask, diffrentMain, mainTask.regs.eflags, (uint32_t*)mainTask.regs.cr3);
   mainTask.next = &otherTask;
-  otherTask.next = &mainTask;
+  otherTask.next = &diffrentTask;
+  diffrentTask.next = &otherTask;
 
   runningTask = &mainTask;
 }
