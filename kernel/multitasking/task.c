@@ -8,6 +8,8 @@ static task_t mainTask;
 static task_t otherTask;
 static task_t diffrentTask;
 
+task_linked_list_t taskList;
+
 static void otherMain(){
   for(uint32_t i = 0; i < 256; i++){
     kprint("A");
@@ -26,9 +28,15 @@ static void diffrentMain(){
   while(1);
 }
 
+static task_t getKernelTask(){
+
+}
+
 void initTasking(){
   __asm__ __volatile__("movl %%cr3, %%eax; movl %%eax, %0;":"=m"(mainTask.regs.cr3)::"%eax");
   __asm__ __volatile__("pushfl; movl (%%esp), %%eax; movl %%eax, %0; popfl;":"=m"(mainTask.regs.eflags)::"%eax");
+
+  taskList = createLinkedList()
 
   createTask(&otherTask, otherMain, mainTask.regs.eflags, (uint32_t*)mainTask.regs.cr3);
   createTask(&diffrentTask, diffrentMain, mainTask.regs.eflags, (uint32_t*)mainTask.regs.cr3);

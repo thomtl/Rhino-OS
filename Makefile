@@ -32,6 +32,10 @@ run:
 	DISPLAY=:0 qemu-system-i386 -m 16M -cdrom rhino.iso -d cpu_reset -D old/qemulog
 	rm -rf build/sys
 
+bochs: rhino.iso
+	DISPLAY=:0 bochs
+	rm -rf build/sys
+
 # Generic rules for wildcards
 # To make an object, always compile from its .c
 %.o: %.c ${HEADERS}
