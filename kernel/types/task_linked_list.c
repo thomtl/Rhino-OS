@@ -4,7 +4,7 @@
 
 static task_linked_list_entry_t* findLastEntry(task_linked_list_t* list){
   task_linked_list_entry_t* currentEntry = list->start;
-  while(currentEntry != NULL){
+  while(currentEntry->next != NULL){
     currentEntry = currentEntry->next;
   }
   return currentEntry;
@@ -18,7 +18,7 @@ static task_linked_list_entry_t* findEntryWithIndex(task_linked_list_t* list, ui
   return currentEntry;
 }
 
-task_linked_list_t* createLinkedList(task_t rootEntry){
+task_linked_list_t* createLinkedList(task_t *rootEntry){
   task_linked_list_entry_t* entryAddress = kmalloc(sizeof(task_linked_list_entry_t));
   memset(entryAddress, 0, sizeof(task_linked_list_entry_t));
   task_linked_list_entry_t entry;
@@ -30,7 +30,7 @@ task_linked_list_t* createLinkedList(task_t rootEntry){
   list->start = entryAddress;
   return list;
 }
-void insertEntry(task_linked_list_t* list, task_t task){
+void insertEntry(task_linked_list_t* list, task_t *task){
   task_linked_list_entry_t* previousEntry = findLastEntry(list);
   task_linked_list_entry_t* entryAddress = kmalloc(sizeof(task_linked_list_entry_t));
   memset(entryAddress, 0, sizeof(task_linked_list_entry_t));
@@ -49,4 +49,17 @@ void deleteEntry(task_linked_list_t* list, uint32_t n){
 }
 task_linked_list_entry_t* findEntry(task_linked_list_t* list, uint32_t n){
   return findEntryWithIndex(list, n);
+}
+task_t* getLastEntry(task_linked_list_t *list){
+  return findLastEntry(list)->task;
+}
+
+uint32_t getIndex(task_linked_list_t *list, task_t* task){
+  uint32_t index = 0;
+  task_linked_list_entry_t *entry = list->start;
+  while(entry->task != task){
+    entry = entry->next;
+    index++;
+  }
+  return index;
 }

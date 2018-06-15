@@ -6,6 +6,7 @@
 #include "multitasking/task.h"
 #include "fs/vfs.h"
 #include "fs/initrd.h"
+#include "multitasking/task.h"
 #include "../drivers/screen.h"
 #include "./../cpu/isr.h"
 #include "./../cpu/gdt.h"
@@ -15,10 +16,7 @@
 #include "./../libc/include/stdio.h"
 #include "./../libc/function.h"
 #include <stdint.h>
-//#include "memory/kmalloc.h"
-//#include "heap/heap.h"
 
-//KHEAPBM kheap;
 extern uint32_t placement_address;
 uint8_t shouldExit = 0; //set this to 1 to exit the kernel
 uint32_t uptime = 0;
@@ -156,6 +154,13 @@ void user_input(char *input){
     kprint("Switching to other task\n");
     yield();
     kprint("ready\n$");
+    return;
+  }
+  if(strcmp(input, "PID") == 0){
+    char c[25] = "";
+    int_to_ascii(getCurrentTask()->pid.pid, c);
+    kprint(c);
+    kprint("\n$");
     return;
   }
   /*
