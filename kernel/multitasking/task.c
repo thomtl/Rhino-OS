@@ -21,6 +21,7 @@ static void otherMain(){
     kprint("A");
     yield();
   }
+  while(1);
 }
 
 static void diffrentMain(){
@@ -29,18 +30,19 @@ static void diffrentMain(){
     yield();
     //while(1);
   }
+  while(1);
 }
 
-//static task_t* getKernelTask(){
-  //return findEntry(taskList, 0);
-//}
+static task_t* getKernelTask(){
+  return findEntry(taskList, 0)->task;
+}
 
 void initTasking(){
   __asm__ __volatile__("movl %%cr3, %%eax; movl %%eax, %0;":"=m"(mainTask.regs.cr3)::"%eax");
   __asm__ __volatile__("pushfl; movl (%%esp), %%eax; movl %%eax, %0; popfl;":"=m"(mainTask.regs.eflags)::"%eax");
   mainTask.pid.pid = 0;
   taskList = createLinkedList(&mainTask);
-  insertEntry(taskList, &mainTask);
+
   createTask(&otherTask, otherMain, mainTask.regs.eflags, (uint32_t*)mainTask.regs.cr3);
   insertEntry(taskList, &otherTask);
   createTask(&diffrentTask, diffrentMain, mainTask.regs.eflags, (uint32_t*)mainTask.regs.cr3);
@@ -73,9 +75,12 @@ void yield(){
   if(runningTask->pid.pid != getLastEntry(taskList)->pid.pid){
     uint32_t index = getIndex(taskList, runningTask);
     runningTask = findEntry(taskList, index + 1)->task;
-  } else {
+  } else if(runningTask->pid.pid == getLastEntry(taskList)->pid.pid) {
     runningTask = findEntry(taskList, 0)->task;
+  } else {
+    runningTask = getKernelTask();
   }
+  //runningTask = findEntry(taskList, 1)->task;//getKernelTask();
   //runningTask = runningTask->next;
   switchTask(&(last->regs), &(runningTask->regs));
 }
