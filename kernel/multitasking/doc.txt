@@ -1,0 +1,3 @@
+Documentation for the Coöperative Multitasking system:
+    Max 256 Tasks, Planned Linked list.
+    

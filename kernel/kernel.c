@@ -99,6 +99,8 @@ void user_input(char *input){
     kprint("EXIT: Exit the Kernel\n");
     kprint("HELP: To show this Page\n");
     kprint("CLEAR: To clear the screen\n");
+    kprint("PID: To show the current tasks PID");
+    kprint("TASK: To yield");
     #ifdef DEBUG
     kprint("Debug commands:\n");
     kprint("PANIC: Panic the kernel\n");
@@ -158,7 +160,7 @@ void user_input(char *input){
   }
   if(strcmp(input, "PID") == 0){
     char c[25] = "";
-    int_to_ascii(getCurrentTask()->pid.pid, c);
+    int_to_ascii(getPID(), c);
     kprint(c);
     kprint("\n$");
     return;
