@@ -49,6 +49,6 @@ bochs: rhino.iso
 	nasm $< -f elf -o $@
 
 clean:
-	rm -rf *.bin *.dis *.o os-image.bin *.elf *.iso
+	rm -rf *.bin *.dis *.o os-image.bin *.elf *.iso *.out
 	rm -rf kernel/*.o kernel/heap/*.o kernel/paging/*.o kernel/types/*.o kernel/fs/*.o kernel/security/*.o kernel/multitasking/*.o boot/*.bin drivers/*.o boot/*.o cpu/*.o libc/*.o libc/string/*.o libc/stdio/*.o libc/stdlib/*.o bootsect/*.o
 	rm -rf build/sys

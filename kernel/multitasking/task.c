@@ -4,9 +4,7 @@
 #include "../heap/kheap.h"
 #include "../types/task_linked_list.h"
 static task_t *runningTask;
-static task_t mainTask;
-static task_t otherTask;
-static task_t diffrentTask;
+
 
 task_linked_list_t *taskList;
 
@@ -33,25 +31,27 @@ static void diffrentMain(){
   while(1);
 }
 
-static task_t* getKernelTask(){
-  return findEntry(taskList, 0)->task;
-}
+//static task_t* getKernelTask(){
+//  return findEntry(taskList, 0)->task;
+//}
 
 void initTasking(){
-  __asm__ __volatile__("movl %%cr3, %%eax; movl %%eax, %0;":"=m"(mainTask.regs.cr3)::"%eax");
-  __asm__ __volatile__("pushfl; movl (%%esp), %%eax; movl %%eax, %0; popfl;":"=m"(mainTask.regs.eflags)::"%eax");
-  mainTask.pid.pid = 0;
-  taskList = createLinkedList(&mainTask);
+  task_t* mainTask = {0};
+  __asm__ __volatile__("movl %%cr3, %%eax; movl %%eax, %0;":"=m"(mainTask->regs.cr3)::"%eax");
+  __asm__ __volatile__("pushfl; movl (%%esp), %%eax; movl %%eax, %0; popfl;":"=m"(mainTask->regs.eflags)::"%eax");
+  mainTask->pid.pid = 0;
+  taskList = createLinkedList(mainTask);
+  task_t* otherTask = {0};
+  task_t* diffrentTask = {0};
+  createTask(otherTask, otherMain, mainTask->regs.eflags, (uint32_t*)mainTask->regs.cr3);
+  insertEntry(taskList, otherTask);
+  createTask(diffrentTask, diffrentMain, mainTask->regs.eflags, (uint32_t*)mainTask->regs.cr3);
+  insertEntry(taskList, diffrentTask);
+  //mainTask.next = &otherTask;
+  //otherTask.next = &diffrentTask;
+  //  diffrentTask.next = &otherTask;
 
-  createTask(&otherTask, otherMain, mainTask.regs.eflags, (uint32_t*)mainTask.regs.cr3);
-  insertEntry(taskList, &otherTask);
-  createTask(&diffrentTask, diffrentMain, mainTask.regs.eflags, (uint32_t*)mainTask.regs.cr3);
-  insertEntry(taskList, &diffrentTask);
-  mainTask.next = &otherTask;
-  otherTask.next = &diffrentTask;
-  diffrentTask.next = &otherTask;
-
-  runningTask = &mainTask;
+  runningTask = mainTask;
 }
 
 void createTask(task_t *task, void(*main)(), uint32_t flags, uint32_t *pagedir){
@@ -72,14 +72,13 @@ void createTask(task_t *task, void(*main)(), uint32_t flags, uint32_t *pagedir){
 void yield(){
   task_t *last = runningTask;
   //runningTask = findEntry(taskList, 0)->task;
-  if(runningTask->pid.pid != getLastEntry(taskList)->pid.pid){
+  /*if(0){//runningTask->pid.pid == getLastEntry(taskList)->pid.pid){
+    runningTask = getKernelTask();
+  } else {
     uint32_t index = getIndex(taskList, runningTask);
     runningTask = findEntry(taskList, index + 1)->task;
-  } else if(runningTask->pid.pid == getLastEntry(taskList)->pid.pid) {
-    runningTask = findEntry(taskList, 0)->task;
-  } else {
-    runningTask = getKernelTask();
-  }
+  }*/
+  runningTask = findEntry(taskList, 1)->task;
   //runningTask = findEntry(taskList, 1)->task;//getKernelTask();
   //runningTask = runningTask->next;
   switchTask(&(last->regs), &(runningTask->regs));
