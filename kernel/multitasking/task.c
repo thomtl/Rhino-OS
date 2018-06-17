@@ -6,7 +6,7 @@
 static task_t *runningTask;
 static task_t tasks[MAX_TASKS];
 static task_t emptyTask;
-static uint16_t yy = 0;
+
 static uint32_t compareTasks(task_t a, task_t b){
   if(a.pid.pid != b.pid.pid) return 0;
   if(a.pid.user != b.pid.user) return 0;
@@ -51,25 +51,17 @@ static task_t* getTaskForPid(uint32_t pid){
   return NULL;
 }
 
-static void otherMain(){
+static void diffrentMain(){
   while(1){
-    kprint("A");
-    if(yy < 4){
-       fork();
-       yy++;
-    }
+    kprint("B");
     yield();
   }
   while(1);
 }
 
-static void diffrentMain(){
+static void otherMain(){
   while(1){
-    kprint("B");
-    if(yy < 4){
-       fork();
-       yy++;
-    }
+    kprint("A");
     yield();
   }
   while(1);
