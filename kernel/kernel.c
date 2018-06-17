@@ -7,6 +7,7 @@
 #include "fs/vfs.h"
 #include "fs/initrd.h"
 #include "multitasking/task.h"
+#include "multitasking/external_program.h"
 #include "../drivers/screen.h"
 #include "./../cpu/isr.h"
 #include "./../cpu/gdt.h"
@@ -60,7 +61,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   kprint(ramString);
   kprint("MB\n");
   kprint("Loading Ramdisk..");
-  ASSERT(mbd->mods_count == 1);
+  ASSERT(mbd->mods_count > 1);
   uint32_t initrd_location = *((uint32_t*)mbd->mods_addr);
   uint32_t initrd_end = *(uint32_t*)(mbd->mods_addr+4);
   placement_address = initrd_end;
@@ -172,6 +173,10 @@ void user_input(char *input){
     kprint(c);
     kprint("\n$");
     return;
+  }
+  if(strcmp(input, "PRG") == 0){
+    uint32_t addr = *(uint32_t*)(multibootInfo->mods_addr+8);
+    call_program((uint32_t*)addr);
   }
   /*
   if(strcmp(input, "MEM") == 0){
