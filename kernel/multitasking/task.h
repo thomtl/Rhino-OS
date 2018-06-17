@@ -20,8 +20,11 @@ typedef struct Task {
 
 extern void initTasking();
 extern void createTask(task_t*, void(*)(), uint32_t, uint32_t*);
-task_t getCurrentTask();
-uint32_t getPID();
+task_t* get_running_task();
+uint32_t get_current_pid();
+task_t* task_for_pid(uint32_t pid);
+extern task_t* fork(void);
+extern void exec(task_t* task, void(*main)());
 //task_t* fork();
 //void exec(task_t* task, void(*main)());
 extern void yield();

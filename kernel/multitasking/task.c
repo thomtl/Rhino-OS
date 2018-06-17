@@ -4,10 +4,9 @@
 #include "../heap/kheap.h"
 
 static task_t *runningTask;
-static task_t kernelTask;
 static task_t tasks[MAX_TASKS];
 static task_t emptyTask;
-uint32_t f = 1;
+static uint16_t yy = 0;
 static uint32_t compareTasks(task_t a, task_t b){
   if(a.pid.pid != b.pid.pid) return 0;
   if(a.pid.user != b.pid.user) return 0;
@@ -45,10 +44,20 @@ static uint32_t getIndexForTask(task_t task){
   return 0;
 }
 
+static task_t* getTaskForPid(uint32_t pid){
+  for(uint32_t i = 0; i < MAX_TASKS; i++){
+    if(tasks[i].pid.pid == pid) return &(tasks[i]);
+  }
+  return NULL;
+}
+
 static void otherMain(){
   while(1){
     kprint("A");
-    f = 0;
+    if(yy < 4){
+       fork();
+       yy++;
+    }
     yield();
   }
   while(1);
@@ -57,31 +66,25 @@ static void otherMain(){
 static void diffrentMain(){
   while(1){
     kprint("B");
+    if(yy < 4){
+       fork();
+       yy++;
+    }
     yield();
   }
   while(1);
 }
 
-//static task_t* getKernelTask(){
-//  return findEntry(taskList, 0)->task;
-//}
-
 void initTasking(){
-  __asm__ __volatile__("movl %%cr3, %%eax; movl %%eax, %0;":"=m"(kernelTask.regs.cr3)::"%eax");
-  __asm__ __volatile__("pushfl; movl (%%esp), %%eax; movl %%eax, %0; popfl;":"=m"(kernelTask.regs.eflags)::"%eax");
-  kernelTask.pid.pid = 0;
-  tasks[0] = kernelTask;
-  //task_t otherTask;
-  //task_t diffrentTask;
-  createTask(&(tasks[1]), otherMain, kernelTask.regs.eflags, (uint32_t*)kernelTask.regs.cr3);
-  //tasks[1] = otherTask;
-  createTask(&(tasks[2]), diffrentMain, kernelTask.regs.eflags, (uint32_t*)kernelTask.regs.cr3);
-  //tasks[2] = diffrentTask;
-  //kernelTask.next = &otherTask;
-  //otherTask.next = &diffrentTask;
-  //  diffrentTask.next = &otherTask;
+  __asm__ __volatile__("movl %%cr3, %%eax; movl %%eax, %0;":"=m"(tasks[0].regs.cr3)::"%eax");
+  __asm__ __volatile__("pushfl; movl (%%esp), %%eax; movl %%eax, %0; popfl;":"=m"(tasks[0].regs.eflags)::"%eax");
+  tasks[0].pid.pid = 0;
 
-  runningTask = &kernelTask;
+  createTask(&(tasks[1]), otherMain, tasks[0].regs.eflags, (uint32_t*)tasks[0].regs.cr3);
+
+  createTask(&(tasks[2]), diffrentMain, tasks[0].regs.eflags, (uint32_t*)tasks[0].regs.cr3);
+
+  runningTask = &tasks[0];
 }
 
 void createTask(task_t *task, void(*main)(), uint32_t flags, uint32_t *pagedir){
@@ -94,56 +97,58 @@ void createTask(task_t *task, void(*main)(), uint32_t flags, uint32_t *pagedir){
   task->regs.eflags = flags;
   task->regs.eip = (uint32_t) main;
   task->regs.cr3 = (uint32_t) pagedir;
-  task->regs.esp = (uint32_t)kmalloc(0x4000) + 0x4000;
+  task->regs.esp = (uint32_t) kmalloc(0x4000) + 0x4000;
   task->pid.pid = tasks[getFinalElement() - 1].pid.pid + 1;
 }
 
 void yield(){
   task_t *last = runningTask;
-  //runningTask = findEntry(taskList, 0)->task;
-  /*if(0){//runningTask->pid.pid == getLastEntry(taskList)->pid.pid){
-    runningTask = getKernelTask();
-  } else {
-    uint32_t index = getIndex(taskList, runningTask);
-    runningTask = findEntry(taskList, index + 1)->task;
-  }*/
+
   uint32_t index = getIndexForTask(*runningTask);
   if(index == getFinalElement() - 1) {
     runningTask = &tasks[0];
   } else {
     runningTask = &tasks[index + 1];
   }
-  runningTask = &tasks[f];
-  //runningTask = findEntry(taskList, 1)->task;//getKernelTask();
-  //runningTask = runningTask->next;
+  
   switchTask(&(last->regs), &(runningTask->regs));
 }
 
-task_t getCurrentTask(){
-  return *runningTask;
+task_t* get_running_task(){
+  return runningTask;
 }
-uint32_t getPID(){
+uint32_t get_current_pid(){
   return runningTask->pid.pid;
 }
-/*task_t* fork(){
-  task_t* task = 0;
-  task->regs.eax = getCurrentTask()->regs.eax;
-  task->regs.ebx = getCurrentTask()->regs.ebx;
-  task->regs.ecx = getCurrentTask()->regs.ecx;
-  task->regs.edx = getCurrentTask()->regs.edx;
-  task->regs.esi = getCurrentTask()->regs.esi;
-  task->regs.edi = getCurrentTask()->regs.edi;
-  task->regs.eflags = getCurrentTask()->regs.eflags;
-  task->regs.eip = (uint32_t) getCurrentTask()->regs.eip;
-  task->regs.cr3 = (uint32_t) getCurrentTask()->regs.cr3;
+
+task_t* task_for_pid(uint32_t pid){
+  return getTaskForPid(pid);
+}
+
+task_t* fork(void){
+  uint32_t index = getFinalElement();
+  tasks[index].regs.eax = get_running_task()->regs.eax;
+  tasks[index].regs.ebx = get_running_task()->regs.ebx;
+  tasks[index].regs.ecx = get_running_task()->regs.ecx;
+  tasks[index].regs.edx = get_running_task()->regs.edx;
+  tasks[index].regs.esi = get_running_task()->regs.esi;
+  tasks[index].regs.edi = get_running_task()->regs.edi;
+  tasks[index].regs.eflags = get_running_task()->regs.eflags;
+  tasks[index].regs.eip = (uint32_t) get_running_task()->regs.eip;
+  tasks[index].regs.cr3 = (uint32_t) get_running_task()->regs.cr3;
   uint32_t stack_bottom = (uint32_t)kmalloc(0x4000);
-  memcpy((uint32_t*)stack_bottom, (uint32_t*)(getCurrentTask()->regs.esp - 0x4000), 0x4000);
-  task->regs.esp = (uint32_t) stack_bottom + 0x4000;
-  task->next = 0;
-  task->pid.pid = getLastEntry(taskList)->pid.pid + 1;
-  insertEntry(taskList, task);
-  return task;
+  //memcpy((uint32_t*)stack_bottom, (uint32_t*)(get_running_task()->regs.esp - 0x4000), 0x4000);
+  tasks[index].regs.esp = (uint32_t) stack_bottom + 0x4000;
+  tasks[index].pid.pid = tasks[getFinalElement() - 1].pid.pid + 1;
+  return &tasks[index];
 }
 void exec(task_t* task, void(*main)()){
+  task->regs.eax = 0;
+  task->regs.ebx = 0;
+  task->regs.ecx = 0;
+  task->regs.edx = 0;
+  task->regs.esi = 0;
+  task->regs.edi = 0;
   task->regs.eip = (uint32_t) main;
-}*/
+  yield();
+}

@@ -1,3 +1,4 @@
 Documentation for the Coöperative Multitasking system:
     Max 256 Tasks, Planned Linked list.
-    
+    Runs Tasks in from 0 to the 256 so for example:
+    Task 0 then 1 then 2
