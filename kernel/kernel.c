@@ -106,6 +106,7 @@ void user_input(char *input){
     kprint("PANIC: Panic the kernel\n");
     kprint("INIT: To show the files on the initrd\n");
     kprint("STACKSMASH: To smash the stack and test the stack smash protection\n");
+    kprint("TICK: To show the current tick of the CPU\n");
     #endif
     kprint("-------------------------------\n");
     kprint("$");
@@ -161,6 +162,13 @@ void user_input(char *input){
   if(strcmp(input, "PID") == 0){
     char c[25] = "";
     int_to_ascii(get_current_pid(), c);
+    kprint(c);
+    kprint("\n$");
+    return;
+  }
+  if(strcmp(input, "TICK") == 0){
+    char c[128] = "";
+    int_to_ascii(uptime, c);
     kprint(c);
     kprint("\n$");
     return;
