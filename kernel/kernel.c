@@ -61,8 +61,8 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   kprint(ramString);
   kprint("MB\n");
   kprint("Loading Ramdisk..");
-  ASSERT(mbd->mods_count > 1);
-  uint32_t initrd_location = *((uint32_t*)mbd->mods_addr);
+  //ASSERT(mbd->mods_count > 1);
+  //uint32_t initrd_location = *((uint32_t*)mbd->mods_addr);
   uint32_t initrd_end = *(uint32_t*)(mbd->mods_addr+4);
   placement_address = initrd_end;
   kprint("done\n");
@@ -70,7 +70,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   initialise_paging();
   kprint("done\n");
   kprint("Initializing Ramdisk..");
-  fs_root = initialise_initrd(initrd_location);
+  //fs_root = initialise_initrd(initrd_location);
   kprint("done\n");
   kprint("Enabling Multitasking..");
   initTasking();
@@ -175,8 +175,9 @@ void user_input(char *input){
     return;
   }
   if(strcmp(input, "PRG") == 0){
-    uint32_t addr = *(uint32_t*)(multibootInfo->mods_addr+8);
+    uint32_t addr = *(uint32_t*)multibootInfo->mods_addr;
     call_program((uint32_t*)addr);
+    return;
   }
   /*
   if(strcmp(input, "MEM") == 0){
