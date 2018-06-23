@@ -7,6 +7,7 @@
 #include "fs/vfs.h"
 #include "fs/initrd.h"
 #include "multitasking/task.h"
+#include "user/program.h"
 #include "../drivers/screen.h"
 #include "../drivers/serial.h"
 #include "./../cpu/isr.h"
@@ -174,6 +175,12 @@ void user_input(char *input){
     kprint(c);
     kprint("\n$");
     return;
+  }
+  if(strcmp(input, "EXT") == 0){
+    loaded_program_t* l = load_program("test.prg", PROGRAM_BINARY_TYPE_BIN);
+    char j[25];
+    hex_to_ascii((uint32_t)l, j);
+    kprint(j);
   }
   /*
   if(strcmp(input, "MEM") == 0){
