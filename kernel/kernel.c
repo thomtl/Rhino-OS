@@ -11,6 +11,7 @@
 #include "../drivers/serial.h"
 #include "./../cpu/isr.h"
 #include "./../cpu/gdt.h"
+#include "./../cpu/msr.h"
 #include "kernel.h"
 #include "panic.h"
 #include "./../libc/include/string.h"

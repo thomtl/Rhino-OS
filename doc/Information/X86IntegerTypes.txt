@@ -1,0 +1,15 @@
+X86 Data types:
+32bit Protected Mode
+Number:
+	Unsigned Byte: 8bit, Range = 0, 255
+	Unsigned Word: 16bit, Range = 0, 65.535
+	Unsigned DoubleWord: 32bit, Range = 0, 2^32-1
+	Unsigned QuadWord: 64bit, Range = 0, 2^64-1
+	Signed Byte: 7bit + Signbit, Range = -128, 127
+	Signed Word: 15bit + Signbit, Range = -32.768, 32.767
+	Signed DoubleWord: 31bit+ Signbit, Range = -2^31, 2^31-1
+	Signed QuadWord: 63bit + Signbit, Range = -2^63, 2^63-1
+	
+Pointer:
+	Near Pointer: 32bit
+	Far Pointer: 16bit Segment Selector + 32bit Offset
