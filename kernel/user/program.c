@@ -6,7 +6,7 @@
 #include "../../libc/function.h"
 #include "../../libc/include/string.h"
 loaded_program_t* load_program(char* filename, uint8_t type){
-    int i = 0;
+    /*int i = 0;
     struct dirent *node = 0;
     while ( (node = readdir_fs(fs_root, i)) != 0)
     {
@@ -30,5 +30,18 @@ loaded_program_t* load_program(char* filename, uint8_t type){
       i++;
     }
     kprint("program.c: ERROR Could not find chosen file");
-    return NULL;
+    return NULL;*/
+    fs_node_t *node = 0;
+    node = finddir_fs(fs_root, filename);
+    if(node == 0){
+      kprint("program.c: Could not find program on the INITRD\n");
+      return 0;
+    }
+    loaded_program_t* header = kmalloc(sizeof(loaded_program_t));
+    uint8_t* buf = kmalloc(node->length);
+    header->base = (uint32_t*)buf;
+    header->end = (uint32_t*)(buf + node->length);
+    header->type = type;
+    read_fs(node, 0, node->length, buf);
+    return header;
 }

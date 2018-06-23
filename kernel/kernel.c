@@ -179,8 +179,11 @@ void user_input(char *input){
   if(strcmp(input, "EXT") == 0){
     loaded_program_t* l = load_program("test.prg", PROGRAM_BINARY_TYPE_BIN);
     char j[25];
-    hex_to_ascii((uint32_t)l, j);
+    hex_to_ascii((uint32_t)l->base, j);
     kprint(j);
+    j[0] = '\0';
+    kprint("\n$");
+    return;
   }
   /*
   if(strcmp(input, "MEM") == 0){
