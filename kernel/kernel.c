@@ -8,6 +8,7 @@
 #include "fs/initrd.h"
 #include "multitasking/task.h"
 #include "../drivers/screen.h"
+#include "../drivers/serial.h"
 #include "./../cpu/isr.h"
 #include "./../cpu/gdt.h"
 #include "kernel.h"

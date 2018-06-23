@@ -26,7 +26,7 @@ const char sc_ascii[] = { '?', '?', '1', '2', '3', '4', '5', '6',
 'B', 'N', 'M', ',', '.', '/', '?', '?', '?', ' '};
 
 static void keyboard_callback(registers_t *regs){
-    uint8_t scancode = port_byte_in(0x60);
+    uint8_t scancode = inb(0x60);
     if(scancode > SC_MAX) return;
 
     if(scancode == BACKSPACE){

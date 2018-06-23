@@ -42,16 +42,16 @@ void isr_install() {
     set_idt_gate(30, (uint32_t)isr30);
     set_idt_gate(31, (uint32_t)isr31);
 
-    port_byte_out(0x20, 0x11);
-    port_byte_out(0xA0, 0x11);
-    port_byte_out(0x21, 0x20);
-    port_byte_out(0xA1, 0x28);
-    port_byte_out(0x21, 0x04);
-    port_byte_out(0xA1, 0x02);
-    port_byte_out(0x21, 0x01);
-    port_byte_out(0xA1, 0x01);
-    port_byte_out(0x21, 0x0);
-    port_byte_out(0xA1, 0x0);
+    outb(0x20, 0x11);
+    outb(0xA0, 0x11);
+    outb(0x21, 0x20);
+    outb(0xA1, 0x28);
+    outb(0x21, 0x04);
+    outb(0xA1, 0x02);
+    outb(0x21, 0x01);
+    outb(0xA1, 0x01);
+    outb(0x21, 0x0);
+    outb(0xA1, 0x0);
 
     set_idt_gate(32, (uint32_t)irq0);
     set_idt_gate(33, (uint32_t)irq1);
@@ -131,8 +131,8 @@ void register_interrupt_handler(uint8_t n, isr_t handler){
 }
 
 void irq_handler(registers_t *r){
-  if(r->int_no >= 40) port_byte_out(0xA0, 0x20);
-  port_byte_out(0x20, 0x20);
+  if(r->int_no >= 40) outb(0xA0, 0x20);
+  outb(0x20, 0x20);
 
   if(interrupt_handlers[r->int_no] != 0){
     isr_t handler = interrupt_handlers[r->int_no];

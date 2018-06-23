@@ -3,8 +3,8 @@
 
 #include "type.h"
 #include <stdint.h>
-unsigned char port_byte_in (uint16_t port);
-void port_byte_out (uint16_t port, uint8_t data);
-unsigned short port_word_in (uint16_t port);
-void port_word_out (uint16_t port, uint16_t data);
+unsigned char inb (uint16_t port);
+void outb (uint16_t port, uint8_t data);
+unsigned short ins (uint16_t port);
+void outs (uint16_t port, uint16_t data);
 #endif
