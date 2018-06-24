@@ -21,7 +21,6 @@ rhino.iso: kernel.bin
 	mkdir -p build/sys/boot/grub
 	cp kernel.bin build/sys/boot/kernel.bin
 	cp initrd.img build/sys/boot/initrd.img
-	cp utils/UserTest/usertest build/sys/boot/usertest.prg
 	cp build/grub.cfg build/sys/boot/grub/grub.cfg
 	grub-mkrescue -o ./rhino.iso build/sys --verbose
 
