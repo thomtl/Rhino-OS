@@ -178,10 +178,16 @@ void user_input(char *input){
   }
   if(strcmp(input, "EXT") == 0){
     loaded_program_t* l = load_program("test.prg", PROGRAM_BINARY_TYPE_BIN);
+    if(l == 0){
+      kprint("load_program errord\n$");
+      return;
+    }
     char j[25];
     hex_to_ascii((uint32_t)l->base, j);
     kprint(j);
     j[0] = '\0';
+    run_program(l->base);
+    free_program(l);
     kprint("\n$");
     return;
   }

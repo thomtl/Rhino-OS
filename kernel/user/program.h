@@ -11,7 +11,11 @@ typedef struct loadedProgram{
     uint32_t* end;
     uint8_t type;
 } loaded_program_t;
-// Filename is on the INITRD
+
+typedef void (*call_module_t)(void);
+
 loaded_program_t* load_program(char* filename, uint8_t type);
+void free_program(loaded_program_t* header);
+void run_program(void *address);
 
 #endif
