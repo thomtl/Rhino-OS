@@ -9,7 +9,7 @@
 #include "multitasking/task.h"
 #include "user/program.h"
 #include "../drivers/screen.h"
-#include "../drivers/serial.h"
+#include "../drivers/keyboard.h"
 #include "./../cpu/isr.h"
 #include "./../cpu/gdt.h"
 #include "./../cpu/msr.h"
@@ -84,9 +84,15 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   kprint("Rhino Shell version 0.0.1\n$");
   while(1)
   {
-      	if(shouldExit == 1){
-          return;
-        }
+    if(shouldExit == 1){
+        return;
+    }
+    char c[256] = "";
+    read_string(c);
+    //user_input(c);
+    kprint("NewData\n>");
+    kprint(c);
+    kprint("\n");
   }
 }
 void user_input(char *input){
@@ -191,6 +197,10 @@ void user_input(char *input){
     kprint("\n$");
     return;
   }
+  if(strcmp(input, "KEY") == 0){
+    putchar(getchar());
+    return;
+  }
   /*
   if(strcmp(input, "MEM") == 0){
     kprint("creating mem\n");
@@ -215,4 +225,26 @@ void do_smash(char *bar){
   char  c[12];
 
   strcpy(c, bar);
+}
+
+
+char *read_string(char str[]){
+  //char str[256] = "";
+  for(uint16_t i = 0; i < 256; i++){
+    str[i] = '\0';
+  }
+  char c;
+  uint32_t pos = 0;
+  while(1){
+    c = getchar();
+
+    if(c == '\n'){
+      str[pos] = '\0';
+      return str;
+    } else {
+      str[pos] = c;
+    }
+    pos++;
+  }
+
 }

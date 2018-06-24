@@ -9,8 +9,10 @@
 #define BACKSPACE 0x0E
 #define ENTER 0x1C
 
-static char key_buffer[265];
-
+#define MAX_STDIN_LENGTH 256
+static char stdin[MAX_STDIN_LENGTH];
+static uint8_t stdinIndex = 0;
+static uint8_t readIndex = 0;
 #define SC_MAX 57
 
 const char *sc_name[] = { "ERROR", "Esc", "1", "2", "3", "4", "5", "6",
@@ -25,26 +27,41 @@ const char sc_ascii[] = { '?', '?', '1', '2', '3', '4', '5', '6',
         'H', 'J', 'K', 'L', ';', '\'', '`', '?', '\\', 'Z', 'X', 'C', 'V',
 'B', 'N', 'M', ',', '.', '/', '?', '?', '?', ' '};
 
-static void keyboard_callback(registers_t *regs){
-    uint8_t scancode = inb(0x60);
-    if(scancode > SC_MAX) return;
-
-    if(scancode == BACKSPACE){
-      backspace(key_buffer);
-      kprint_backspace();
-    } else if(scancode == ENTER){
-      kprint("\n");
-      user_input(key_buffer);
-      key_buffer[0] = '\0';
-    } else {
-      char letter = sc_ascii[(int)scancode];
-      char str[2] = {letter, '\0'};
-      append(key_buffer, letter);
-      kprint(str);
-    }
-    UNUSED(regs);
+static void kbd_irq(registers_t *regs){
+  uint8_t scancode;
+  if(BIT_IS_SET(inb(0x64), 0)){
+    scancode = inb(0x60);
+  } else {
+    kprint("Keyboard sent IRQ but there was no data\n");
+    return;
+  }
+  if(scancode > SC_MAX) return;
+  if(scancode == ENTER){
+    kprint("\n");
+    append(stdin, '\n');
+    stdinIndex++;
+  } else if (scancode == BACKSPACE){
+    backspace(stdin);
+    stdinIndex--;
+    readIndex--;
+    kprint_backspace();
+  } else {
+    append(stdin, sc_ascii[(int)scancode]);
+    char str[2] = {stdin[stdinIndex], '\0'};
+    stdinIndex++;
+    kprint(str);
+  }
+  UNUSED(regs);
 }
 
+
 void init_keyboard(){
-  register_interrupt_handler(IRQ1, keyboard_callback);
+  register_interrupt_handler(IRQ1, kbd_irq);
+}
+
+char getchar(){
+  while(stdinIndex <= readIndex);
+  char ascii = stdin[readIndex];
+  readIndex++;
+  return ascii;
 }

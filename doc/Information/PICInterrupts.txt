@@ -1,0 +1,17 @@
+N  INPUT-PIN INTERRUPT-NUMBER DESCRIPTION
+0  IRQ0      0x08             PIT Timer
+1  IRQ1      0x09             8042 Keyboard
+2  IRQ2      0x0A             Cascade for 8259A Slave controller
+3  IRQ3      0x0B             Serial port 2
+4  IRQ4      0x0C             Serial port 1
+5  IRQ5      0x0D             AT systems: parallel port 2. PS/2 Systems: reserved
+6  IRQ6      0x0E             Diskette drive
+7  IRQ7      0x0F             Parallel port 1
+8  IRQ8      0x70             CMOS Real time clock
+9  IRQ9      0x71             CGA vertical retrace
+10 IRQ10     0x72             reserved
+11 IRQ11     0x73             reserved
+12 IRQ12     0x74             AT systems: reserved, PS/2: auxiliary device
+13 IRQ13     0x75             FPU
+14 IRQ14     0x76             Hard disk controller
+15 IRQ15     0x77             reserved
