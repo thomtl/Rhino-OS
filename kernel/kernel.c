@@ -88,11 +88,8 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
         return;
     }
     char c[256] = "";
-    read_string(c);
-    //user_input(c);
-    kprint("NewData\n>");
-    kprint(c);
-    kprint("\n");
+    getline(c, 256);
+    user_input(c);
   }
 }
 void user_input(char *input){
@@ -225,26 +222,4 @@ void do_smash(char *bar){
   char  c[12];
 
   strcpy(c, bar);
-}
-
-
-char *read_string(char str[]){
-  //char str[256] = "";
-  for(uint16_t i = 0; i < 256; i++){
-    str[i] = '\0';
-  }
-  char c;
-  uint32_t pos = 0;
-  while(1){
-    c = getchar();
-
-    if(c == '\n'){
-      str[pos] = '\0';
-      return str;
-    } else {
-      str[pos] = c;
-    }
-    pos++;
-  }
-
 }

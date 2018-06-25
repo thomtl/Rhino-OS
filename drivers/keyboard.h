@@ -2,5 +2,5 @@
 #define KEYBOARD_H
 #include "./../cpu/type.h"
 void init_keyboard();
-char getchar();
+char kbd_getchar();
 #endif

@@ -41,10 +41,12 @@ static void kbd_irq(registers_t *regs){
     append(stdin, '\n');
     stdinIndex++;
   } else if (scancode == BACKSPACE){
-    backspace(stdin);
-    stdinIndex--;
-    readIndex--;
+    //backspace(stdin);
+    //stdinIndex--;
+    //readIndex--;
     kprint_backspace();
+    append(stdin, '\b');
+    stdinIndex++;
   } else {
     append(stdin, sc_ascii[(int)scancode]);
     char str[2] = {stdin[stdinIndex], '\0'};
@@ -59,7 +61,7 @@ void init_keyboard(){
   register_interrupt_handler(IRQ1, kbd_irq);
 }
 
-char getchar(){
+char kbd_getchar(){
   while(stdinIndex <= readIndex);
   char ascii = stdin[readIndex];
   readIndex++;
