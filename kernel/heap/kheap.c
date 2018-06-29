@@ -34,8 +34,24 @@ void* kmalloc_int(size_t sz, int align, uint32_t *phys)
 }
 void kfree(void *p)
 {
-    free(p, kheap);
+    free_int(p, kheap);
 }
+
+void* krealloc(void *ptr, size_t size){
+  //step one allocate new memory
+  //step two copy old into new
+  //set three kfree(old);
+  //step one
+  void* new = kmalloc(size);
+  //step two
+  header_t* header = (header_t*)((header_t*)ptr - 1);
+  size_t sz = header->size;
+  memcpy(new, ptr, sz);
+  //step three
+  kfree(ptr);
+  return new;
+}
+
 
 void* kmalloc_a(size_t sz)
 {
@@ -283,7 +299,7 @@ void *alloc(size_t size, uint8_t page_align, heap_t *heap){
     // ...And we're done!
     return (void *) ( (uint32_t)block_header+sizeof(header_t) );
 }
-void free(void *p, heap_t *heap){
+void free_int(void *p, heap_t *heap){
   // Exit gracefully for null pointers.
   if (p == 0)
       return;
@@ -292,9 +308,9 @@ void free(void *p, heap_t *heap){
   header_t *header = (header_t*) ( (uint32_t)p - sizeof(header_t) );
   footer_t *footer = (footer_t*) ( (uint32_t)header + header->size - sizeof(footer_t) );
 
-      // Sanity checks.
-  ASSERT(header->magic == HEAP_MAGIC);
-  ASSERT(footer->magic == HEAP_MAGIC);
+  // Sanity checks.
+  //ASSERT(header->magic == HEAP_MAGIC);
+  //ASSERT(footer->magic == HEAP_MAGIC);
 
   // Make us a hole.
   header->is_hole = 1;
