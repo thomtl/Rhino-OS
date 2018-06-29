@@ -3,7 +3,7 @@
 #include "../fs/vfs.h"
 #include "../fs/initrd.h"
 #include "../heap/kheap.h"
-#include "../../libc/function.h"
+#include "../common.h"
 #include "../../libc/include/string.h"
 
 

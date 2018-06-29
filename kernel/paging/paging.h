@@ -2,7 +2,7 @@
 #define PAGING_H
 #include <stdint.h>
 #include "../../libc/include/string.h"
-#include "../../cpu/isr.h"
+#include "../arch/x86/isr.h"
 #include "../heap/kheap.h"
 #include "../panic.h"
 typedef struct page {

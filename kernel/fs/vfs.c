@@ -1,5 +1,5 @@
 #include "vfs.h"
-#include "../../libc/function.h"
+#include "../common.h"
 fs_node_t *fs_root = 0;
 
 uint32_t read_fs(fs_node_t *node, uint32_t offset, uint32_t size, uint8_t *buffer){

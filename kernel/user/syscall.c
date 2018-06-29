@@ -1,5 +1,5 @@
 #include "syscall.h"
-#include "../../libc/function.h"
+#include "../common.h"
 #include "../../drivers/screen.h"
 #include "../../libc/include/stdio.h"
 void syscall_handler(registers_t *regs){

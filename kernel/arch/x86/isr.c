@@ -1,11 +1,11 @@
 #include "isr.h"
 #include "idt.h"
-#include "./../drivers/screen.h"
-#include "./../drivers/keyboard.h"
-#include "./../libc/include/string.h"
+#include "../../../drivers/screen.h"
+#include "../../../drivers/keyboard.h"
+#include "../../../libc/include/string.h"
 #include "timer.h"
 #include "ports.h"
-#include "../kernel/user/syscall.h"
+#include "../..//user/syscall.h"
 isr_t interrupt_handlers[256];
 
 void isr_install() {

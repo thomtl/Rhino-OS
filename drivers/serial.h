@@ -1,6 +1,6 @@
 #ifndef SERIAL_H
 #define SERIAL_H
-#include "../cpu/ports.h"
+#include "../kernel/arch/x86/ports.h"
 
 #define SERIAL_COM1_BASE 0x3F8
 #define SERIAL_DATA_PORT(base) ((base))

@@ -10,14 +10,14 @@
 #include "user/program.h"
 #include "../drivers/screen.h"
 #include "../drivers/keyboard.h"
-#include "./../cpu/isr.h"
-#include "./../cpu/gdt.h"
-#include "./../cpu/msr.h"
+#include "./arch/x86/isr.h"
+#include "./arch/x86/gdt.h"
+#include "./arch/x86/msr.h"
+#include "security/test_security.h"
 #include "kernel.h"
 #include "panic.h"
 #include "./../libc/include/string.h"
 #include "./../libc/include/stdio.h"
-#include "./../libc/function.h"
 #include <stdint.h>
 
 extern uint32_t placement_address;
@@ -113,6 +113,7 @@ void user_input(char *input){
     kprint("INIT: To show the files on the initrd\n");
     kprint("STACKSMASH: To smash the stack and test the stack smash protection\n");
     kprint("TICK: To show the current tick of the CPU\n");
+    kprint("SYSCALL: Simulate a bare syscall\n");
     #endif
     kprint("-------------------------------\n");
     kprint("$");
@@ -156,7 +157,7 @@ void user_input(char *input){
     return;
   }
   if(strcmp(input, "STACKSMASH") == 0){
-    do_smash("BLUBBLUBBLUBBLUBLUB");
+    do_stacksmash("BLUBBLUBBLUBBLUBLUB");
     return;
   }
   if(strcmp(input, "TASK") == 0){
@@ -182,7 +183,7 @@ void user_input(char *input){
   if(strcmp(input, "EXT") == 0){
     loaded_program_t* l = load_program("test.prg", PROGRAM_BINARY_TYPE_BIN);
     if(l == 0){
-      kprint("load_program errord\n$");
+      kprint("load_program errored\n$");
       return;
     }
     char j[25];
@@ -199,17 +200,6 @@ void user_input(char *input){
     kprint("\n$");
     return;
   }
-  /*
-  if(strcmp(input, "MEM") == 0){
-    kprint("creating mem\n");
-    char *j = "";
-    char *ptr = (char*)k_heapBMAlloc(&kheap, 265);
-    kprint("successfully allocated 265 bytes at ");
-    hex_to_ascii((uint32_t)ptr, j);
-    kprint(j);
-    kprint("\n$");
-    return;
-  }*/
   kprint(input);
   kprint(" is not an executable program.");
   kprint("\n$");
@@ -217,10 +207,4 @@ void user_input(char *input){
 
 void kernel_timer_callback(){
   uptime++;
-}
-
-void do_smash(char *bar){
-  char  c[12];
-
-  strcpy(c, bar);
 }

@@ -1,5 +1,5 @@
 #include "screen.h"
-#include "./../cpu/ports.h"
+#include "../kernel/arch/x86/ports.h"
 #include "./../libc/include/string.h"
 #include <stdint.h>
 // private helping funtions

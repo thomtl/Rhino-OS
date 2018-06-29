@@ -1,8 +1,8 @@
 #include "timer.h"
 #include "isr.h"
 #include "ports.h"
-#include "./../libc/function.h"
-#include "./../kernel/kernel.h"
+#include "../../common.h"
+#include "../../kernel.h"
 
 uint32_t tick = 0;
 
