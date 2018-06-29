@@ -5,7 +5,7 @@
 #include "./../libc/include/string.h"
 #include "timer.h"
 #include "ports.h"
-
+#include "../kernel/user/syscall.h"
 isr_t interrupt_handlers[256];
 
 void isr_install() {
@@ -69,7 +69,7 @@ void isr_install() {
     set_idt_gate(45, (uint32_t)irq13);
     set_idt_gate(46, (uint32_t)irq14);
     set_idt_gate(47, (uint32_t)irq15);
-
+    set_idt_gate(128, (uint32_t)isr128);
     set_idt(); // Load with ASM
 }
 
@@ -112,16 +112,17 @@ char *exception_messages[] = {
 };
 
 void isr_handler(registers_t *r){
-  if(interrupt_handlers[r->int_no] != 0){
-    isr_t handler = interrupt_handlers[r->int_no];
+  uint8_t int_no = r->int_no & 0xFF;
+  if(interrupt_handlers[int_no] != 0){
+    isr_t handler = interrupt_handlers[int_no];
     handler(r);
   } else {
     kprint("received interrupt: ");
     char s[3];
-    int_to_ascii(r->int_no, s);
+    int_to_ascii(int_no, s);
     kprint(s);
     kprint("\n");
-    kprint(exception_messages[r->int_no]);
+    kprint(exception_messages[int_no]);
     kprint("\n");
   }
 }
@@ -144,4 +145,5 @@ void irq_install(){
   __asm__ __volatile__("sti");
   init_timer(50);
   init_keyboard();
+  init_syscall();
 }

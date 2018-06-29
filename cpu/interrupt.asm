@@ -17,7 +17,6 @@ isr_common_stub:
     ; 2. Call C handler
   cld ; C code following the sysV ABI requires DF to be clear on function entry
 	call isr_handler
-
     ; 3. Restore state
 	pop eax
   pop eax
@@ -52,6 +51,7 @@ irq_common_stub:
     popa
     add esp, 8
     iret
+
 
 ; We don't get information about which interrupt was caller
 ; when the handler is run, so we will need to have a different handler
@@ -111,6 +111,7 @@ global irq13
 global irq14
 global irq15
 
+global isr128
 ; 0: Divide By Zero Exception
 isr0:
     push byte 0
@@ -377,3 +378,9 @@ irq15:
 	push byte 15
 	push byte 47
 	jmp irq_common_stub
+
+
+isr128:
+  push byte 1
+  push byte 128
+  jmp isr_common_stub

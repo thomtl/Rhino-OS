@@ -194,8 +194,9 @@ void user_input(char *input){
     kprint("\n$");
     return;
   }
-  if(strcmp(input, "KEY") == 0){
-    putchar(getchar());
+  if(strcmp(input, "SYSCALL") == 0){
+    __asm__ __volatile__ ("int $0x80");
+    kprint("\n$");
     return;
   }
   /*
