@@ -80,8 +80,8 @@ void free_frame(page_t *page){
 
 
 
-void initialise_paging(){
-  uint32_t mem_end_page = 0x1000000;//memSize;
+void initialise_paging(uint32_t memSize){
+  uint32_t mem_end_page = memSize;//0x1000000;
 
   nframes = mem_end_page / 0x1000;
   frames = (uint32_t*)kmalloc(INDEX_FROM_BIT(nframes));

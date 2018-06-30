@@ -24,7 +24,8 @@ extern uint32_t placement_address;
 uint8_t shouldExit = 0; //set this to 1 to exit the kernel
 uint32_t uptime = 0;
 multiboot_info_t* multibootInfo;
-uint32_t ramAmount = 0; // in MegaBytes
+uint32_t ramAmountMB = 0; // in MegaBytes
+uint32_t ramAmount = 0;
 //uint32_t* KERNEL_START = (uint32_t*)0xC0100000;
 void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   /*char kernelVirtualBaseString[25] = "";
@@ -45,7 +46,8 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   }
   multibootInfo = mbd;
   if(BIT_IS_SET(mbd->flags, 1)){
-    ramAmount = ((((mbd->mem_lower * 1024) + (mbd->mem_upper * 1024)) / 1024) / 1024) + 1; // Formula for converting from Kibibyte to Megabyte so: Megabyte = (Kibibyte * 1024) / 1024 / 1024 + 1
+    ramAmountMB = ((((mbd->mem_lower * 1024) + (mbd->mem_upper * 1024)) / 1024) / 1024) + 1; // Formula for converting from Kibibyte to Megabyte so: Megabyte = (Kibibyte * 1024) / 1024 / 1024 + 1
+    ramAmount = (((mbd->mem_lower * 1024) + (mbd->mem_upper * 1024)) / 1024 / 1024 + 1) * 0x100000;
   } else {
     panic_m("Multiboot did not supply memory info");
   }
@@ -58,7 +60,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   irq_install();
   kprint("done\n");
   char ramString[25] = "";
-  int_to_ascii(ramAmount, ramString);
+  int_to_ascii(ramAmountMB, ramString);
   kprint("Detected Memory: ");
   kprint(ramString);
   kprint("MB\n");
@@ -69,7 +71,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   placement_address = initrd_end;
   kprint("done\n");
   kprint("Enabling Paging..");
-  initialise_paging();
+  initialise_paging(ramAmount);
   kprint("done\n");
   kprint("Initializing Ramdisk..");
   fs_root = initialise_initrd(initrd_location);

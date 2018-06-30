@@ -14,10 +14,11 @@ CFLAGS = -g -m32 -fno-builtin -fstack-protector -nostartfiles -nodefaultlibs \
 all: rhino.iso run
 # First rule is run by default
 
-# '--oformat binary' deletes all symbols as a collateral, so we don't need
-# to 'strip' them manually on this case
+initrd.img:
+	rm -f initrd.img
+	./utils/initrdgen/genrd ./utils/initrdgen/test.txt test.txt ./utils/initrdgen/test1.txt test1.txt ./utils/UserTest/usertest test.prg
 
-rhino.iso: kernel.bin
+rhino.iso: kernel.bin initrd.img
 	mkdir -p build/sys/boot/grub
 	cp kernel.bin build/sys/boot/kernel.bin
 	cp initrd.img build/sys/boot/initrd.img
@@ -25,11 +26,10 @@ rhino.iso: kernel.bin
 	grub-mkrescue -o ./rhino.iso build/sys --verbose
 
 kernel.bin: kernel/kernel_early.o ${OBJ}
-	#;i686-elf-ld -T linker.ld -o $@  -Ttext 0x1000 $^ #--oformat binary
 	${CC} -T linker.ld -o $@ -ffreestanding -O2 -nostdlib $^ -lgcc
 
 run:
-	DISPLAY=:0 qemu-system-x86_64 -m 16M -cdrom rhino.iso -d cpu_reset -D log/qemulog
+	DISPLAY=:0 qemu-system-x86_64 -m 256M -cdrom rhino.iso -d cpu_reset -D log/qemulog
 	rm -rf build/sys
 
 bochs: rhino.iso
@@ -53,3 +53,4 @@ clean:
 	rm -rf kernel/*.o kernel/heap/*.o kernel/paging/*.o kernel/types/*.o kernel/fs/*.o kernel/security/*.o kernel/multitasking/*.o kernel/user/*.o boot/*.bin drivers/*.o kernel/arch/x86/*.o libc/*.o libc/string/*.o libc/stdio/*.o libc/stdlib/*.o
 	rm -rf build/sys
 	rm -rf log/*
+	rm -f initrd.img

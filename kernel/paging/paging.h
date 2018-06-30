@@ -25,7 +25,7 @@ typedef struct page_directory {
   uint32_t physicalAddr;
 } __attribute__((aligned(4096))) page_directory_t;
 
-void initialise_paging();
+void initialise_paging(uint32_t memSize);
 void switch_page_directory(page_directory_t *dir);
 void alloc_frame(page_t *page, uint32_t is_kernel, uint32_t is_writable);
 page_t* get_page(uint32_t address, uint32_t make, page_directory_t *dir);
