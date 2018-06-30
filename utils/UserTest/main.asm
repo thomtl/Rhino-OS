@@ -2,9 +2,8 @@
 [section .text]
 
 main:
-    mov eax, M
+    mov eax, 1
+    mov ebx, 1
+    mov ecx, 'Q'
     int 0x80
     ret
-
-M:
-  db 'Hello World from an external program!', 0

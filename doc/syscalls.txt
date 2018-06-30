@@ -1,0 +1,4 @@
+N   EAX   EBX   ECX   EDX   NAME    FUNCTION                              DATA
+0   0     1     0     0     Yield   Yields away from the current task
+1   0     2     A     0     Exec    Calls Exec for the current task       A = pointer to the main function
+2   1     1     A     0     Printc  Prints whats the char in ecx          A = pointer to data
