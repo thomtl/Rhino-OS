@@ -1,0 +1,5 @@
+First enable high half in kernel early and then again when init for good
+1: https://wiki.osdev.org/Higher_Half_x86_Bare_Bones
+2: Heap at 0xE0000000
+3: Kernel at 0xC0000000
+4: Far jump
