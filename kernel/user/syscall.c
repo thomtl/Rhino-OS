@@ -15,8 +15,12 @@ static inline void sys_exec(void(*main)()){
   return;
 }
 
+static inline void sys_putchar(uint8_t c){
+  putchar(c);
+  return;
+}
+
 void syscall_handler(registers_t *regs){
-  kprint("\nSYSCALL RECEIVED!\n");
   switch (regs->eax) {
     case 0:
       switch(regs->ebx){
@@ -33,7 +37,7 @@ void syscall_handler(registers_t *regs){
     case 1:
       switch(regs->ebx){
         case 1:
-          putchar(regs->ecx);
+          sys_putchar(regs->ecx);
           break;
         default:
           return;
