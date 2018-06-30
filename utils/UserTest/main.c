@@ -1,16 +1,30 @@
 #include <stdint.h>
+#include <stddef.h>
 void printf(char *c);
 void putchar(char c);
-void _start(void){
-  //putchar('Q');
+
+void main(void){
+  putchar('H');
+  /*putchar('e');
+  putchar('l');
+  putchar('l');
+  putchar('o');
+  putchar(' ');
+  putchar('W');
+  putchar('o');
+  putchar('r');
+  putchar('l');
+  putchar('d');*/
   printf("Hello External World");
   return;
 }
 
 void printf(char *c){
-  int offset = 0;
-  while(c[offset] != '\0'){
-    putchar(c[offset++]);
+  putchar('Q');
+  for(uint8_t i = 0; i < 20; i++){
+    putchar('Q');
+    putchar(*c);
+    c++;
   }
 }
 void putchar(char c){
