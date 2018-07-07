@@ -2,40 +2,37 @@
 #define KMALLOC_H
 #include <stdint.h>
 #include <stddef.h>
-#include "../types/ordered_array.h"
-#define KHEAP_START 0xC0000000
-#define KHEAP_INITIAL_SIZE 0x100000
-#define HEAP_INDEX_SIZE 0x20000
-#define HEAP_MAGIC 0x123890AB
-#define HEAP_MIN_SIZE 0x70000
-
-typedef struct {
-  uint32_t magic;
-  uint32_t is_hole;
-  uint32_t size;
-} header_t;
-
-typedef struct {
-  uint32_t magic;
-  header_t *header;
-} footer_t;
-
-typedef struct{
-  ordered_array_t index;
-  uint32_t start_address;
-  uint32_t end_address;
-  uint32_t max_address;
-  uint8_t supervisor;
-  uint8_t readonly;
-} heap_t;
-
-//heap_t *create_heap(uint32_t start, uint32_t end, uint32_t max, uint8_t supervisor, uint8_t readonly);
-//void *alloc(size_t size, uint8_t page_align, heap_t *heap);
-//void free_int(void *p, heap_t *heap);
-
+#include "../common.h"
 extern uint32_t end;
+#define KHEAP_MAGIC 0x04206969
+#define KHEAP_MAGIC2 0xCAFEC0DE
+
+#define KHEAP_END 0xFFFFDEAD
+
+#define MEM_END 0x8000000
+
+typedef struct {
+  uint32_t magic;
+  bool free;
+  uint32_t size;
+  uint32_t magic2;
+} heap_header_t;
+
+typedef struct {
+  uint32_t magic;
+  uint32_t size;
+  uint32_t magic2;
+} heap_footer_t;
+
+#define HEAP_S (sizeof(heap_header_t))
+#define HEAP_TOTAL (sizeof(heap_footer_t) + HEAP_S)
+#define HEAP_MINIMUM 1
+#define HEAP_FIND_SIZE (HEAP_TOTAL + HEAP_MINIMUM)
+#define KHEAP_SIZE 0xFFFFF
+void init_heap();
+
+
 void kfree(void *p);
-void* krealloc(void *ptr, size_t size);
 void* kmalloc_int(size_t sz, int align, uint32_t *phys);
 
 void* kmalloc_a(size_t sz);

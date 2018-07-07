@@ -3,6 +3,7 @@
 #include "common.h"
 #include "multiboot.h"
 #include "mm/paging.h"
+#include "mm/frame.h"
 #include "multitasking/task.h"
 #include "fs/vfs.h"
 #include "fs/initrd.h"
@@ -51,6 +52,9 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   } else {
     panic_m("Multiboot did not supply memory info");
   }
+  if(!BIT_IS_SET(mbd->flags, 6)){
+    panic_m("Multiboot did not supply memory map");
+  }
   kprint("Starting Rhino Copyright 2018 Thomas Woertman, The Netherlands\n");
   kprint("Installing GDT..");
   gdt_install();
@@ -70,8 +74,9 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   uint32_t initrd_end = *(uint32_t*)(mbd->mods_addr+4);
   placement_address = initrd_end;
   kprint("done\n");
-  kprint("Enabling Paging..");
+  kprint("Initializing Memory Management..");
   install_paging();
+  init_frame_alloc(mbd);
   kprint("done\n");
   /*__asm__ __volatile__ ("cli; hlt");
   kprint("Initializing Ramdisk..");
@@ -84,7 +89,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   #ifndef DEBUG
   clear_screen();
   #endif
-  kprint("Rhino Shell version 0.0.1\n$");
+  kprint("Rhino Kernel Internal Shell version 0.0.2\n$");
   while(1)
   {
     if(shouldExit == 1){
