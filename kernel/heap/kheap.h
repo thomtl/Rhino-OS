@@ -29,9 +29,9 @@ typedef struct{
   uint8_t readonly;
 } heap_t;
 
-heap_t *create_heap(uint32_t start, uint32_t end, uint32_t max, uint8_t supervisor, uint8_t readonly);
-void *alloc(size_t size, uint8_t page_align, heap_t *heap);
-void free_int(void *p, heap_t *heap);
+//heap_t *create_heap(uint32_t start, uint32_t end, uint32_t max, uint8_t supervisor, uint8_t readonly);
+//void *alloc(size_t size, uint8_t page_align, heap_t *heap);
+//void free_int(void *p, heap_t *heap);
 
 extern uint32_t end;
 void kfree(void *p);

@@ -11,3 +11,5 @@ https://en.wikiversity.org/wiki/Operating_system
 https://en.wikibooks.org/wiki/Operating_System_Design
 https://en.wikibooks.org/wiki/Computer_Programming/OS_Programming
 https://kukuruku.co/post/multitasking-management-in-the-operating-system-kernel/
+https://github.com/16Bitt/virtix
+https://anastas.io/osdev/memory/2016/08/08/page-frame-allocator.html

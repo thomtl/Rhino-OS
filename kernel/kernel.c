@@ -66,20 +66,21 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   kprint("MB\n");
   kprint("Loading Ramdisk..");
   ASSERT(mbd->mods_count >= 1);
-  uint32_t initrd_location = *((uint32_t*)mbd->mods_addr);
+  //uint32_t initrd_location = *((uint32_t*)mbd->mods_addr);
   uint32_t initrd_end = *(uint32_t*)(mbd->mods_addr+4);
   placement_address = initrd_end;
   kprint("done\n");
   kprint("Enabling Paging..");
-  initialise_paging(ramAmount);
+  install_paging();
   kprint("done\n");
+  /*__asm__ __volatile__ ("cli; hlt");
   kprint("Initializing Ramdisk..");
   fs_root = initialise_initrd(initrd_location);
   kprint("done\n");
   kprint("Enabling Multitasking..");
   initTasking();
   kprint("done\n");
-  kprint("Boot successfull!\n");
+  kprint("Boot successfull!\n");*/
   #ifndef DEBUG
   clear_screen();
   #endif
@@ -129,7 +130,7 @@ void user_input(char *input){
   if(strcmp(input, "PANIC") == 0){
     panic_m("Deliberate Kernel Panic");
   }
-  if(strcmp(input, "INIT") == 0){
+  /*if(strcmp(input, "INIT") == 0){
     int i = 0;
     struct dirent *node = 0;
     while ( (node = readdir_fs(fs_root, i)) != 0)
@@ -174,7 +175,7 @@ void user_input(char *input){
     kprint(c);
     kprint("\n$");
     return;
-  }
+  }*/
   if(strcmp(input, "TICK") == 0){
     char c[128] = "";
     int_to_ascii(uptime, c);
@@ -182,7 +183,7 @@ void user_input(char *input){
     kprint("\n$");
     return;
   }
-  if(strcmp(input, "EXT") == 0){
+  /*if(strcmp(input, "EXT") == 0){
     loaded_program_t* l = load_program("test.prg", PROGRAM_BINARY_TYPE_BIN);
     if(l == 0){
       kprint("load_program errored\n$");
@@ -201,7 +202,7 @@ void user_input(char *input){
     __asm__ __volatile__ ("int $0x80");
     kprint("\n$");
     return;
-  }
+  }*/
   kprint(input);
   kprint(" is not an executable program.");
   kprint("\n$");

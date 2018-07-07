@@ -8,7 +8,7 @@ uint32_t placement_address = (uint32_t)&end;
 heap_t *kheap = 0;
 void* kmalloc_int(size_t sz, int align, uint32_t *phys)
 {
-    if(kheap != 0){
+    /*if(kheap != 0){
       void *addr = alloc(sz, (uint8_t)align, kheap);
       if (phys != 0)
       {
@@ -16,7 +16,7 @@ void* kmalloc_int(size_t sz, int align, uint32_t *phys)
         *phys = (page->frame*0x1000 + (uint32_t)addr)&0xFFF;
       }
       return (void*)addr;
-    } else {
+    } else {*/
       if (align == 1 && (placement_address & 0xFFFFF000) )
       {
           // Align the placement address;
@@ -30,11 +30,13 @@ void* kmalloc_int(size_t sz, int align, uint32_t *phys)
       uint32_t tmp = placement_address;
       placement_address += sz;
       return (void*)tmp;
-  }
+  //}
 }
 void kfree(void *p)
 {
-    free_int(p, kheap);
+    //free_int(p, kheap);
+    p++;
+    return;
 }
 
 void* krealloc(void *ptr, size_t size){
@@ -42,14 +44,18 @@ void* krealloc(void *ptr, size_t size){
   //step two copy old into new
   //set three kfree(old);
   //step one
-  void* new = kmalloc(size);
+  //void* new = kmalloc(size);
   //step two
-  header_t* header = (header_t*)((header_t*)ptr - 1);
-  size_t sz = header->size;
-  memcpy(new, ptr, sz);
+  //header_t* header = (header_t*)((header_t*)ptr - 1);
+  //size_t sz = header->size;
+  //memcpy(new, ptr, sz);
   //step three
-  kfree(ptr);
-  return new;
+  //kfree(ptr);
+  //return new;
+
+  ptr++;
+  size++;
+  return ptr;
 }
 
 
@@ -73,7 +79,7 @@ void* kmalloc(size_t sz)
     return kmalloc_int(sz, 0, 0);
 }
 
-static int32_t find_smallest_hole(size_t size, uint8_t page_align, heap_t *heap){
+/*static int32_t find_smallest_hole(size_t size, uint8_t page_align, heap_t *heap){
   uint32_t iterator = 0;
   while(iterator < heap->index.size){
     header_t *header = (header_t*)lookup_ordered_array(iterator, &heap->index);
@@ -150,7 +156,7 @@ static void expand(uint32_t new_size, heap_t *heap)
    {
        alloc_frame( get_page(heap->start_address+i, 1, kernel_directory),
                     (heap->supervisor)?1:0, (heap->readonly)?0:1);
-       i += 0x1000 /* page size */;
+       i += 0x1000;
    }
    heap->end_address = heap->start_address+new_size;
 }
@@ -251,9 +257,9 @@ void *alloc(size_t size, uint8_t page_align, heap_t *heap){
     // If we need to page-align the data, do it now and make a new hole in front of our block.
     if (page_align && orig_hole_pos&0xFFFFF000)
     {
-        uint32_t new_location   = orig_hole_pos + 0x1000 /* page size */ - (orig_hole_pos&0xFFF) - sizeof(header_t);
+        uint32_t new_location   = orig_hole_pos + 0x1000 - (orig_hole_pos&0xFFF) - sizeof(header_t);
         header_t *hole_header = (header_t *)orig_hole_pos;
-        hole_header->size     = 0x1000 /* page size */ - (orig_hole_pos&0xFFF) - sizeof(header_t);
+        hole_header->size     = 0x1000 - (orig_hole_pos&0xFFF) - sizeof(header_t);
         hole_header->magic    = HEAP_MAGIC;
         hole_header->is_hole  = 1;
         footer_t *hole_footer = (footer_t *) ( (uint32_t)new_location - sizeof(footer_t) );
@@ -380,4 +386,4 @@ void free_int(void *p, heap_t *heap){
         if (do_add == 1)
           insert_ordered_array((void*)header, &heap->index);
 
-}
+}*/

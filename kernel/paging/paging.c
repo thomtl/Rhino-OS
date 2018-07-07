@@ -1,163 +1,116 @@
 #include "paging.h"
-
-
-page_directory_t *kernel_directory = 0;
-page_directory_t *current_directory = 0;
-uint32_t *frames;
-uint32_t nframes;
 extern heap_t *kheap;
 extern uint32_t placement_address;
 
-#define INDEX_FROM_BIT(a) ((a)/(8*4))
-#define OFFSET_FROM_BIT(a) ((a)%(8*4))
 
-static void set_frame(uint32_t frame_address){
-  uint32_t frame = frame_address / 0x1000;
-  uint32_t idx = INDEX_FROM_BIT(frame);
-  uint32_t off = OFFSET_FROM_BIT(frame);
-  frames[idx] |= (0x1 << off);
-}
 
-static void clear_frame(uint32_t frame_address){
-  uint32_t frame = frame_address / 0x1000;
-  uint32_t idx = INDEX_FROM_BIT(frame);
-  uint32_t off = OFFSET_FROM_BIT(frame);
-  frames[idx] &= ~(0x1 << off);
-}
 
-/*static uint32_t test_frame(uint32_t frame_address){
-  uint32_t frame = frame_address / 0x1000;
-  uint32_t idx = INDEX_FROM_BIT(frame);
-  uint32_t off = OFFSET_FROM_BIT(frame);
-  return (frames[idx] & (0x1 << off));
+vpage_dir_t* current_vpage_dir = NULL;
+vpage_dir_t* root_vpage_dir = NULL;
+
+
+/*static page_table_t* read_cr3(){
+	unsigned int cr3;
+
+	__asm__ __volatile__ ("movl %%cr3, %%eax" : "=a" (cr3));
+	return (page_table_t*) cr3;
 }*/
 
-static uint32_t first_frame(){
-  uint32_t i, j;
-  for (i = 0; i < INDEX_FROM_BIT(nframes); i++)
-  {
-      if (frames[i] != 0xFFFFFFFF) // nothing free, exit early.
-      {
-          // at least one bit is free here.
-          for (j = 0; j < 32; j++)
-          {
-              uint32_t toTest = 0x1 << j;
-              if ( !(frames[i]&toTest) )
-              {
-                  return i*4*8+j;
-              }
-          }
-      }
-  }
-  return -5000;
+static unsigned int read_cr0(){
+	unsigned int cr0;
+
+	__asm__ __volatile__ ("movl %%cr0, %%eax" : "=a" (cr0));
+	return cr0;
 }
 
-void alloc_frame(page_t *page, uint32_t is_kernel, uint32_t is_writable){
-  if(page->frame != 0){
-    return;
-  } else {
-    uint32_t idx = first_frame();
-    if(idx == (uint32_t)-1){
-      panic_m("No Free Pages!");
-    }
-    set_frame(idx * 0x1000);
-    page->present = 1;
-    page->rw = (is_writable)?1:0;
-    page->user = (is_kernel)?0:1;
-    page->frame = idx;
-  }
+static void write_cr3(vpage_dir_t* dir){
+	unsigned int addr = (unsigned int) &dir->tables[0];
+	__asm__ __volatile__ ("movl %%eax, %%cr3" :: "a" (addr));
 }
 
-void free_frame(page_t *page){
-  uint32_t frame;
-  if(!(frame = page->frame)){
-    return;
-  } else {
-    clear_frame(frame);
-    page->frame = 0x0;
-  }
+static void write_cr0(unsigned int new_cr0){
+	__asm__ __volatile__ ("movl %%eax, %%cr0" :: "a" (new_cr0));
 }
 
 
 
-void initialise_paging(uint32_t memSize){
-  uint32_t mem_end_page = memSize;//0x1000000;
 
-  nframes = mem_end_page / 0x1000;
-  frames = (uint32_t*)kmalloc(INDEX_FROM_BIT(nframes));
-  memset(frames, 0, INDEX_FROM_BIT(nframes));
 
-  kernel_directory = (page_directory_t*)kmalloc_a(sizeof(page_directory_t));
-  memset(kernel_directory, 0, sizeof(page_directory_t));
-  current_directory = kernel_directory;
-
-  uint32_t i = 0;
-
-  for(i = KHEAP_START; i < KHEAP_START+KHEAP_INITIAL_SIZE; i += 0x1000){
-    get_page(i, 1, kernel_directory);
-  }
-
-  i = 0;
-  while(i < placement_address+0x1000){
-    page_t* usepage = get_page(i, 1, kernel_directory);
-    alloc_frame(usepage, 0, 0);
-    i += 0x1000;
-  }
-  for(i = KHEAP_START; i < KHEAP_START+KHEAP_INITIAL_SIZE; i += 0x1000){
-    page_t* usepage = get_page(i, 1, kernel_directory);
-    alloc_frame(usepage, 0, 0);
-  }
-  register_interrupt_handler(14, page_fault);
-  switch_page_directory(kernel_directory);
-  kheap = create_heap(KHEAP_START, KHEAP_START+KHEAP_INITIAL_SIZE, 0xCFFFF000, 0, 0);
+void switch_vpage_dir(vpage_dir_t* dir){
+  write_cr3(dir);
+  write_cr0(read_cr0() | 0x80000001);
 }
 
-void switch_page_directory(page_directory_t *dir){
-  current_directory = dir;
-  __asm__ __volatile__("mov %0, %%cr3":: "r"(&dir->tablesPhysical));
-  uint32_t cr0;
-  __asm__ __volatile__("mov %%cr0, %0": "=r"(cr0));
-  cr0 |= 0x80000001;//0x80000000; // Enable paging!
-  __asm__ __volatile__("mov %0, %%cr0":: "r"(cr0));
-}
+vpage_dir_t* mk_vpage_dir(){
+  vpage_dir_t* dir = (vpage_dir_t*) kmalloc_a(sizeof(vpage_dir_t));
 
-page_t* get_page(uint32_t address, uint32_t make, page_directory_t *dir){
-  address /= 0x1000;
-
-  uint32_t table_idx = address / 1024;
-  if(dir->tables[table_idx]){
-    return &dir->tables[table_idx]->pages[address%1024];
+  for(uint32_t i = 0; i < PAGE_COMMON_SIZE; i++){
+    dir->tables[i] = EMPTY_TAB;
   }
-  else if(make){
-    uint32_t tmp;
-    dir->tables[table_idx] = (page_table_t*)kmalloc_ap(sizeof(page_table_t), &tmp);
-    memset(dir->tables[table_idx], 0, 0x1000);
-    dir->tablesPhysical[table_idx] = tmp | 0x7; // PRESENT, RW, US.
-    return &dir->tables[table_idx]->pages[address%1024];
-  } else {
-    return 0;
-  }
+
+  return dir;
 }
+page_table_t* mk_vpage_table(){
+  page_table_t* tab = (page_table_t*) kmalloc_a(sizeof(page_table_t));
 
-void page_fault(registers_t *regs){
-  uint32_t faulting_address;
-  __asm__ ("mov %%cr2, %0" : "=r" (faulting_address));
+  for(uint32_t i = 0; i < PAGE_COMMON_SIZE; i++){
+    tab->pages[i].present = 0;
+    tab->pages[i].rw = 0;
+  }
 
-  int present   = !(regs->err_code & 0x1); // Page not present
-  int rw = regs->err_code & 0x2;           // Write operation?
-  int us = regs->err_code & 0x4;           // Processor was in user-mode?
-  int reserved = regs->err_code & 0x8;     // Overwritten CPU-reserved bits of page entry?
+  return tab;
+}
+void vpage_fault(registers_t* regs){
+	unsigned int err_pos;
+	__asm__ __volatile__ ("mov %%cr2, %0" : "=r" (err_pos));
 
-  // Output an error message.
-  kprint("Page fault! ( ");
-  if (present) {kprint("present ");}
-  if (rw) {kprint("read-only ");}
-  if (us) {kprint("user-mode ");}
-  if (reserved) {kprint("reserved ");}
-  kprint(") at ");
+	kprint("Page fault occurred at ");
   char address[35] = "";
-  hex_to_ascii(faulting_address, address);
+  hex_to_ascii(err_pos, address);
   kprint(address);
-  kprint("\n");
-  panic_m("Page Fault");
+
+	kprint("\nReasons:");
+
+	int no_page = regs->err_code & 1;
+	int rw = regs->err_code & 2;
+	int um = regs->err_code & 4;
+	int re = regs->err_code & 8;
+	int dc = regs->err_code & 16;
+
+	if(dc)		kprint(" (Instruction decode error) ");
+	if(!no_page)	kprint(" (No page present) ");
+	if(um)		kprint(" (in user mode) ");
+	if(rw)		kprint(" (Write permissions) ");
+	if(re)		kprint(" (RE) ");
+
+	kprint("\n");
+  __asm__ __volatile__ ("cli");
+  while(1);
+}
+
+void install_paging(){
+  register_interrupt_handler(14, vpage_fault);
+
+  current_vpage_dir = mk_vpage_dir();
+  root_vpage_dir = current_vpage_dir;
+
+  for(uint32_t i = 0; i < placement_address; i += PAGE_S){
+    vpage_map(root_vpage_dir, i, i);
+  }
+
+  __asm__ __volatile__ ("cli");
+  switch_vpage_dir(root_vpage_dir);
+  __asm__ __volatile__ ("sti");
+}
+
+void vpage_map(vpage_dir_t* dir, uint32_t virt, uint32_t phys){
+  uint16_t id = virt >> 22;
+  page_table_t* tab = mk_vpage_table();
+  dir->tables[id] = ((page_table_t*)((unsigned int) tab | 3 | 4));
+
+  for(uint32_t i = 0; i < PAGE_COMMON_SIZE; i++){
+    tab->pages[i].frame = phys >> 12;
+    tab->pages[i].present = 1;
+    phys += 4096;
+  }
 }
