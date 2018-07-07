@@ -2,7 +2,7 @@
 #include "../../drivers/screen.h"
 #include "../fs/vfs.h"
 #include "../fs/initrd.h"
-#include "../heap/kheap.h"
+#include "../mm/kheap.h"
 #include "../common.h"
 #include "../../libc/include/string.h"
 

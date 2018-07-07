@@ -1,6 +1,6 @@
 #include "kheap.h"
 #include "../../libc/include/string.h"
-#include "../paging/paging.h"
+#include "paging.h"
 #include "../common.h"
 extern uint32_t end;
 extern page_directory_t *kernel_directory;

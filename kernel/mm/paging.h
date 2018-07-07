@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include "../../libc/include/string.h"
 #include "../arch/x86/isr.h"
-#include "../heap/kheap.h"
+#include "kheap.h"
 #include "../panic.h"
 #include "../common.h"
 #define PAGE_COMMON_SIZE 1024

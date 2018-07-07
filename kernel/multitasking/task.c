@@ -1,7 +1,7 @@
 #include "task.h"
 #include "../../drivers/screen.h"
 #include "../../libc/include/string.h"
-#include "../heap/kheap.h"
+#include "../mm/kheap.h"
 
 static task_t *runningTask;
 static task_t tasks[MAX_TASKS];

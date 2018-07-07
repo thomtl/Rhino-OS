@@ -1,5 +1,5 @@
 #include "../include/stdlib.h"
-#include "../../kernel/heap/kheap.h"
+#include "../../kernel/mm/kheap.h"
 
 void* malloc(size_t size){
   return (void*)kmalloc(size);

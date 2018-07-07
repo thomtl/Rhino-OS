@@ -2,7 +2,7 @@
 
 #include "common.h"
 #include "multiboot.h"
-#include "paging/paging.h"
+#include "mm/paging.h"
 #include "multitasking/task.h"
 #include "fs/vfs.h"
 #include "fs/initrd.h"

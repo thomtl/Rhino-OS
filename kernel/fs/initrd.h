@@ -2,7 +2,7 @@
 #define INITRD_H
 #include <stdint.h>
 #include "vfs.h"
-#include "../heap/kheap.h"
+#include "../mm/kheap.h"
 
 typedef struct {
   uint32_t nfiles;
