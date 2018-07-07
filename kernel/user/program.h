@@ -2,9 +2,9 @@
 #define PROGRAM_H
 #include <stdint.h>
 
-#define PROGRAM_BINARY_TYPE_BIN 0
-#define PROGRAM_BINARY_TYPE_AOUT 1
-#define PROGRAM_BINARY_TYPE_ELF 2
+#define PROGRAM_BINARY_TYPE_BIN 0x0
+#define PROGRAM_BINARY_TYPE_AOUT 0x1
+#define PROGRAM_BINARY_TYPE_ELF 0x2
 
 typedef struct loadedProgram{
     uint32_t* base;
