@@ -1,8 +1,8 @@
 #include "paging.h"
-extern heap_t *kheap;
+
 extern uint32_t placement_address;
 
-
+extern void tlb_flush();
 
 
 vpage_dir_t* current_vpage_dir = NULL;
@@ -57,7 +57,7 @@ page_table_t* mk_vpage_table(){
     tab->pages[i].present = 0;
     tab->pages[i].rw = 0;
   }
-
+  tlb_flush();
   return tab;
 }
 void vpage_fault(registers_t* regs){

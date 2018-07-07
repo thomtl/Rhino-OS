@@ -6,58 +6,7 @@
 
 uint32_t placement_address = (uint32_t)&end;
 heap_header_t* kheap = NULL;
-void* kmalloc_int(size_t sz, int align, uint32_t *phys)
-{
-    /*if(kheap != 0){
-      void *addr = alloc(sz, (uint8_t)align, kheap);
-      if (phys != 0)
-      {
-        page_t *page = get_page((uint32_t)addr, 0, kernel_directory);
-        *phys = (page->frame*0x1000 + (uint32_t)addr)&0xFFF;
-      }
-      return (void*)addr;
-    } else {*/
-      if (align == 1 && (placement_address & 0xFFFFF000) )
-      {
-          // Align the placement address;
-          placement_address &= 0xFFFFF000;
-          placement_address += 0x1000;
-      }
-      if (phys)
-      {
-          *phys = placement_address;
-      }
-      uint32_t tmp = placement_address;
-      placement_address += sz;
-      return (void*)tmp;
-  //}
-}
-void kfree(void *p)
-{
-    //free_int(p, kheap);
-    return;
-}
 
-
-void* kmalloc_a(size_t sz)
-{
-    return kmalloc_int(sz, 1, 0);
-}
-
-void* kmalloc_p(size_t sz, uint32_t *phys)
-{
-    return kmalloc_int(sz, 0, phys);
-}
-
-void* kmalloc_ap(size_t sz, uint32_t *phys)
-{
-    return kmalloc_int(sz, 1, phys);
-}
-
-void* kmalloc(size_t sz)
-{
-    return kmalloc_int(sz, 0, 0);
-}
 static void start_heap(heap_header_t *heap, size_t size){
     heap->magic = KHEAP_MAGIC;
     heap->magic2 = KHEAP_MAGIC2;
@@ -107,15 +56,116 @@ static void split_heap(heap_header_t* heap, size_t size){
 	heap->magic = KHEAP_MAGIC;
     heap->magic2 = KHEAP_MAGIC2;
 
-    foot = (heap_footer_t*)((uint32_t) foot + sizeof(heap_footer_t));
+    foot = (heap_footer_t*)((uint32_t) heap + HEAP_S + heap->size);
     if((foot->magic != KHEAP_MAGIC) || (foot->magic2 != KHEAP_MAGIC2)){
-		printf("invalid footer in split");
+		printf("invalid footer in split\n");
 	}
     if(foot->size != KHEAP_END) foot->size = new_size;
 }
 // leave of at free_internal
+
+static void free_internal(heap_header_t* heap, void* address){
+    heap_header_t *head = (heap_header_t*)((uint32_t) address - HEAP_S);
+    if(head == heap){
+        printf("kheap: cannot collapse top of heap");
+        head->free = true;
+        return;
+    }
+
+    if((head->magic != KHEAP_MAGIC) || (head->magic2 != KHEAP_MAGIC2)){
+        printf("kheap: invalid magic1");
+        return;
+    }
+
+    heap_footer_t *foot = (heap_footer_t*)((uint32_t) head + HEAP_S + head->size);
+    if((foot->magic != KHEAP_MAGIC) || (foot->magic2 != KHEAP_MAGIC2)){
+        printf("kheap: invalid magic2");
+        return;
+    }
+
+    foot = (heap_footer_t*)((uint32_t) head - sizeof(heap_footer_t));
+    if((foot->magic != KHEAP_MAGIC) || (foot->magic2 != KHEAP_MAGIC2)){
+        printf("kheap: invalid magic3");
+        return;
+    }
+
+    if(foot->size == KHEAP_END) panic_m("impossible condition for heap");
+
+    heap = (heap_header_t*)((uint32_t)foot - foot->size - HEAP_S);
+    if((heap->magic != KHEAP_MAGIC) || (heap->magic2 != KHEAP_MAGIC2)){
+        printf("kheap: invalid magic4");
+        return;
+    }
+
+    foot = (heap_footer_t*)((uint32_t)heap + (heap->size + head->size + HEAP_TOTAL) + HEAP_S);
+    if((foot->magic != KHEAP_MAGIC) || (foot->magic2 != KHEAP_MAGIC2)){
+        printf("kheap: invalid magic5");
+        return;
+    }
+
+    heap->size += head->size + HEAP_TOTAL;
+    foot->size = heap->size;
+}
+
+void* alloc_internal(heap_header_t* heap, size_t size){
+    heap = find_sized_heap(heap, size + 8);
+    heap->free = false;
+    split_heap(heap, size);
+    return (void*)((uint32_t) heap + HEAP_S);
+}
+
+
+
 void init_heap(){
     kheap = (heap_header_t*) kmalloc(KHEAP_SIZE);
     start_heap(kheap, KHEAP_SIZE);
 
+}
+
+void* kmalloc_int(size_t sz, int align, uint32_t *phys)
+{
+    if(kheap != 0){
+      void *addr = alloc_internal(kheap, sz);
+      return (void*)addr;
+    } else {
+      if (align == 1 && (placement_address & 0xFFFFF000) )
+      {
+          // Align the placement address;
+          placement_address &= 0xFFFFF000;
+          placement_address += 0x1000;
+      }
+      if (phys)
+      {
+          *phys = placement_address;
+      }
+      uint32_t tmp = placement_address;
+      placement_address += sz;
+      return (void*)tmp;
+  }
+}
+void kfree(void *p)
+{
+    free_internal(kheap, p);
+    return;
+}
+
+
+void* kmalloc_a(size_t sz)
+{
+    return kmalloc_int(sz, 1, 0);
+}
+
+void* kmalloc_p(size_t sz, uint32_t *phys)
+{
+    return kmalloc_int(sz, 0, phys);
+}
+
+void* kmalloc_ap(size_t sz, uint32_t *phys)
+{
+    return kmalloc_int(sz, 1, phys);
+}
+
+void* kmalloc(size_t sz)
+{
+    return kmalloc_int(sz, 0, 0);
 }

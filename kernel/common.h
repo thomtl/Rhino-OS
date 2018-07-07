@@ -8,7 +8,7 @@
 #define UNUSED(x) (void)(x)
 
 typedef uint8_t bool;
-#define NULL 0
+#define null 0
 #define false 0
 #define true (!false)
 #endif

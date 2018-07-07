@@ -4,6 +4,7 @@
 #include "multiboot.h"
 #include "mm/paging.h"
 #include "mm/frame.h"
+#include "mm/kheap.h"
 #include "multitasking/task.h"
 #include "fs/vfs.h"
 #include "fs/initrd.h"
@@ -27,21 +28,9 @@ uint32_t uptime = 0;
 multiboot_info_t* multibootInfo;
 uint32_t ramAmountMB = 0; // in MegaBytes
 uint32_t ramAmount = 0;
-//uint32_t* KERNEL_START = (uint32_t*)0xC0100000;
+
 void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
-  /*char kernelVirtualBaseString[25] = "";
-  hex_to_ascii((uint32_t)KERNEL_START, kernelVirtualBaseString);
-  kprint("KERNEL VIRTUAL BASE: ");
-  kprint(kernelVirtualBaseString);
-  kprint("\n");
-  char kernelPhysicalBaseString[25] = "";
-  hex_to_ascii((uint32_t)KERNEL_START - KERNEL_VBASE, kernelPhysicalBaseString);
-  kprint("KERNEL PHYSICAL BASE: ");
-  kprint(kernelPhysicalBaseString);
-  kprint("\n");*/
-  if(magic == MULTIBOOT_BOOTLOADER_MAGIC){
-    kprint("Multiboot boot successfull\n");
-  } else {
+  if(magic != MULTIBOOT_BOOTLOADER_MAGIC){
     kprint("Error not correctly booted!\n");
     return;
   }
@@ -56,36 +45,33 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
     panic_m("Multiboot did not supply memory map");
   }
   kprint("Starting Rhino Copyright 2018 Thomas Woertman, The Netherlands\n");
-  kprint("Installing GDT..");
-  gdt_install();
-  kprint("done\n");
-  kprint("Installing Interrupts..");
-  isr_install();
-  irq_install();
-  kprint("done\n");
   char ramString[25] = "";
   int_to_ascii(ramAmountMB, ramString);
   kprint("Detected Memory: ");
   kprint(ramString);
   kprint("MB\n");
+  kprint("Enabling Protected Mode..");
+  gdt_install();
+  isr_install();
+  irq_install();
+  kprint("done\n");
   kprint("Loading Ramdisk..");
   ASSERT(mbd->mods_count >= 1);
-  //uint32_t initrd_location = *((uint32_t*)mbd->mods_addr);
+  uint32_t initrd_location = *((uint32_t*)mbd->mods_addr);
   uint32_t initrd_end = *(uint32_t*)(mbd->mods_addr+4);
   placement_address = initrd_end;
   kprint("done\n");
   kprint("Initializing Memory Management..");
   install_paging();
   init_frame_alloc(mbd);
+  init_heap();
   kprint("done\n");
-  /*__asm__ __volatile__ ("cli; hlt");
   kprint("Initializing Ramdisk..");
   fs_root = initialise_initrd(initrd_location);
   kprint("done\n");
   kprint("Enabling Multitasking..");
   initTasking();
   kprint("done\n");
-  kprint("Boot successfull!\n");*/
   #ifndef DEBUG
   clear_screen();
   #endif
@@ -135,7 +121,7 @@ void user_input(char *input){
   if(strcmp(input, "PANIC") == 0){
     panic_m("Deliberate Kernel Panic");
   }
-  /*if(strcmp(input, "INIT") == 0){
+  if(strcmp(input, "INIT") == 0){
     int i = 0;
     struct dirent *node = 0;
     while ( (node = readdir_fs(fs_root, i)) != 0)
@@ -180,7 +166,7 @@ void user_input(char *input){
     kprint(c);
     kprint("\n$");
     return;
-  }*/
+  }
   if(strcmp(input, "TICK") == 0){
     char c[128] = "";
     int_to_ascii(uptime, c);
@@ -188,7 +174,7 @@ void user_input(char *input){
     kprint("\n$");
     return;
   }
-  /*if(strcmp(input, "EXT") == 0){
+  if(strcmp(input, "EXT") == 0){
     loaded_program_t* l = load_program("test.prg", PROGRAM_BINARY_TYPE_BIN);
     if(l == 0){
       kprint("load_program errored\n$");
@@ -197,6 +183,7 @@ void user_input(char *input){
     char j[25];
     hex_to_ascii((uint32_t)l->base, j);
     kprint(j);
+    kprint("\n");
     j[0] = '\0';
     run_program(l->base);
     free_program(l);
@@ -207,7 +194,7 @@ void user_input(char *input){
     __asm__ __volatile__ ("int $0x80");
     kprint("\n$");
     return;
-  }*/
+  }
   kprint(input);
   kprint(" is not an executable program.");
   kprint("\n$");
