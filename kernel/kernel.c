@@ -35,9 +35,9 @@ uint32_t ramAmountMB = 0; // in MegaBytes
 uint32_t ramAmount = 0;
 
 void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
+
   if(magic != MULTIBOOT_BOOTLOADER_MAGIC){
-    kprint(__FILE__);
-    kprint_err(": Kernel not booted by a multiboot compliant bootloader!\n");
+    PANIC_M(": Kernel not booted by a multiboot compliant bootloader!\n");
     return;
   }
   multibootInfo = mbd;
@@ -46,6 +46,11 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
     ramAmount = (((mbd->mem_lower * 1024) + (mbd->mem_upper * 1024)) / 1024 / 1024 + 1) * 0x100000;
   } else {
     PANIC_M("bootloader did not supply memory info");
+  }
+  if(BIT_IS_SET(mbd->flags, 10)){
+    kprint_warn("MULTIBOOT Supplied apm table\n");
+  } else {
+    kprint_err("MULTIBOOT didn't supply APM table\n");
   }
   set_color(VGA_COLOR_LIGHT_BLUE, VGA_COLOR_BLACK);
   kprint("Starting Rhino Copyright 2018 Thomas Woertman, The Netherlands\n");
@@ -114,6 +119,7 @@ void user_input(char *input){
     kprint("INIT: To show the files on the initrd\n");
     kprint("STACKSMASH: To smash the stack and test the stack smash protection\n");
     kprint("SYSCALL: Simulate a bare syscall\n");
+    kprint("MMAP: Print the sections in the BIOS mmap\n");
     #endif
     kprint("-------------------------------\n");
     kprint("$");
@@ -192,6 +198,51 @@ void user_input(char *input){
   if(strcmp(input, "SYSCALL") == 0){
     __asm__ __volatile__ ("int $0x80");
     kprint("\n$");
+    return;
+  }
+  if(strcmp(input, "MMAP") == 0){
+    set_color(VGA_COLOR_GREEN, VGA_COLOR_BLACK);
+    uint8_t entryCount = 1;
+    multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)multibootInfo->mmap_addr;
+    uintptr_t *mmap_end = (uintptr_t*)(multibootInfo->mmap_addr + multibootInfo->mmap_length);
+    while((uint32_t)mmap < (uint32_t)mmap_end){
+      char buf[128] = "";
+      kprint("Entry: ");
+      int_to_ascii(entryCount, buf);
+      kprint(buf);
+      for(uint32_t i = 0; i < 128; i++) buf[i] = '\0';
+      kprint(" Base: ");
+      hex_to_ascii(mmap->addr, buf);
+      kprint(buf);
+      for(uint32_t i = 0; i < 128; i++) buf[i] = '\0';
+      kprint(" - Top: ");
+      hex_to_ascii(mmap->addr + mmap->len, buf);
+      kprint(buf);
+      switch(mmap->type){
+        case MULTIBOOT_MEMORY_AVAILABLE:
+          kprint(" Available\n");
+          break;
+        case MULTIBOOT_MEMORY_RESERVED:
+          kprint(" Reserved\n");
+          break;
+        case MULTIBOOT_MEMORY_ACPI_RECLAIMABLE:
+         kprint(" ACPI RECLAIM\n");
+         break;
+        case MULTIBOOT_MEMORY_NVS:
+          kprint(" NVS\n");
+          break;
+        case MULTIBOOT_MEMORY_BADRAM:
+          kprint(" BADRAM\n");
+          break;
+        default:
+          break;
+      }
+      for(uint32_t i = 0; i < 128; i++) buf[i] = '\0';
+      mmap = (multiboot_memory_map_t*) ( (uintptr_t)mmap + mmap->size + sizeof(uintptr_t) );
+      entryCount++;
+    }
+    set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
+    kprint("$");
     return;
   }
   kprint(input);

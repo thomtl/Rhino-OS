@@ -23,7 +23,7 @@ rhino.iso: kernel.bin initrd.img
 	cp kernel.bin build/sys/boot/kernel.bin
 	cp initrd.img build/sys/boot/initrd.img
 	cp build/grub.cfg build/sys/boot/grub/grub.cfg
-	grub-mkrescue -o ./rhino.iso build/sys --verbose
+	grub-mkrescue -o ./rhino.iso build/sys
 
 kernel.bin: kernel/kernel_early.o ${OBJ}
 	${CC} -T linker.ld -o $@ -ffreestanding -O2 -nostdlib $^ -lgcc
