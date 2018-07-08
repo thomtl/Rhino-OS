@@ -19,6 +19,7 @@
 #include "./arch/x86/isr.h"
 #include "./arch/x86/gdt.h"
 #include "./arch/x86/msr.h"
+#include "./arch/x86/ports.h"
 #include "security/test_security.h"
 #include "kernel.h"
 #include "panic.h"
@@ -112,7 +113,6 @@ void user_input(char *input){
     kprint("PANIC: Panic the kernel\n");
     kprint("INIT: To show the files on the initrd\n");
     kprint("STACKSMASH: To smash the stack and test the stack smash protection\n");
-    kprint("TICK: To show the current tick of the CPU\n");
     kprint("SYSCALL: Simulate a bare syscall\n");
     #endif
     kprint("-------------------------------\n");
@@ -173,13 +173,6 @@ void user_input(char *input){
     kprint("\n$");
     return;
   }
-  if(strcmp(input, "TICK") == 0){
-    char c[128] = "";
-    int_to_ascii(uptime, c);
-    kprint(c);
-    kprint("\n$");
-    return;
-  }
   if(strcmp(input, "EXT") == 0){
     loaded_program_t* l = load_program("test.prg", PROGRAM_BINARY_TYPE_BIN);
     if(l == 0){
@@ -208,4 +201,10 @@ void user_input(char *input){
 
 void kernel_timer_callback(){
   uptime++;
+  char c[128] = "";
+  int_to_ascii(uptime, c);
+  uint8_t backup = get_color();
+  set_color(VGA_COLOR_CYAN, VGA_COLOR_BLACK);
+  kprint_at(c, 75, 0, 1);
+  set_raw_color(backup);
 }

@@ -21,8 +21,20 @@ uint8_t color = WHITE_ON_BLACK;
 void set_color(enum vga_color fg, enum vga_color bg){
   color = fg | bg << 4;
 }
-void kprint_at(char *message, int col, int row){
+
+uint8_t get_color(){
+  return color;
+}
+void set_raw_color(uint8_t col){
+  color = col;
+}
+
+void kprint_at(char *message, int col, int row, uint8_t backup){
   int offset;
+  int b;
+  if(backup == 1){
+    b = get_cursor_offset();
+  }
   if(col >= 0 && row >= 0){
     offset = get_offset(col, row);
   } else {
@@ -36,21 +48,24 @@ void kprint_at(char *message, int col, int row){
     row = get_offset_row(offset);
     col = get_offset_col(offset);
   }
+  if(backup == 1){
+    set_cursor_offset(b);
+  }
 }
 
 void kprint(char *message){
-  kprint_at(message, -1, -1);
+  kprint_at(message, -1, -1, 0);
 }
 void kprint_err(char *message){
   uint8_t tmp = color;
   set_color(VGA_COLOR_RED, VGA_COLOR_BLACK);
-  kprint_at(message, -1, -1);
+  kprint_at(message, -1, -1, 0);
   color = tmp;
 }
 void kprint_warn(char *message){
   uint8_t tmp = color;
   set_color(VGA_COLOR_YELLOW, VGA_COLOR_BLACK);
-  kprint_at(message, -1, -1);
+  kprint_at(message, -1, -1, 0);
   color = tmp;
 }
 void clear_screen(){

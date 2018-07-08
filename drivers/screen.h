@@ -34,8 +34,10 @@ enum vga_color {
 
 // Public kernel API
 void set_color(enum vga_color fg, enum vga_color bg);
+uint8_t get_color();
+void set_raw_color(uint8_t col);
 void clear_screen();
-void kprint_at(char *message, int col, int row);
+void kprint_at(char *message, int col, int row, uint8_t backup);
 void kprint(char *message);
 void kprint_err(char *message);
 void kprint_warn(char *message);
