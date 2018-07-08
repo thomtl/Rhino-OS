@@ -17,11 +17,11 @@ loaded_program_t* load_program(char* filename, uint8_t type){
       fs_node_t *node = 0;
       node = finddir_fs(fs_root, filename);
       if(node == 0){
-        kprint("program.c: Could not find program on the INITRD\n");
+        kprint_err("program.c: Could not find program on the INITRD\n");
         return 0;
       }
       if((node->flags & 0x7) == FS_DIRECTORY){
-        kprint("program.c: Selected File is a Directory\n");
+        kprint_err("program.c: Selected File is a Directory\n");
         return 0;
       }
       loaded_program_t* header = kmalloc(sizeof(loaded_program_t));
@@ -32,7 +32,7 @@ loaded_program_t* load_program(char* filename, uint8_t type){
       read_fs(node, 0, node->length, (uint8_t*)buf);
       return header;
     } else {
-      kprint("program.c: ELF and A.OUT types are not yet implemented!\n");
+      kprint_err("program.c: ELF and A.OUT types are not yet implemented!\n");
       return 0;
     }
 }

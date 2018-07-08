@@ -1,6 +1,6 @@
 #include "kheap.h"
 #include "../../libc/include/string.h"
-#include "../../libc/include/stdio.h"
+#include "../../drivers/screen.h"
 #include "paging.h"
 #include "../common.h"
 
@@ -23,16 +23,16 @@ static heap_header_t* find_sized_heap(heap_header_t* heap, size_t size){
     while((heap->size < HEAP_FIND_SIZE + size) || (heap->free != true)){
         ASSERT(heap->magic == KHEAP_MAGIC);
         ASSERT(heap->magic2 == KHEAP_MAGIC2);
-        heap_footer_t *foot = (heap_footer_t*) ((uint32_t) heap + HEAP_S + heap->size);  
+        heap_footer_t *foot = (heap_footer_t*) ((uint32_t) heap + HEAP_S + heap->size);
         ASSERT(foot->magic == KHEAP_MAGIC);
         ASSERT(foot->magic2 == KHEAP_MAGIC2);
 
         if(foot->size == KHEAP_END){
-            panic_m("heap out of space");
+            PANIC_M("heap out of space");
         }
 
         if(foot->size != heap->size){
-            panic_m("heap footer/header size mismatch");
+            PANIC_M("heap footer/header size mismatch");
         }
 
         heap = (heap_header_t*) ((uint32_t) foot + sizeof(heap_footer_t));
@@ -42,11 +42,11 @@ static heap_header_t* find_sized_heap(heap_header_t* heap, size_t size){
 }
 
 static void split_heap(heap_header_t* heap, size_t size){
-    heap_footer_t* foot = (heap_footer_t*) ((uint32_t) heap + HEAP_S + size);
-    foot->magic = KHEAP_MAGIC;
+  heap_footer_t* foot = (heap_footer_t*) ((uint32_t) heap + HEAP_S + size);
+  foot->magic = KHEAP_MAGIC;
 	foot->magic2 = KHEAP_MAGIC2;
 	foot->size = size;
-	
+
 	size_t new_size = heap->size - HEAP_TOTAL - size;
 	heap->size = size;
 
@@ -54,52 +54,52 @@ static void split_heap(heap_header_t* heap, size_t size){
 	heap->size = new_size;
 	heap->free = true;
 	heap->magic = KHEAP_MAGIC;
-    heap->magic2 = KHEAP_MAGIC2;
+  heap->magic2 = KHEAP_MAGIC2;
 
-    foot = (heap_footer_t*)((uint32_t) heap + HEAP_S + heap->size);
-    if((foot->magic != KHEAP_MAGIC) || (foot->magic2 != KHEAP_MAGIC2)){
-		printf("invalid footer in split\n");
+  foot = (heap_footer_t*)((uint32_t) heap + HEAP_S + heap->size);
+  if((foot->magic != KHEAP_MAGIC) || (foot->magic2 != KHEAP_MAGIC2)){
+	   kprint_warn("invalid footer in split\n");
 	}
-    if(foot->size != KHEAP_END) foot->size = new_size;
+  if(foot->size != KHEAP_END) foot->size = new_size;
 }
 // leave of at free_internal
 
 static void free_internal(heap_header_t* heap, void* address){
     heap_header_t *head = (heap_header_t*)((uint32_t) address - HEAP_S);
     if(head == heap){
-        printf("kheap: cannot collapse top of heap");
+        kprint_warn("kheap: cannot collapse top of heap");
         head->free = true;
         return;
     }
 
     if((head->magic != KHEAP_MAGIC) || (head->magic2 != KHEAP_MAGIC2)){
-        printf("kheap: invalid magic1");
+        kprint_warn("kheap: invalid magic1");
         return;
     }
 
     heap_footer_t *foot = (heap_footer_t*)((uint32_t) head + HEAP_S + head->size);
     if((foot->magic != KHEAP_MAGIC) || (foot->magic2 != KHEAP_MAGIC2)){
-        printf("kheap: invalid magic2");
+        kprint_warn("kheap: invalid magic2");
         return;
     }
 
     foot = (heap_footer_t*)((uint32_t) head - sizeof(heap_footer_t));
     if((foot->magic != KHEAP_MAGIC) || (foot->magic2 != KHEAP_MAGIC2)){
-        printf("kheap: invalid magic3");
+        kprint_warn("kheap: invalid magic3");
         return;
     }
 
-    if(foot->size == KHEAP_END) panic_m("impossible condition for heap");
+    if(foot->size == KHEAP_END) PANIC_M("impossible condition for heap");
 
     heap = (heap_header_t*)((uint32_t)foot - foot->size - HEAP_S);
     if((heap->magic != KHEAP_MAGIC) || (heap->magic2 != KHEAP_MAGIC2)){
-        printf("kheap: invalid magic4");
+        kprint_warn("kheap: invalid magic4");
         return;
     }
 
     foot = (heap_footer_t*)((uint32_t)heap + (heap->size + head->size + HEAP_TOTAL) + HEAP_S);
     if((foot->magic != KHEAP_MAGIC) || (foot->magic2 != KHEAP_MAGIC2)){
-        printf("kheap: invalid magic5");
+        kprint_warn("kheap: invalid magic5");
         return;
     }
 

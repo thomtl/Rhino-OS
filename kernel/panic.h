@@ -7,7 +7,7 @@ __attribute__((noreturn))
 void panic();
 
 __attribute__((noreturn))
-void panic_m(char* m);
+void panic_m(char* m, char *f);
 
 __attribute__((noreturn))
 void panic_assert(char *file, uint32_t line, char *desc);

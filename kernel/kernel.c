@@ -1,5 +1,9 @@
 #define DEBUG
 
+#if defined(__linux__)
+#error "No cross compiler detected you will probably run into trouble"
+#endif
+
 #include "common.h"
 #include "multiboot.h"
 #include "mm/paging.h"
@@ -31,19 +35,18 @@ uint32_t ramAmount = 0;
 
 void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   if(magic != MULTIBOOT_BOOTLOADER_MAGIC){
-    kprint("Error not correctly booted!\n");
+    kprint(__FILE__);
+    kprint_err(": Kernel not booted by a multiboot compliant bootloader!\n");
     return;
   }
   multibootInfo = mbd;
-  if(BIT_IS_SET(mbd->flags, 1)){
+  if(BIT_IS_SET(mbd->flags, 1) && BIT_IS_SET(mbd->flags, 6)){
     ramAmountMB = ((((mbd->mem_lower * 1024) + (mbd->mem_upper * 1024)) / 1024) / 1024) + 1; // Formula for converting from Kibibyte to Megabyte so: Megabyte = (Kibibyte * 1024) / 1024 / 1024 + 1
     ramAmount = (((mbd->mem_lower * 1024) + (mbd->mem_upper * 1024)) / 1024 / 1024 + 1) * 0x100000;
   } else {
-    panic_m("Multiboot did not supply memory info");
+    PANIC_M("bootloader did not supply memory info");
   }
-  if(!BIT_IS_SET(mbd->flags, 6)){
-    panic_m("Multiboot did not supply memory map");
-  }
+  set_color(VGA_COLOR_LIGHT_BLUE, VGA_COLOR_BLACK);
   kprint("Starting Rhino Copyright 2018 Thomas Woertman, The Netherlands\n");
   char ramString[25] = "";
   int_to_ascii(ramAmountMB, ramString);
@@ -75,7 +78,10 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   #ifndef DEBUG
   clear_screen();
   #endif
-  kprint("Rhino Kernel Internal Shell version 0.0.2\n$");
+  //set_color(VGA_COLOR_WHITE, VGA_COLOR_MAGENTA);
+  kprint("Rhino Kernel Internal Shell version 0.0.2");
+  set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
+  kprint("\n$");
   while(1)
   {
     if(shouldExit == 1){
@@ -119,7 +125,7 @@ void user_input(char *input){
     return;
   }
   if(strcmp(input, "PANIC") == 0){
-    panic_m("Deliberate Kernel Panic");
+    PANIC_M("Deliberate Kernel Panic");
   }
   if(strcmp(input, "INIT") == 0){
     int i = 0;
@@ -177,7 +183,7 @@ void user_input(char *input){
   if(strcmp(input, "EXT") == 0){
     loaded_program_t* l = load_program("test.prg", PROGRAM_BINARY_TYPE_BIN);
     if(l == 0){
-      kprint("load_program errored\n$");
+      kprint_err("load_program errored\n$");
       return;
     }
     char j[25];

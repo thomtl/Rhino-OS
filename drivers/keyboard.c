@@ -32,7 +32,7 @@ static void kbd_irq(registers_t *regs){
   if(BIT_IS_SET(inb(0x64), 0)){
     scancode = inb(0x60);
   } else {
-    kprint("Keyboard sent IRQ but there was no data\n");
+    kprint_err("Keyboard sent IRQ but there was no data\n");
     return;
   }
   if(scancode > SC_MAX) return;

@@ -64,12 +64,12 @@ void vpage_fault(registers_t* regs){
 	unsigned int err_pos;
 	__asm__ __volatile__ ("mov %%cr2, %0" : "=r" (err_pos));
 
-	kprint("Page fault occurred at ");
+	kprint_err("Page fault occurred at ");
   char address[35] = "";
   hex_to_ascii(err_pos, address);
-  kprint(address);
+  kprint_err(address);
 
-	kprint("\nReasons:");
+	kprint_err("\nReasons:");
 
 	int no_page = regs->err_code & 1;
 	int rw = regs->err_code & 2;
@@ -77,13 +77,13 @@ void vpage_fault(registers_t* regs){
 	int re = regs->err_code & 8;
 	int dc = regs->err_code & 16;
 
-	if(dc)		kprint(" (Instruction decode error) ");
-	if(!no_page)	kprint(" (No page present) ");
-	if(um)		kprint(" (in user mode) ");
-	if(rw)		kprint(" (Write permissions) ");
-	if(re)		kprint(" (RE) ");
+	if(dc)		kprint_err(" (Instruction decode error) ");
+	if(!no_page)	kprint_err(" (No page present) ");
+	if(um)		kprint_err(" (in user mode) ");
+	if(rw)		kprint_err(" (Write permissions) ");
+	if(re)		kprint_err(" (RE) ");
 
-	kprint("\n");
+	kprint_err("\n");
   __asm__ __volatile__ ("cli");
   while(1);
 }

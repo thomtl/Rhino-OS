@@ -6,7 +6,7 @@
 #define BIT_IS_SET(var, pos) ((var) & (1 << (pos)))
 #define ASSERT(b) ((b) ? (void)0 : panic_assert(__FILE__, __LINE__, #b))
 #define UNUSED(x) (void)(x)
-
+#define PANIC_M(x) (panic_m(x, __FILE__))
 typedef uint8_t bool;
 #define null 0
 #define false 0

@@ -10,13 +10,17 @@ int get_offset(int col, int row);
 int get_offset_row(int offset);
 int get_offset_col(int offset);
 
+// Global vars
+uint8_t color = WHITE_ON_BLACK;
 // Public Kernel API
 
 /*
  * Print a mssage on the specified location
  * if col and row are negative we will use the current offset
 **/
-
+void set_color(enum vga_color fg, enum vga_color bg){
+  color = fg | bg << 4;
+}
 void kprint_at(char *message, int col, int row){
   int offset;
   if(col >= 0 && row >= 0){
@@ -28,7 +32,7 @@ void kprint_at(char *message, int col, int row){
   }
   int i = 0;
   while(message[i] != 0){
-    offset = print_char(message[i++], col, row, WHITE_ON_BLACK);
+    offset = print_char(message[i++], col, row, color);
     row = get_offset_row(offset);
     col = get_offset_col(offset);
   }
@@ -37,7 +41,18 @@ void kprint_at(char *message, int col, int row){
 void kprint(char *message){
   kprint_at(message, -1, -1);
 }
-
+void kprint_err(char *message){
+  uint8_t tmp = color;
+  set_color(VGA_COLOR_RED, VGA_COLOR_BLACK);
+  kprint_at(message, -1, -1);
+  color = tmp;
+}
+void kprint_warn(char *message){
+  uint8_t tmp = color;
+  set_color(VGA_COLOR_YELLOW, VGA_COLOR_BLACK);
+  kprint_at(message, -1, -1);
+  color = tmp;
+}
 void clear_screen(){
   int screen_size = MAX_COLS * MAX_ROWS;
   int i;
@@ -52,7 +67,7 @@ void kprint_backspace(){
   int offset = get_cursor_offset() - 2;
   int row = get_offset_row(offset);
   int col = get_offset_col(offset);
-  print_char(0x08, col, row, WHITE_ON_BLACK);
+  print_char(0x08, col, row, color);
 
 }
 // Private Kernel functions

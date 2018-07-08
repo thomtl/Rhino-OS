@@ -117,13 +117,13 @@ void isr_handler(registers_t *r){
     isr_t handler = interrupt_handlers[int_no];
     handler(r);
   } else {
-    kprint("received interrupt: ");
+    kprint_err("received interrupt: ");
     char s[3];
     int_to_ascii(int_no, s);
-    kprint(s);
-    kprint("\n");
-    kprint(exception_messages[int_no]);
-    kprint("\n");
+    kprint_err(s);
+    kprint_err("\n");
+    kprint_err(exception_messages[int_no]);
+    kprint_err("\n");
   }
 }
 

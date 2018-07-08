@@ -32,11 +32,6 @@ typedef struct {
   page_table_t* tables[PAGE_COMMON_SIZE];
 } vpage_dir_t;
 
-typedef struct{
-	page_table_t* tables[1024];
-	unsigned int tables_physical[1024];
-	unsigned int physical_address;
-} page_directory_t;
 
 extern vpage_dir_t* root_vpage_dir;
 
