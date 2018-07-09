@@ -16,6 +16,7 @@
 #include "user/program.h"
 #include "../drivers/screen.h"
 #include "../drivers/keyboard.h"
+#include "../drivers/floppy.h"
 #include "./arch/x86/isr.h"
 #include "./arch/x86/gdt.h"
 #include "./arch/x86/msr.h"
@@ -33,7 +34,39 @@ uint32_t uptime = 0;
 multiboot_info_t* multibootInfo;
 uint32_t ramAmountMB = 0; // in MegaBytes
 uint32_t ramAmount = 0;
-
+static void read_flop(){
+  uint8_t flop = count_floppy_drives();
+  if(BIT_IS_SET(flop, 0) && !BIT_IS_SET(flop, 1) && !BIT_IS_SET(flop, 2) && !BIT_IS_SET(flop, 3)){
+    kprint_warn("Slave 360 KB 5.25 Drive\n");
+  }
+  if(!BIT_IS_SET(flop, 0) && BIT_IS_SET(flop, 1) && !BIT_IS_SET(flop, 2) && !BIT_IS_SET(flop, 3)){
+    kprint_warn("Slave 1.2 MB 5.25 Drive\n");
+  }
+  if(BIT_IS_SET(flop, 0) && BIT_IS_SET(flop, 1) && !BIT_IS_SET(flop, 2) && !BIT_IS_SET(flop, 3)){
+    kprint_warn("Slave 720 KB 3.5 Drive\n");
+  }
+  if(!BIT_IS_SET(flop, 0) && !BIT_IS_SET(flop, 1) && BIT_IS_SET(flop, 2) && !BIT_IS_SET(flop, 3)){
+    kprint_warn("Slave 1.44 MB 3.5 Drive\n");
+  }
+  if(BIT_IS_SET(flop, 0) && !BIT_IS_SET(flop, 1) && BIT_IS_SET(flop, 2) && !BIT_IS_SET(flop, 3)){
+    kprint_warn("Slave 1.44 MB 3.5 Drive\n");
+  }
+  if(BIT_IS_SET(flop, 0) && !BIT_IS_SET(flop, 1) && !BIT_IS_SET(flop, 2) && !BIT_IS_SET(flop, 3)){
+    kprint_warn("Master 360 KB 5.25 Drive\n");
+  }
+  if(!BIT_IS_SET(flop, 4) && BIT_IS_SET(flop, 5) && !BIT_IS_SET(flop, 6) && !BIT_IS_SET(flop, 7)){
+    kprint_warn("Master 1.2 MB 5.25 Drive\n");
+  }
+  if(BIT_IS_SET(flop, 4) && BIT_IS_SET(flop, 5) && !BIT_IS_SET(flop, 6) && !BIT_IS_SET(flop, 7)){
+    kprint_warn("Master 720 KB 3.5 Drive\n");
+  }
+  if(!BIT_IS_SET(flop, 4) && !BIT_IS_SET(flop, 5) && BIT_IS_SET(flop, 6) && !BIT_IS_SET(flop, 7)){
+    kprint_warn("Master 1.44 MB 3.5 Drive\n");
+  }
+  if(BIT_IS_SET(flop, 4) && !BIT_IS_SET(flop, 5) && BIT_IS_SET(flop, 6) && !BIT_IS_SET(flop, 7)){
+    kprint_warn("Master 1.44 MB 3.5 Drive\n");
+  }
+}
 void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
 
   if(magic != MULTIBOOT_BOOTLOADER_MAGIC){
@@ -242,6 +275,11 @@ void user_input(char *input){
       entryCount++;
     }
     set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
+    kprint("$");
+    return;
+  }
+  if(strcmp(input, "FLOPPY") == 0){
+    read_flop();
     kprint("$");
     return;
   }
