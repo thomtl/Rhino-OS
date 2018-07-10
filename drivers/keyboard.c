@@ -13,6 +13,7 @@
 static char stdin[MAX_STDIN_LENGTH];
 static uint8_t stdinIndex = 0;
 static uint8_t readIndex = 0;
+static bool hasSecondChannel = true;
 #define SC_MAX 57
 
 const char *sc_name[] = { "ERROR", "Esc", "1", "2", "3", "4", "5", "6",
@@ -56,35 +57,86 @@ static void kbd_irq(registers_t *regs){
   UNUSED(regs);
 }
 
-
-void init_keyboard(){
-  kbd_test();
-  register_interrupt_handler(IRQ1, kbd_irq);
+static void wait_for_res(){
+  while(!BIT_IS_SET(inb(KBD_REG_COMMAND), 0));
 }
 
-void kbd_test(){
+void init_keyboard(){
+  uint8_t res, conf;
+  // Stop interrupts
   CLI();
-  uint8_t res;
-  outb(KBD_REG_COMMAND, KBD_REG_INT_READ_CONF_BYTE);
-  if(!BIT_IS_SET(inb(KBD_REG_COMMAND), 0)) PANIC_M("8042 Keyboard controller configuration byte read did not return value");
+
+  // Disable the 2 devices, if the second channel doesn't exist it will ignore it
+  outb(KBD_REG_COMMAND, KBD_REG_INT_DISABLE_DEV_1);
+  outb(KBD_REG_COMMAND, KBD_REG_INT_DISABLE_DEV_2);
+
+  // Flush the buffer
+  for(uint8_t i = 0; i < KBD_BUF_FLUSH_LEN; i++) inb(KBD_REG_DATA);
+
+  // Init the controller configuration byte
+  conf = kbd_read(KBD_REG_INT_READ_CONF_BYTE);
+  BIT_CLEAR(conf, 0);
+  BIT_CLEAR(conf, 1);
+  BIT_CLEAR(conf, 6);
+  if(!BIT_IS_SET(conf, 5)) hasSecondChannel = false;
+  kbd_write(KBD_REG_INT_WRITE_CONF_BYTE, conf);
+
+  // Perform controller self-test
+  outb(KBD_REG_COMMAND,  KBD_REG_INT_CONT_SELF_TEST);
+  wait_for_res();
   res = inb(KBD_REG_DATA);
-  //if(!BIT_IS_SET(res, 7)) kprint_err("8042 Keyboard controller configuration byte does not have the always 0 bit as 0 something might be wrong\n");
-  if(!BIT_IS_SET(res, 2)) PANIC_M("CRITICAL ERROR: BIOS did not pass POST continuing will probably break something!");
+  if(res != 0x55) PANIC_M("8042 Controller did not successfully self-test");
 
+  // Determine if there are 2 channels
+  if(hasSecondChannel == true){
+    // Temporarly enable the second channel
+    outb(KBD_REG_COMMAND, KBD_REG_INT_ENABLE_DEV_2);
 
+    // Read controller configuration again
+    conf = kbd_read(KBD_REG_INT_READ_CONF_BYTE);
+    if(!BIT_IS_SET(conf, 5)){
+      hasSecondChannel = true;
+    } else if (BIT_IS_SET(conf, 5)){
+      hasSecondChannel = false;
+    }
 
-  outb(KBD_REG_COMMAND, KBD_REG_INT_CONT_SELF_TEST);
-  if(!BIT_IS_SET(inb(KBD_REG_COMMAND), 0)) PANIC_M("8042 Keyboard controller self test did not return value");
+    // Disable channel 2 again
+    outb(KBD_REG_COMMAND, KBD_REG_INT_DISABLE_DEV_2);
+  }
+
+  // Test the channels themselves
+  outb(KBD_REG_COMMAND, KBD_REG_INT_DEV_1_SELF_TEST);
+  wait_for_res();
   res = inb(KBD_REG_DATA);
-  if(res != 0x55 && res == 0xFC && BIT_IS_SET(inb(KBD_REG_COMMAND), 0)) PANIC_M("8042 Keyboard controller test failed");
+  if(res == 0x01) PANIC_M("PS/2 Channel 1 Clock line stuck low");
+  if(res == 0x02) PANIC_M("PS/2 Channel 1 Clock line stuck high");
+  if(res == 0x03) PANIC_M("PS/2 Channel 1 Data line stuck low");
+  if(res == 0x04) PANIC_M("PS/2 Channel 1 Data line stuck high");
 
-  outb(KBD_REG_COMMAND, KBD_REG_INT_KEYB_SELF_TEST);
-  if(!BIT_IS_SET(inb(KBD_REG_COMMAND), 0)) PANIC_M("Keyboard 1 self test did not return value");
-  res = inb(KBD_REG_DATA);
-  if(res != 0x00 && res == 0x01) PANIC_M("Keyboard 1 Clock line stuck low");
-  if(res != 0x00 && res == 0x02) PANIC_M("Keyboard 1 Clock line stuck high");
-  if(res != 0x00 && res == 0x03) PANIC_M("Keyboard 1 Data line stuck low");
-  if(res != 0x00 && res == 0x04) PANIC_M("Keyboard 1 Data line stuck high");
+  if(hasSecondChannel == true){
+    outb(KBD_REG_COMMAND, KBD_REG_INT_DEV_2_SELF_TEST);
+    wait_for_res();
+    res = inb(KBD_REG_DATA);
+    if(res == 0x01) PANIC_M("PS/2 Channel 2 Clock line stuck low");
+    if(res == 0x02) PANIC_M("PS/2 Channel 2 Clock line stuck high");
+    if(res == 0x03) PANIC_M("PS/2 Channel 2 Data line stuck low");
+    if(res == 0x04) PANIC_M("PS/2 Channel 2 Data line stuck high");
+  }
+
+  // Enable the devices
+  outb(KBD_REG_COMMAND, KBD_REG_INT_ENABLE_DEV_1);
+  if(hasSecondChannel == true) outb(KBD_REG_COMMAND, KBD_REG_INT_ENABLE_DEV_2);
+
+  conf = kbd_read(KBD_REG_INT_READ_CONF_BYTE);
+  BIT_SET(conf, 0);
+  BIT_SET(conf, 6);
+  kbd_write(KBD_REG_INT_WRITE_CONF_BYTE, conf);
+
+
+  // Register the interrupt handler for the first channel
+  register_interrupt_handler(IRQ1, kbd_irq);
+
+  // Restart interrupts
   STI();
 }
 
@@ -93,4 +145,15 @@ char kbd_getchar(){
   char ascii = stdin[readIndex];
   readIndex++;
   return ascii;
+}
+
+uint8_t kbd_read(uint8_t reg){
+  outb(KBD_REG_COMMAND, reg);
+  wait_for_res();
+  return inb(KBD_REG_DATA);
+}
+
+void kbd_write(uint8_t reg, uint8_t data){
+  outb(KBD_REG_COMMAND, reg);
+  outb(KBD_REG_DATA, data);
 }
