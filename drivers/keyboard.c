@@ -29,8 +29,8 @@ const char sc_ascii[] = { '?', '?', '1', '2', '3', '4', '5', '6',
 
 static void kbd_irq(registers_t *regs){
   uint8_t scancode;
-  if(BIT_IS_SET(inb(0x64), 0)){
-    scancode = inb(0x60);
+  if(BIT_IS_SET(inb(KBD_REG_COMMAND), 0)){
+    scancode = inb(KBD_REG_DATA);
   } else {
     kprint_err("Keyboard sent IRQ but there was no data\n");
     return;
@@ -58,7 +58,34 @@ static void kbd_irq(registers_t *regs){
 
 
 void init_keyboard(){
+  kbd_test();
   register_interrupt_handler(IRQ1, kbd_irq);
+}
+
+void kbd_test(){
+  CLI();
+  uint8_t res;
+  outb(KBD_REG_COMMAND, KBD_REG_INT_READ_CONF_BYTE);
+  if(!BIT_IS_SET(inb(KBD_REG_COMMAND), 0)) PANIC_M("8042 Keyboard controller configuration byte read did not return value");
+  res = inb(KBD_REG_DATA);
+  //if(!BIT_IS_SET(res, 7)) kprint_err("8042 Keyboard controller configuration byte does not have the always 0 bit as 0 something might be wrong\n");
+  if(!BIT_IS_SET(res, 2)) PANIC_M("CRITICAL ERROR: BIOS did not pass POST continuing will probably break something!");
+
+
+
+  outb(KBD_REG_COMMAND, KBD_REG_INT_CONT_SELF_TEST);
+  if(!BIT_IS_SET(inb(KBD_REG_COMMAND), 0)) PANIC_M("8042 Keyboard controller self test did not return value");
+  res = inb(KBD_REG_DATA);
+  if(res != 0x55 && res == 0xFC && BIT_IS_SET(inb(KBD_REG_COMMAND), 0)) PANIC_M("8042 Keyboard controller test failed");
+
+  outb(KBD_REG_COMMAND, KBD_REG_INT_KEYB_SELF_TEST);
+  if(!BIT_IS_SET(inb(KBD_REG_COMMAND), 0)) PANIC_M("Keyboard 1 self test did not return value");
+  res = inb(KBD_REG_DATA);
+  if(res != 0x00 && res == 0x01) PANIC_M("Keyboard 1 Clock line stuck low");
+  if(res != 0x00 && res == 0x02) PANIC_M("Keyboard 1 Clock line stuck high");
+  if(res != 0x00 && res == 0x03) PANIC_M("Keyboard 1 Data line stuck low");
+  if(res != 0x00 && res == 0x04) PANIC_M("Keyboard 1 Data line stuck high");
+  STI();
 }
 
 char kbd_getchar(){

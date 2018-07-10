@@ -3,7 +3,8 @@
 
 #include <stdint.h>
 #include "../kernel/arch/x86/cmos.h"
+#include "screen.h"
 
-uint8_t count_floppy_drives();
+void display_floppy_drive_info();
 
 #endif
