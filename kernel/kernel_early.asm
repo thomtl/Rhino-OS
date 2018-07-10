@@ -42,5 +42,3 @@ START_EXIT_LOOP:
 EXIT_LOOP:
   hlt
   jmp EXIT_LOOP
-
-;_kernel_end:

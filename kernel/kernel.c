@@ -14,6 +14,7 @@
 #include "fs/initrd.h"
 #include "multitasking/task.h"
 #include "user/program.h"
+#include "power/power.h"
 #include "../drivers/screen.h"
 #include "../drivers/keyboard.h"
 #include "../drivers/floppy.h"
@@ -251,6 +252,7 @@ void user_input(char *input){
     kprint("$");
     return;
   }
+  if(strcmp(input, "REBOOT") == 0) reboot();
   kprint(input);
   kprint(" is not an executable program.");
   kprint("\n$");
