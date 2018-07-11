@@ -143,7 +143,7 @@ void irq_handler(registers_t *r){
 
 void irq_install(){
   __asm__ __volatile__("sti");
-  init_timer(50);
+  init_timer(5);
   init_keyboard();
   init_syscall();
 }

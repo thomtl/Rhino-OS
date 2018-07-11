@@ -1,8 +1,8 @@
 #include "floppy.h"
 
 void display_floppy_drive_info(){
-  uint8_t flop = read_cmos(CMOS_REG_FLOPPY_DATA);
-  
+  uint8_t flop = read_cmos(CMOS_REG_INT_FLOPPY_DATA);
+
   if(BIT_IS_SET(flop, 4) && !BIT_IS_SET(flop, 5) && !BIT_IS_SET(flop, 6) && !BIT_IS_SET(flop, 7)){
     kprint_warn("Master 360 KB 5.25 Drive\n");
   } else if(!BIT_IS_SET(flop, 4) && BIT_IS_SET(flop, 5) && !BIT_IS_SET(flop, 6) && !BIT_IS_SET(flop, 7)){

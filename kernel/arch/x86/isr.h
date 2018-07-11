@@ -78,6 +78,10 @@ typedef struct {
   uint32_t eip, cs, eflags, esp, ss;
 } registers_t;
 
+
+void enable_nmi();
+void disable_nmi();
+
 void isr_install();
 void isr_handler(registers_t *r);
 void irq_install();

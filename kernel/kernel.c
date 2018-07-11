@@ -22,6 +22,7 @@
 #include "./arch/x86/gdt.h"
 #include "./arch/x86/msr.h"
 #include "./arch/x86/ports.h"
+#include "./arch/x86/cmos.h"
 #include "security/test_security.h"
 #include "kernel.h"
 #include "panic.h"
@@ -61,6 +62,27 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   kprint("Detected Memory: ");
   kprint(ramString);
   kprint("MB\n");
+
+  kprint("Date: ");
+  time_t date = read_rtc();
+  char buf[25] = "";
+  int_to_ascii(date.day, buf);
+  kprint(buf);
+  kprint("/");
+  int_to_ascii(date.month, buf);
+  kprint(buf);
+  kprint("/");
+  int_to_ascii(date.year, buf);
+  kprint(buf);
+  kprint(" ");
+  int_to_ascii(date.hour, buf);
+  kprint(buf);
+  kprint(":");
+  int_to_ascii(date.minute, buf);
+  kprint(buf);
+  kprint("\n");
+
+
   kprint("Enabling Protected Mode..");
   gdt_install();
   isr_install();
