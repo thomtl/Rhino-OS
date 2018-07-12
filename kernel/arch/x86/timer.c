@@ -2,13 +2,18 @@
 #include "isr.h"
 #include "ports.h"
 #include "../../common.h"
-#include "../../kernel.h"
+#include "../../../drivers/screen.h"
 
 uint32_t tick = 0;
 
 static void timer_callback(registers_t *regs){
   tick++;
-  kernel_timer_callback();
+  char c[128] = "";
+  int_to_ascii(tick, c);
+  uint8_t backup = get_color();
+  set_color(VGA_COLOR_CYAN, VGA_COLOR_BLACK);
+  kprint_at(c, 75, 0, 1);
+  set_raw_color(backup);
   UNUSED(regs);
 }
 

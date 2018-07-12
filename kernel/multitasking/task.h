@@ -1,6 +1,7 @@
 #ifndef TASK_H
 #define TASK_H
 #include <stdint.h>
+#include "../common.h"
 #define MAX_TASKS 256
 typedef struct {
   uint32_t eax, ebx, ecx, edx, esi, edi, esp, ebp, eip, eflags, cr3;
@@ -15,6 +16,7 @@ typedef struct {
 
 typedef struct Task {
   task_registers_t regs;
+  bool used;
   pid_t pid;
 } task_t;
 

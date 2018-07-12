@@ -5,45 +5,62 @@
 
 static task_t *runningTask;
 static task_t tasks[MAX_TASKS];
-static task_t emptyTask;
+//static task_t emptyTask;
 
-static uint32_t compareTasks(task_t a, task_t b){
-  if(a.pid.pid != b.pid.pid) return 0;
-  if(a.pid.user != b.pid.user) return 0;
-  if(a.pid.flags != b.pid.flags) return 0;
-  if(a.pid.path != b.pid.path) return 0;
-  if(a.regs.eax != b.regs.eax) return 0;
-  if(a.regs.ebx != b.regs.ebx) return 0;
-  if(a.regs.ecx != b.regs.ecx) return 0;
-  if(a.regs.edx != b.regs.edx) return 0;
-  if(a.regs.esi != b.regs.esi) return 0 ;
-  if(a.regs.edi != b.regs.edi) return 0;
-  if(a.regs.esp != b.regs.esp) return 0;
-  if(a.regs.ebp != b.regs.ebp) return 0;
-  if(a.regs.eip != b.regs.eip) return 0;
-  if(a.regs.eflags != b.regs.eflags) return 0;
-  if(a.regs.cr3 != b.regs.cr3) return 0;
-  return 1;
+/**
+   @brief Compares 2 tasks and returns true if they are thesame and returns false if they aren't.
+   @param args List of args.  args[0] is the first task.  args[1] is the second task.
+   @return returns a bool if the comparables are the same it will return true, if they aren't it will return false.
+ */
+static bool compareTasks(task_t a, task_t b){
+  if(a.pid.pid != b.pid.pid) return false;
+  if(a.pid.user != b.pid.user) return false;
+  if(a.pid.flags != b.pid.flags) return false;
+  if(a.pid.path != b.pid.path) return false;
+  if(a.regs.eax != b.regs.eax) return false;
+  if(a.regs.ebx != b.regs.ebx) return false;
+  if(a.regs.ecx != b.regs.ecx) return false;
+  if(a.regs.edx != b.regs.edx) return false;
+  if(a.regs.esi != b.regs.esi) return false;
+  if(a.regs.edi != b.regs.edi) return false;
+  if(a.regs.esp != b.regs.esp) return false;
+  if(a.regs.ebp != b.regs.ebp) return false;
+  if(a.regs.eip != b.regs.eip) return false;
+  if(a.regs.eflags != b.regs.eflags) return false;
+  if(a.regs.cr3 != b.regs.cr3) return false;
+  return true;
 }
 
+/**
+   @brief Searches the tasks array for the last filles element.
+   @return returns the index of the final element.
+ */
 static uint32_t getFinalElement(){
   for(uint32_t i = 0; i < MAX_TASKS; i++){
-    if(compareTasks(tasks[i], emptyTask) == 1){
-      return i;
-    }
+    if(tasks[i].used == false) return i;
   }
   return 0;
 }
 
+/**
+   @brief Takes in a task and returns the index of it.
+   @param args List of args.  args[0] is the task.
+   @return returns the index of the task.
+ */
 static uint32_t getIndexForTask(task_t task){
   for(uint32_t i = 0; i < MAX_TASKS; i++){
-    if(compareTasks(tasks[i], task) == 1){
+    if(compareTasks(tasks[i], task)){
       return i;
     }
   }
   return 0;
 }
 
+/**
+   @brief Get a task with pid.
+   @param args List of args.  args[0] is the pid to search.
+   @return returns a pointer to the task.
+ */
 static task_t* getTaskForPid(uint32_t pid){
   for(uint32_t i = 0; i < MAX_TASKS; i++){
     if(tasks[i].pid.pid == pid) return &(tasks[i]);
@@ -67,10 +84,18 @@ static void otherMain(){
   while(1);
 }
 
+
+/**
+   @brief Initialize tasking.
+ */
 void initTasking(){
+  for(uint32_t i = 0; i < MAX_TASKS; i++) tasks[i].used = false;
+
+
   __asm__ __volatile__("movl %%cr3, %%eax; movl %%eax, %0;":"=m"(tasks[0].regs.cr3)::"%eax");
   __asm__ __volatile__("pushfl; movl (%%esp), %%eax; movl %%eax, %0; popfl;":"=m"(tasks[0].regs.eflags)::"%eax");
   tasks[0].pid.pid = 0;
+  tasks[0].used = true;
 
   createTask(&(tasks[1]), otherMain, tasks[0].regs.eflags, (uint32_t*)tasks[0].regs.cr3);
 
@@ -79,6 +104,10 @@ void initTasking(){
   runningTask = &tasks[0];
 }
 
+/**
+   @brief Create a task.
+   @param args List of args.  args[0] the pointer to where to locate the task.  args[1] is a pointer to the main function. args[2] is the EFLAGS register. args[3] is the cr3 register.
+ */
 void createTask(task_t *task, void(*main)(), uint32_t flags, uint32_t *pagedir){
   task->regs.eax = 0;
   task->regs.ebx = 0;
@@ -91,32 +120,57 @@ void createTask(task_t *task, void(*main)(), uint32_t flags, uint32_t *pagedir){
   task->regs.cr3 = (uint32_t) pagedir;
   task->regs.esp = (uint32_t) kmalloc(0x4000) + 0x4000;
   task->pid.pid = tasks[getFinalElement() - 1].pid.pid + 1;
+  task->used = true;
 }
 
+/**
+   @brief yield away from the current task into the next.
+ */
 void yield(){
   task_t *last = runningTask;
 
-  uint32_t index = getIndexForTask(*runningTask);
-  if(index == getFinalElement() - 1) {
-    runningTask = &tasks[0];
-  } else {
-    runningTask = &tasks[index + 1];
+  // dirty overflow trick
+  uint8_t i = getIndexForTask(*runningTask) + 1;
+  while(1){
+    if(tasks[i].used == true){
+      runningTask = &tasks[i];
+      break;
+    }
+    i++;
   }
-  
   switchTask(&(last->regs), &(runningTask->regs));
 }
 
+/**
+   @brief get a pointer to the current task.
+   @return returns a pointer to the location of the current task.
+ */
 task_t* get_running_task(){
   return runningTask;
 }
+
+/**
+   @brief returns the pid of the current task.
+   @return returns an integer that is equal to the pid of the current task.
+ */
 uint32_t get_current_pid(){
   return runningTask->pid.pid;
 }
 
+
+/**
+   @brief Get the task for the pid.
+   @param args List of args.  args[0] is the pid to search.
+   @return returns a pointer to the task with pid in args[0].
+ */
 task_t* task_for_pid(uint32_t pid){
   return getTaskForPid(pid);
 }
 
+/**
+   @brief Fork the current task.
+   @return returns a pointer to the forked task.
+ */
 task_t* fork(void){
   uint32_t index = getFinalElement();
   tasks[index].regs.eax = get_running_task()->regs.eax;
@@ -132,8 +186,14 @@ task_t* fork(void){
   //memcpy((uint32_t*)stack_bottom, (uint32_t*)(get_running_task()->regs.esp - 0x4000), 0x4000);
   tasks[index].regs.esp = (uint32_t) stack_bottom + 0x4000;
   tasks[index].pid.pid = tasks[getFinalElement() - 1].pid.pid + 1;
+  tasks[index].used = true;
   return &tasks[index];
 }
+
+/**
+   @brief Changes the EIP(instruction pointer) of the task.
+   @param args List of args.  args[0] is the task to modify.  args[1] is function to update EIP to.
+ */
 void exec(task_t* task, void(*main)()){
   task->regs.eax = 0;
   task->regs.ebx = 0;

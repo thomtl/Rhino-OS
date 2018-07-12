@@ -32,7 +32,6 @@
 
 extern uint32_t placement_address;
 uint8_t shouldExit = 0; //set this to 1 to exit the kernel
-uint32_t uptime = 0;
 multiboot_info_t* multibootInfo;
 uint32_t ramAmountMB = 0; // in MegaBytes
 uint32_t ramAmount = 0;
@@ -278,14 +277,4 @@ void user_input(char *input){
   kprint(input);
   kprint(" is not an executable program.");
   kprint("\n$");
-}
-
-void kernel_timer_callback(){
-  uptime++;
-  char c[128] = "";
-  int_to_ascii(uptime, c);
-  uint8_t backup = get_color();
-  set_color(VGA_COLOR_CYAN, VGA_COLOR_BLACK);
-  kprint_at(c, 75, 0, 1);
-  set_raw_color(backup);
 }

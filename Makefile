@@ -10,8 +10,8 @@ CC = i686-elf-gcc
 # -g: Use debugging symbols in gcc
 CFLAGS = -g -m32 -fno-builtin -fstack-protector -nostartfiles -nodefaultlibs \
 					-Wall -Wextra -Werror -std=c99
-
-all: rhino.iso run
+.PHONY: all clean run bochs
+all: run
 # First rule is run by default
 
 initrd.img:
@@ -28,7 +28,7 @@ rhino.iso: kernel.bin initrd.img
 kernel.bin: kernel/kernel_early.o ${OBJ}
 	${CC} -T linker.ld -o $@ -ffreestanding -O2 -nostdlib $^ -lgcc
 
-run:
+run: rhino.iso
 	DISPLAY=:0 qemu-system-x86_64 -m 256M -cdrom rhino.iso -d cpu_reset -D log/qemulog
 	rm -rf build/sys
 
