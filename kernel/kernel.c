@@ -136,6 +136,8 @@ void user_input(char *input){
     kprint("CLEAR: To clear the screen\n");
     kprint("PID: To show the current tasks PID\n");
     kprint("TASK: To yield\n");
+    kprint("EXT: To run an external program on the INITRD\n");
+    kprint("REBOOT: To reboot the machine\n");
     #ifdef DEBUG
     kprint("Debug commands:\n");
     kprint("PANIC: Panic the kernel\n");
@@ -143,6 +145,7 @@ void user_input(char *input){
     kprint("STACKSMASH: To smash the stack and test the stack smash protection\n");
     kprint("SYSCALL: Simulate a bare syscall\n");
     kprint("MMAP: Print the sections in the BIOS mmap\n");
+    kprint("FLOPPY: Show the floppy configuration of this machine\n");
     #endif
     kprint("-------------------------------\n");
     kprint("$");
@@ -166,9 +169,9 @@ void user_input(char *input){
       fs_node_t *fsnode = finddir_fs(fs_root, node->name);
 
       if ((fsnode->flags&0x7) == FS_DIRECTORY){
-        kprint("\n\t(directory)\n");
+        kprint("\n(directory)\n");
       } else {
-        kprint("\n\t contents: \"");
+        kprint("\n    contents: \"");
         uint8_t buf[256];
         int sz = read_fs(fsnode, 0, 256, buf);
         int j;
