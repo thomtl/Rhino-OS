@@ -1,5 +1,5 @@
-#ifndef FRAME_H
-#define FRAME_H
+#ifndef PHYS_H
+#define PHYS_H
 #include <stdint.h>
 #include "../multiboot.h"
 

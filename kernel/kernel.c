@@ -7,7 +7,7 @@
 #include "common.h"
 #include "multiboot.h"
 #include "mm/paging.h"
-#include "mm/frame.h"
+#include "mm/phys.h"
 #include "mm/kheap.h"
 #include "multitasking/task.h"
 #include "fs/vfs.h"
@@ -94,8 +94,8 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   placement_address = initrd_end;
   kprint("done\n");
   kprint("Initializing Memory Management..");
-  install_paging();
   init_frame_alloc(mbd);
+  install_paging();
   init_heap();
   kprint("done\n");
   kprint("Initializing Ramdisk..");
@@ -277,6 +277,15 @@ void user_input(char *input){
     return;
   }
   if(strcmp(input, "REBOOT") == 0) reboot();
+
+  if(strcmp(input, "PHYS") == 0){
+    char buf[25] = "";
+    frame_t fr = alloc_frame();
+    hex_to_ascii(fr.addr, buf);
+    kprint(buf);
+    kprint("\n$");
+    return;
+  }
   kprint(input);
   kprint(" is not an executable program.");
   kprint("\n$");
