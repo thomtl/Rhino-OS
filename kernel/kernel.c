@@ -39,7 +39,7 @@ uint32_t ramAmount = 0;
 void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
 
   if(magic != MULTIBOOT_BOOTLOADER_MAGIC){
-    PANIC_M(": Kernel not booted by a multiboot compliant bootloader!\n");
+    PANIC_M(": Kernel was not booted by a multiboot compliant bootloader!\n");
     return;
   }
   multibootInfo = mbd;
@@ -279,19 +279,6 @@ void user_input(char *input){
     return;
   }
   if(strcmp(input, "REBOOT") == 0) reboot();
-
-  if(strcmp(input, "PHYS") == 0){
-    char buf[25] = "";
-    hex_to_ascii((uint32_t)alloc_frame(), buf);
-    kprint(buf);
-    for(uint32_t i = 0; i < 25; i++) buf[i] = '\0';
-    kprint("\n");
-    hex_to_ascii((uint32_t)alloc_frame(), buf);
-    kprint(buf);
-    for(uint32_t i = 0; i < 25; i++) buf[i] = '\0';
-    kprint("\n$");
-    return;
-  }
   kprint(input);
   kprint(" is not an executable program.");
   kprint("\n$");

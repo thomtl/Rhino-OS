@@ -20,6 +20,11 @@ uint32_t* frames;
 #define IDX_TO_ADDR(a) ((a) * (0x1000))
 #define ADDR_TO_IDX(a) ((a) / (0x1000))
 
+
+/**
+   @brief Sets a bit in the bitmap for a frame.
+   @param args List of args.  args[0] is the address of the frame to set.
+ */
 static void set_frame(uint32_t addr){
     uint32_t frame = ADDR_TO_IDX(addr);
     uint32_t i = INDEX_FROM_BIT(frame);
@@ -27,6 +32,11 @@ static void set_frame(uint32_t addr){
     frames[i] |= (0x1 << offset);
 }
 
+
+/**
+   @brief Clears a bit in the bitmap for a frame.
+   @param args List of args.  args[0] is the address of the frame to set.
+ */
 static void clear_frame(uint32_t addr){
     uint32_t frame = ADDR_TO_IDX(addr);
     uint32_t i = INDEX_FROM_BIT(frame);
@@ -34,6 +44,23 @@ static void clear_frame(uint32_t addr){
     frames[i] &= ~(0x1 << offset);
 }
 
+/**
+   @brief Checks if the bit in the bitmap is set for a frame.
+   @param args List of args.  args[0] is the address of the frame to check.
+   @return returns a bool for the state of the bit.
+ */
+static bool test_frame(uint32_t addr){
+  uint32_t frame = ADDR_TO_IDX(addr);
+  uint32_t i = INDEX_FROM_BIT(frame);
+  uint32_t offset = OFFSET_FROM_BIT(frame);
+  return frames[i] & (0x1 << offset);
+}
+
+
+/**
+   @brief Looks in the bitmap and finds the first free bit.
+   @return returns the index in the bitmap for the first free frame.
+ */
 static uint32_t first_frame(){
     uint32_t i, j;
     for(i = 0; i < INDEX_FROM_BIT(nframes); i++){
@@ -47,9 +74,13 @@ static uint32_t first_frame(){
         }
     }
     return 0xDEADBEEF;
-    //return -1;
 }
 
+
+/**
+   @brief Initialize the physical memory manager.
+   @param args List of args.  args[0] is the pointer to the multiboot info structure.
+ */
 void init_phys_manager(multiboot_info_t *mbd){
     mboot_hdr = mbd;
     mboot_reserved_start = (uint32_t)mboot_hdr;
@@ -61,56 +92,56 @@ void init_phys_manager(multiboot_info_t *mbd){
     memset(frames, 0, INDEX_FROM_BIT(nframes));
 }
 
-uint32_t mmap_read(uint32_t request, uint8_t mode){
-    if(request == 0) return 0;
-    if(mode != MMAP_GET_NUM && mode != MMAP_GET_ADDR) return 0;
 
-    uintptr_t cur_mmap_addr = (uintptr_t)mboot_hdr->mmap_addr;
-    uintptr_t mmap_end_addr = cur_mmap_addr + mboot_hdr->mmap_length;
-    uint32_t cur_num = 0;
-    while(cur_mmap_addr < mmap_end_addr){
-        multiboot_memory_map_t *current_entry = (multiboot_memory_map_t*)cur_mmap_addr;
-        uint64_t i;
-        uint64_t current_entry_end = current_entry->addr + current_entry->len;
-        for(i = current_entry->addr; i + PAGE_SIZE < current_entry_end; i += PAGE_SIZE){
-            if(mode == MMAP_GET_NUM && request >= i && request <= i + PAGE_SIZE){
-                return cur_num + 1;
-            }
-            if(current_entry->type == MULTIBOOT_MEMORY_RESERVED){
-                if(mode == MMAP_GET_ADDR && cur_num == request){
-                    ++request;
-                }
-                ++cur_num;
-                continue;
-            } else if(mode == MMAP_GET_ADDR && cur_num == request){
-                return i;
-            }
-            ++cur_num;
-        }
-
-        cur_mmap_addr += current_entry->size + sizeof(uintptr_t);
-
+/**
+   @brief Reads the memory map for a frame and checks if it is available.
+   @param args List of args.  args[0] is the frame to check for.
+   @return returns a bool for if it is reserved.
+ */
+bool read_mmap(uint32_t addr){
+  multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)mboot_hdr->mmap_addr;
+  uintptr_t *mmap_end = (uintptr_t*)(mboot_hdr->mmap_addr + mboot_hdr->mmap_length);
+  while((uint32_t)mmap < (uint32_t)mmap_end){
+    if((addr >= mmap->addr) && (addr <= (mmap->addr + mmap->len))){
+      if((mmap->type == MULTIBOOT_MEMORY_RESERVED) || (mmap->type == MULTIBOOT_MEMORY_ACPI_RECLAIMABLE) || (mmap->type == MULTIBOOT_MEMORY_NVS) || (mmap->type == MULTIBOOT_MEMORY_BADRAM)){
+        return true;
+      } else if (mmap->type == MULTIBOOT_MEMORY_AVAILABLE){
+        return false;
+      }
     }
-    return 0;
+    mmap = (multiboot_memory_map_t*) ( (uintptr_t)mmap + mmap->size + sizeof(uintptr_t) );
+  }
+  return true;
 }
 
+
+/**
+   @brief Allocates a physical frame.
+   @return returns a pointer to the allocated frame.
+ */
 void* alloc_frame(){
     uint32_t idx = first_frame();
-    if(idx == (uint32_t)-1) PANIC_M("No free physical frames left");
-    //uint32_t addr = mmap_read(idx, MMAP_GET_ADDR);
-    //frame_t frame;
+    if(idx == 0xDEADBEEF) PANIC_M("No free physical frames left");
+
+    bool reserved = read_mmap(IDX_TO_ADDR(idx));
+    if(reserved){
+      set_frame(IDX_TO_ADDR(idx));
+      return alloc_frame();
+    }
     uint32_t addr = IDX_TO_ADDR(idx);
     if((addr >= mboot_reserved_start && addr <= mboot_reserved_end ) || (addr >= kernel_start && addr <= kernel_end)){
-        set_frame(idx * 0x1000);
+        set_frame(IDX_TO_ADDR(idx));
         return alloc_frame();
     }
-    ///set_frame(idx * 1000);
-    //frame.num = idx;//mmap_read(addr, MMAP_GET_NUM);
-    //frame.addr = idx * 0x1000;//mmap_read(frame.num, MMAP_GET_ADDR);
+
     set_frame(IDX_TO_ADDR(idx));
     return (void*)(IDX_TO_ADDR(idx));
 }
 
-void free_frame(uint32_t* frame){
-  clear_frame((uint32_t)frame * 0x1000);
+/**
+   @brief Frees an allocated frame.
+   @param args List of args.  args[0] is the address of the frame to free.
+ */
+void free_frame(void* frame){
+  if(test_frame((uint32_t)frame)) clear_frame((uint32_t)frame * 0x1000);
 }

@@ -94,7 +94,6 @@ int print_char(char c, int col, int row, char attr){
   char *vidmem = VIDEO_ADDRESS;
   if(!attr) attr = WHITE_ON_BLACK;
 
-
   if(col >= MAX_COLS || row >= MAX_ROWS){
     vidmem[2*(MAX_COLS)*(MAX_ROWS)-2] = 'E';
     vidmem[2*(MAX_COLS)*(MAX_ROWS)-1] = RED_ON_WHITE;
