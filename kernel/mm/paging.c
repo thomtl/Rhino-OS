@@ -5,8 +5,8 @@ extern uint32_t placement_address;
 extern void tlb_flush();
 
 
-vpage_dir_t* current_vpage_dir = NULL;
-vpage_dir_t* root_vpage_dir = NULL;
+page_dir_t* current_page_dir = NULL;
+page_dir_t* root_page_dir = NULL;
 
 
 /*static page_table_t* read_cr3(){
@@ -23,7 +23,7 @@ static unsigned int read_cr0(){
 	return cr0;
 }
 
-static void write_cr3(vpage_dir_t* dir){
+static void write_cr3(page_dir_t* dir){
 	unsigned int addr = (unsigned int) &dir->tables[0];
 	__asm__ __volatile__ ("movl %%eax, %%cr3" :: "a" (addr));
 }
@@ -36,31 +36,30 @@ static void write_cr0(unsigned int new_cr0){
 
 
 
-void switch_vpage_dir(vpage_dir_t* dir){
+void switch_page_dir(page_dir_t* dir){
   write_cr3(dir);
   write_cr0(read_cr0() | 0x80000001);
 }
 
-vpage_dir_t* mk_vpage_dir(){
-  vpage_dir_t* dir = (vpage_dir_t*) kmalloc_a(sizeof(vpage_dir_t));
+page_dir_t* mk_page_dir(){
+  page_dir_t* dir = (page_dir_t*) alloc_frame();
 
-  for(uint32_t i = 0; i < PAGE_COMMON_SIZE; i++){
-    dir->tables[i] = EMPTY_TAB;
+  for(uint32_t i = 0; i < MM_PAGE_COMMON_SIZE; i++){
+    dir->tables[i] = MM_EMPTY_TAB;
   }
 
   return dir;
 }
-page_table_t* mk_vpage_table(){
-  page_table_t* tab = (page_table_t*) kmalloc_a(sizeof(page_table_t));
+page_table_t* mk_page_table(){
+  page_table_t* tab = (page_table_t*) alloc_frame();
 
-  for(uint32_t i = 0; i < PAGE_COMMON_SIZE; i++){
+  for(uint32_t i = 0; i < MM_PAGE_COMMON_SIZE; i++){
     tab->pages[i].present = 0;
     tab->pages[i].rw = 0;
   }
-  tlb_flush();
   return tab;
 }
-void vpage_fault(registers_t* regs){
+void page_fault(registers_t* regs){
 	unsigned int err_pos;
 	__asm__ __volatile__ ("mov %%cr2, %0" : "=r" (err_pos));
 
@@ -84,33 +83,34 @@ void vpage_fault(registers_t* regs){
 	if(re)		kprint_err(" (RE) ");
 
 	kprint_err("\n");
-  __asm__ __volatile__ ("cli");
+  CLI();
   while(1);
 }
 
-void install_paging(){
-  register_interrupt_handler(14, vpage_fault);
+void init_mm_paging(){
+  register_interrupt_handler(14, page_fault);
 
-  current_vpage_dir = mk_vpage_dir();
-  root_vpage_dir = current_vpage_dir;
+  current_page_dir = mk_page_dir();
+  root_page_dir = current_page_dir;
 
-  for(uint32_t i = 0; i < placement_address; i += PAGE_S){
-    vpage_map(root_vpage_dir, i, i);
+  for(uint32_t i = 0; i < placement_address; i += MM_PAGE_S){
+    page_map(root_page_dir, i, i);
   }
 
-  __asm__ __volatile__ ("cli");
-  switch_vpage_dir(root_vpage_dir);
-  __asm__ __volatile__ ("sti");
+  CLI();
+  switch_page_dir(root_page_dir);
+  STI();
 }
 
-void vpage_map(vpage_dir_t* dir, uint32_t virt, uint32_t phys){
+void page_map(page_dir_t* dir, uint32_t virt, uint32_t phys){
   uint16_t id = virt >> 22;
-  page_table_t* tab = mk_vpage_table();
+  page_table_t* tab = mk_page_table();
   dir->tables[id] = ((page_table_t*)((unsigned int) tab | 3 | 4));
 
-  for(uint32_t i = 0; i < PAGE_COMMON_SIZE; i++){
+  for(uint32_t i = 0; i < MM_PAGE_COMMON_SIZE; i++){
     tab->pages[i].frame = phys >> 12;
     tab->pages[i].present = 1;
     phys += 4096;
   }
+  tlb_flush();
 }

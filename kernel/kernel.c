@@ -77,12 +77,12 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   int_to_ascii(date.hour, buf);
   kprint(buf);
   kprint(":");
+  if(date.minute < 9) kprint("0");
   int_to_ascii(date.minute, buf);
   kprint(buf);
   kprint("\n");
+
   buf[0] = '\0';
-  hex_to_ascii(ramAmount, buf);
-  kprint(buf);
 
   kprint("\nEnabling Protected Mode..");
   gdt_install();
@@ -96,8 +96,8 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   placement_address = initrd_end;
   kprint("done\n");
   kprint("Initializing Memory Management..");
-  init_phys_manager(mbd);
-  install_paging();
+  init_mm_phys_manager(mbd);
+  init_mm_paging();
   init_heap();
   kprint("done\n");
   kprint("Initializing Ramdisk..");

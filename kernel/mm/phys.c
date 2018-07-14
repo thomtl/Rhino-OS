@@ -81,7 +81,7 @@ static uint32_t first_frame(){
    @brief Initialize the physical memory manager.
    @param args List of args.  args[0] is the pointer to the multiboot info structure.
  */
-void init_phys_manager(multiboot_info_t *mbd){
+void init_mm_phys_manager(multiboot_info_t *mbd){
     mboot_hdr = mbd;
     mboot_reserved_start = (uint32_t)mboot_hdr;
     mboot_reserved_end = (uint32_t)(mboot_hdr + sizeof(multiboot_info_t));
