@@ -1,5 +1,6 @@
 #include "phys.h"
 #include "kheap.h"
+#include "../../drivers/screen.h"
 #include "../common.h"
 multiboot_info_t *mboot_hdr;
 uint32_t mboot_reserved_start;
@@ -14,22 +15,24 @@ uint32_t kernel_start = (uint32_t)&_kernel_start;
 uint32_t nframes;
 uint32_t* frames;
 
-#define INDEX_FROM_BIT(a) ((a) / ( 8 * 4))
+#define INDEX_FROM_BIT(a) ((a) / (8 * 4))
 #define OFFSET_FROM_BIT(a) ((a) % (8 * 4))
+#define IDX_TO_ADDR(a) ((a) * (0x1000))
+#define ADDR_TO_IDX(a) ((a) / (0x1000))
 
 static void set_frame(uint32_t addr){
-    uint32_t frame = addr / 0x1000;
+    uint32_t frame = ADDR_TO_IDX(addr);
     uint32_t i = INDEX_FROM_BIT(frame);
     uint32_t offset = OFFSET_FROM_BIT(frame);
     frames[i] |= (0x1 << offset);
 }
 
-/*static void clear_frame(uint32_t addr){
-    uint32_t frame = addr / 0x1000;
+static void clear_frame(uint32_t addr){
+    uint32_t frame = ADDR_TO_IDX(addr);
     uint32_t i = INDEX_FROM_BIT(frame);
     uint32_t offset = OFFSET_FROM_BIT(frame);
     frames[i] &= ~(0x1 << offset);
-}*/
+}
 
 static uint32_t first_frame(){
     uint32_t i, j;
@@ -43,11 +46,11 @@ static uint32_t first_frame(){
             }
         }
     }
-
-    return -1;
+    return 0xDEADBEEF;
+    //return -1;
 }
 
-void init_frame_alloc(multiboot_info_t *mbd){
+void init_phys_manager(multiboot_info_t *mbd){
     mboot_hdr = mbd;
     mboot_reserved_start = (uint32_t)mboot_hdr;
     mboot_reserved_end = (uint32_t)(mboot_hdr + sizeof(multiboot_info_t));
@@ -91,18 +94,23 @@ uint32_t mmap_read(uint32_t request, uint8_t mode){
     return 0;
 }
 
-frame_t alloc_frame(){
+void* alloc_frame(){
     uint32_t idx = first_frame();
     if(idx == (uint32_t)-1) PANIC_M("No free physical frames left");
-    uint32_t addr = mmap_read(idx, MMAP_GET_ADDR);
-    frame_t frame;
+    //uint32_t addr = mmap_read(idx, MMAP_GET_ADDR);
+    //frame_t frame;
+    uint32_t addr = IDX_TO_ADDR(idx);
     if((addr >= mboot_reserved_start && addr <= mboot_reserved_end ) || (addr >= kernel_start && addr <= kernel_end)){
         set_frame(idx * 0x1000);
         return alloc_frame();
     }
-    set_frame(idx * 1000);
-    frame.num = mmap_read(addr, MMAP_GET_NUM);
-    frame.addr = mmap_read(frame.num, MMAP_GET_ADDR);
+    ///set_frame(idx * 1000);
+    //frame.num = idx;//mmap_read(addr, MMAP_GET_NUM);
+    //frame.addr = idx * 0x1000;//mmap_read(frame.num, MMAP_GET_ADDR);
+    set_frame(IDX_TO_ADDR(idx));
+    return (void*)(IDX_TO_ADDR(idx));
+}
 
-    return frame;
+void free_frame(uint32_t* frame){
+  clear_frame((uint32_t)frame * 0x1000);
 }

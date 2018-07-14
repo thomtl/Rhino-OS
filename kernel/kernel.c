@@ -80,9 +80,11 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   int_to_ascii(date.minute, buf);
   kprint(buf);
   kprint("\n");
+  buf[0] = '\0';
+  hex_to_ascii(ramAmount, buf);
+  kprint(buf);
 
-
-  kprint("Enabling Protected Mode..");
+  kprint("\nEnabling Protected Mode..");
   gdt_install();
   isr_install();
   irq_install();
@@ -94,7 +96,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   placement_address = initrd_end;
   kprint("done\n");
   kprint("Initializing Memory Management..");
-  init_frame_alloc(mbd);
+  init_phys_manager(mbd);
   install_paging();
   init_heap();
   kprint("done\n");
@@ -280,9 +282,13 @@ void user_input(char *input){
 
   if(strcmp(input, "PHYS") == 0){
     char buf[25] = "";
-    frame_t fr = alloc_frame();
-    hex_to_ascii(fr.addr, buf);
+    hex_to_ascii((uint32_t)alloc_frame(), buf);
     kprint(buf);
+    for(uint32_t i = 0; i < 25; i++) buf[i] = '\0';
+    kprint("\n");
+    hex_to_ascii((uint32_t)alloc_frame(), buf);
+    kprint(buf);
+    for(uint32_t i = 0; i < 25; i++) buf[i] = '\0';
     kprint("\n$");
     return;
   }
