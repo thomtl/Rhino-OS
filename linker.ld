@@ -4,41 +4,29 @@ ENTRY(_kernel_early)
 
 /* Tell where the various sections of the object files will be put in the final
    kernel image. */
-SECTIONS
-{
-	/* Begin putting sections at 1 MiB, a conventional place for kernels to be
-	   loaded at by the bootloader. */
-	. = 1M;
-	_kernel_start = .;
-	/* First put the multiboot header, as it is required to be put very early
-	   early in the image or the bootloader won't recognize the file format.
-	   Next we'll put the .text section. */
-	.text BLOCK(4K) : ALIGN(4K)
-	{
-		*(.multiboot)
-		*(.text)
-	}
 
-	/* Read-only data. */
-	.rodata BLOCK(4K) : ALIGN(4K)
-	{
-		*(.rodata)
-	}
+   SECTIONS {
+      /* The kernel will live at 3GB + 1MB in the virtual
+         address space, which will be mapped to 1MB in the
+         physical address space. */
+      . = 0xC0100000;
+      _kernel_start = .;
+      .text : AT(ADDR(.text) - 0xC0000000) {
+          *(.multiboot)
+          *(.text)
+          *(.rodata*)
+      }
 
-	/* Read-write data (initialized) */
-	.data BLOCK(4K) : ALIGN(4K)
-	{
-		*(.data)
-	}
+      .data ALIGN (0x1000) : AT(ADDR(.data) - 0xC0000000) {
+          *(.data)
+      }
 
-	/* Read-write data (uninitialized) and stack */
-	.bss BLOCK(4K) : ALIGN(4K)
-	{
-		*(COMMON)
-		*(.bss)
-	}
-  	end = .; _end = .; __end = .;
-	_kernel_end = .;
-	/* The compiler may produce other sections, by default it will put them in
-	   a segment with the same name. Simply add stuff here as needed. */
-}
+      .bss : AT(ADDR(.bss) - 0xC0000000) {
+          _sbss = .;
+          *(COMMON)
+          *(.bss)
+          _ebss = .;
+      }
+      _kernel_end = .;
+      end = .;
+   }

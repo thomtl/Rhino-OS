@@ -83,13 +83,15 @@ static uint32_t first_frame(){
  */
 void init_mm_phys_manager(multiboot_info_t *mbd){
     mboot_hdr = mbd;
-    mboot_reserved_start = (uint32_t)mboot_hdr;
-    mboot_reserved_end = (uint32_t)(mboot_hdr + sizeof(multiboot_info_t));
+    mboot_reserved_start = (uint32_t)(mboot_hdr - KERNEL_VBASE);
+    mboot_reserved_end = (uint32_t)((mboot_hdr + sizeof(multiboot_info_t)) - KERNEL_VBASE);
 
     uint32_t mem = (((mbd->mem_lower * 1024) + (mbd->mem_upper * 1024)) / 1024 / 1024 + 1) * 0x100000;
     nframes = mem / 0x1000;
     frames = (uint32_t*)kmalloc(INDEX_FROM_BIT(nframes));
     memset(frames, 0, INDEX_FROM_BIT(nframes));
+    kernel_start -= KERNEL_VBASE;
+    _kernel_end -= KERNEL_VBASE;
 }
 
 
@@ -99,8 +101,8 @@ void init_mm_phys_manager(multiboot_info_t *mbd){
    @return returns a bool for if it is reserved.
  */
 bool read_mmap(uint32_t addr){
-  multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)mboot_hdr->mmap_addr;
-  uintptr_t *mmap_end = (uintptr_t*)(mboot_hdr->mmap_addr + mboot_hdr->mmap_length);
+  multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)(mboot_hdr->mmap_addr + KERNEL_VBASE);
+  uintptr_t *mmap_end = (uintptr_t*)((mboot_hdr->mmap_addr + mboot_hdr->mmap_length) + KERNEL_VBASE);
   while((uint32_t)mmap < (uint32_t)mmap_end){
     if((addr >= mmap->addr) && (addr <= (mmap->addr + mmap->len))){
       if((mmap->type == MULTIBOOT_MEMORY_RESERVED) || (mmap->type == MULTIBOOT_MEMORY_ACPI_RECLAIMABLE) || (mmap->type == MULTIBOOT_MEMORY_NVS) || (mmap->type == MULTIBOOT_MEMORY_BADRAM)){
@@ -135,7 +137,7 @@ void* alloc_frame(){
     }
 
     set_frame(IDX_TO_ADDR(idx));
-    return (void*)(IDX_TO_ADDR(idx));
+    return (void*)(IDX_TO_ADDR(idx) + KERNEL_VBASE);
 }
 
 /**

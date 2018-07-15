@@ -3,7 +3,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "panic.h"
-//#define KERNEL_VBASE 0xC0000000
+#define KERNEL_VBASE 0xC0000000
+
 #define BIT_IS_SET(var, pos) ((var) & (1 << (pos)))
 #define BIT_SET(var, pos) ((var) |= (1ULL << (pos)))
 #define BIT_CLEAR(var, pos) ((var) &= ~(1ULL << (pos)))

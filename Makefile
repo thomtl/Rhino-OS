@@ -8,7 +8,7 @@ OBJ = ${C_SOURCES:.c=.o kernel/arch/x86/interrupt.o kernel/arch/x86/gdtlow.o ker
 CC = i686-elf-gcc
 
 # -g: Use debugging symbols in gcc
-CFLAGS = -g -m32 -fno-builtin -fstack-protector -nostartfiles -nodefaultlibs \
+CFLAGS = -g -m32 -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs \
 					-Wall -Wextra -Werror -std=c99
 .PHONY: all clean run bochs
 all: run

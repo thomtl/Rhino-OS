@@ -89,27 +89,34 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   isr_install();
   irq_install();
   kprint("done\n");
+
   kprint("Loading Ramdisk..");
   ASSERT(mbd->mods_count >= 1);
-  uint32_t initrd_location = *((uint32_t*)mbd->mods_addr);
-  uint32_t initrd_end = *(uint32_t*)(mbd->mods_addr+4);
+  uint32_t initrd_location = *((uint32_t*)phys_to_virt(mbd->mods_addr));
+  uint32_t initrd_end = *(uint32_t*)(phys_to_virt(mbd->mods_addr+4));
   placement_address = initrd_end;
   kprint("done\n");
+
+
   kprint("Initializing Memory Management..");
   init_mm_phys_manager(mbd);
   init_mm_paging();
+
   init_heap();
   kprint("done\n");
+
   kprint("Initializing Ramdisk..");
   fs_root = initialise_initrd(initrd_location);
   kprint("done\n");
+__asm__ ("cli; hlt");
   kprint("Enabling Multitasking..");
   initTasking();
   kprint("done\n");
+
   #ifndef DEBUG
   clear_screen();
   #endif
-  //set_color(VGA_COLOR_WHITE, VGA_COLOR_MAGENTA);
+
   kprint("Rhino Kernel Internal Shell version 0.0.2");
   set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
   kprint("\n$");
@@ -231,8 +238,8 @@ void user_input(char *input){
   if(strcmp(input, "MMAP") == 0){
     set_color(VGA_COLOR_GREEN, VGA_COLOR_BLACK);
     uint8_t entryCount = 1;
-    multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)multibootInfo->mmap_addr;
-    uintptr_t *mmap_end = (uintptr_t*)(multibootInfo->mmap_addr + multibootInfo->mmap_length);
+    multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)phys_to_virt(multibootInfo->mmap_addr);
+    uintptr_t *mmap_end = (uintptr_t*)(phys_to_virt(multibootInfo->mmap_addr + multibootInfo->mmap_length));
     while((uint32_t)mmap < (uint32_t)mmap_end){
       char buf[128] = "";
       kprint("Entry: ");

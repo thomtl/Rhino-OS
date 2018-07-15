@@ -5,60 +5,7 @@ extern uint32_t placement_address;
 extern void tlb_flush();
 
 
-page_dir_t* current_page_dir = NULL;
-page_dir_t* root_page_dir = NULL;
 
-
-/*static page_table_t* read_cr3(){
-	unsigned int cr3;
-
-	__asm__ __volatile__ ("movl %%cr3, %%eax" : "=a" (cr3));
-	return (page_table_t*) cr3;
-}*/
-
-static unsigned int read_cr0(){
-	unsigned int cr0;
-
-	__asm__ __volatile__ ("movl %%cr0, %%eax" : "=a" (cr0));
-	return cr0;
-}
-
-static void write_cr3(page_dir_t* dir){
-	unsigned int addr = (unsigned int) &dir->tables[0];
-	__asm__ __volatile__ ("movl %%eax, %%cr3" :: "a" (addr));
-}
-
-static void write_cr0(unsigned int new_cr0){
-	__asm__ __volatile__ ("movl %%eax, %%cr0" :: "a" (new_cr0));
-}
-
-
-
-
-
-void switch_page_dir(page_dir_t* dir){
-  write_cr3(dir);
-  write_cr0(read_cr0() | 0x80000001);
-}
-
-page_dir_t* mk_page_dir(){
-  page_dir_t* dir = (page_dir_t*) alloc_frame();
-
-  for(uint32_t i = 0; i < MM_PAGE_COMMON_SIZE; i++){
-    dir->tables[i] = MM_EMPTY_TAB;
-  }
-
-  return dir;
-}
-page_table_t* mk_page_table(){
-  page_table_t* tab = (page_table_t*) alloc_frame();
-
-  for(uint32_t i = 0; i < MM_PAGE_COMMON_SIZE; i++){
-    tab->pages[i].present = 0;
-    tab->pages[i].rw = 0;
-  }
-  return tab;
-}
 void page_fault(registers_t* regs){
 	unsigned int err_pos;
 	__asm__ __volatile__ ("mov %%cr2, %0" : "=r" (err_pos));
@@ -88,29 +35,51 @@ void page_fault(registers_t* regs){
 }
 
 void init_mm_paging(){
+	//char buf[25] = "";
   register_interrupt_handler(14, page_fault);
 
-  current_page_dir = mk_page_dir();
-  root_page_dir = current_page_dir;
+	uintptr_t page_directory = (uintptr_t)alloc_frame();
 
-  for(uint32_t i = 0; i < placement_address; i += MM_PAGE_S){
-    page_map(root_page_dir, i, i);
-  }
+	unsigned int pde = 0;
+	for(pde = 0; pde < MM_PAGE_COMMON_SIZE; pde++){
+		((uintptr_t*)page_directory)[pde] = 0 | 2;
+	}
 
-  CLI();
-  switch_page_dir(root_page_dir);
-  STI();
+	uintptr_t address = 0x0;
+	unsigned int pidx = 0;
+	for(pidx = KERNEL_VBASE >> 22; pidx < (KERNEL_VBASE >> 22) + 4; pidx++){
+		uintptr_t page_table = (uintptr_t)alloc_frame();
+
+		unsigned int pte;
+		for(pte = 0; pte < MM_PAGE_COMMON_SIZE; pte++){
+			((uint32_t*)page_table)[pte] = address | 3;
+			address += 0x1000;
+		}
+
+		((uintptr_t*)page_directory)[pidx] = virt_to_phys(page_table) | 3;
+	}
+
+	__asm__ __volatile__ ("mov %0, %%cr3":: "r"(virt_to_phys(page_directory)));
+
+	/* clear 4MB page bit since we're switching to 4KB pages */
+	uint32_t cr4;
+	__asm__ __volatile__("mov %%cr4, %0": "=r" (cr4));
+	cr4 &= ~(0x00000010);
+	__asm__ __volatile__("mov %0, %%cr4":: "r" (cr4));
+
+	/* read cr0, set paging bit, write it back */
+	uint32_t cr0;
+	__asm__ __volatile__("mov %%cr0, %0": "=r" (cr0));
+	cr0 |= 0x80000000;
+	__asm__ __volatile__("mov %0, %%cr0":: "r" (cr0));
+
+	//__asm__ ("cli; hlt");
 }
 
-void page_map(page_dir_t* dir, uint32_t virt, uint32_t phys){
-  uint16_t id = virt >> 22;
-  page_table_t* tab = mk_page_table();
-  dir->tables[id] = ((page_table_t*)((unsigned int) tab | 3 | 4));
+uintptr_t phys_to_virt(uintptr_t phys){
+	return phys + KERNEL_VBASE;
+}
 
-  for(uint32_t i = 0; i < MM_PAGE_COMMON_SIZE; i++){
-    tab->pages[i].frame = phys >> 12;
-    tab->pages[i].present = 1;
-    phys += 4096;
-  }
-  tlb_flush();
+uintptr_t virt_to_phys(uintptr_t virt){
+	return virt - KERNEL_VBASE;
 }
