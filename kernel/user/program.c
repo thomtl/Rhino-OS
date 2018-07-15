@@ -5,8 +5,8 @@
 #include "../mm/kheap.h"
 #include "../common.h"
 #include "../../libc/include/string.h"
-
-
+#include "../multitasking/task.h"
+extern task_t* taskArray;
 /**
    @brief Loads a program from the INITRD into Memory.
    @param args List of args.  args[0] is the filename of the file to search.  args[1] is the binary type of the file.
@@ -42,8 +42,10 @@ loaded_program_t* load_program(char* filename, uint8_t type){
    @return returns nothing.
  */
 void run_program(void *address){
-  call_module_t prog = (call_module_t) address;
-  prog();
+  //call_module_t prog = (call_module_t) address;
+  //prog();
+  
+  createTask(address, taskArray[0].regs.eflags, (uint32_t*)taskArray[0].regs.cr3);
   return;
 }
 

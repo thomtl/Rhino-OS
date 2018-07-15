@@ -4,7 +4,8 @@
 #include "../mm/kheap.h"
 #include "scheduler.h"
 static task_t *runningTask;
-static task_t tasks[MAX_TASKS];
+task_t tasks[MAX_TASKS];
+task_t* taskArray = tasks;
 //static task_t emptyTask;
 
 /**
@@ -68,35 +69,6 @@ static task_t* getTaskForPid(uint32_t pid){
   return NULL;
 }
 
-static void diffrentMain(){
-  uint32_t a = 0;
-  char buf[25] = "";
-  while(1){
-    CLI();
-    int_to_ascii(a, buf);
-    kprint_at(buf, 0, 24, 1);
-    a++;
-    STI();
-    //yield();
-  }
-  while(1);
-}
-
-static void otherMain(){
-  uint32_t b = 0;
-  char buff[25] = "";
-  while(1){
-    CLI();
-    int_to_ascii(b, buff);
-    kprint_at(buff, 15, 24, 1);
-    b++;
-    STI();
-    //yield();
-  }
-  while(1);
-}
-
-
 /**
    @brief Initialize tasking.
  */
@@ -111,10 +83,6 @@ void initTasking(){
   tasks[0].pid.pid = 0;
   tasks[0].used = true;
 
-  createTask(&(tasks[1]), otherMain, tasks[0].regs.eflags, (uint32_t*)tasks[0].regs.cr3);
-
-  createTask(&(tasks[2]), diffrentMain, tasks[0].regs.eflags, (uint32_t*)tasks[0].regs.cr3);
-
   runningTask = &tasks[0];
 }
 
@@ -122,7 +90,8 @@ void initTasking(){
    @brief Create a task.
    @param args List of args.  args[0] the pointer to where to locate the task.  args[1] is a pointer to the main function. args[2] is the EFLAGS register. args[3] is the cr3 register.
  */
-void createTask(task_t *task, void(*main)(), uint32_t flags, uint32_t *pagedir){
+void createTask(void(*main)(), uint32_t flags, uint32_t *pagedir){
+  task_t* task = &tasks[getFinalElement()];
   task->regs.eax = 0;
   task->regs.ebx = 0;
   task->regs.ecx = 0;

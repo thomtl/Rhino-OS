@@ -1,4 +1,5 @@
 #include "scheduler.h"
+#include "../../drivers/screen.h"
 uint32_t seconds_passed = 0;
 bool scheduling_enabled = false;
 

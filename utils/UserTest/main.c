@@ -2,6 +2,8 @@
 void putchar(char c);
 
 void main(void){
+  __asm__ ("sti");
+  while(1){
   putchar('1');
   putchar('2');
   putchar('3');
@@ -12,6 +14,7 @@ void main(void){
   putchar('8');
   putchar('9');
   putchar('0');
+  }
   return;
 }
 

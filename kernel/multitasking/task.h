@@ -23,7 +23,7 @@ typedef struct Task {
 
 void initTasking();
 
-void createTask(task_t*, void(*)(), uint32_t, uint32_t*);
+void createTask(void(*)(), uint32_t, uint32_t*);
 
 task_t* get_running_task();
 uint32_t get_current_pid();
