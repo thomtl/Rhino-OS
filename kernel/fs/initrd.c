@@ -1,4 +1,5 @@
 #include "initrd.h"
+#include "../mm/phys.h"
 #include "../../libc/include/string.h"
 initrd_header_t *initrd_header;
 initrd_file_header_t *file_headers;
@@ -56,6 +57,7 @@ fs_node_t *initialise_initrd(uint32_t location){
   file_headers = (initrd_file_header_t *) (location+sizeof(initrd_header_t));
   initrd_root = (fs_node_t*)kmalloc(sizeof(fs_node_t));
   strcpy(initrd_root->name, "initrd");
+
   initrd_root->mask = initrd_root->uid = initrd_root->gid = initrd_root->inode = initrd_root->length = 0;
   initrd_root->flags = FS_DIRECTORY;
   initrd_root->read = 0;
@@ -78,9 +80,13 @@ fs_node_t *initialise_initrd(uint32_t location){
   initrd_dev->finddir = &initrd_finddir;
   initrd_dev->ptr = 0;
   initrd_dev->impl = 0;
+
   root_nodes = (fs_node_t*)kmalloc(sizeof(fs_node_t) * initrd_header->nfiles);
+
   nroot_nodes = initrd_header->nfiles;
+
   uint32_t i;
+
   for (i = 0; i < initrd_header->nfiles; i++)
   {
     // Edit the file's header - currently it holds the file offset

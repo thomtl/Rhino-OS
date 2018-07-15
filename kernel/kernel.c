@@ -31,13 +31,28 @@
 #include <stdint.h>
 
 extern uint32_t placement_address;
+extern uint32_t _kernel_start;
 uint8_t shouldExit = 0; //set this to 1 to exit the kernel
 multiboot_info_t* multibootInfo;
 uint32_t ramAmountMB = 0; // in MegaBytes
 uint32_t ramAmount = 0;
 
 void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
-
+  char buf[25] = "";
+  #ifdef DEBUG
+  set_color(VGA_COLOR_LIGHT_CYAN, VGA_COLOR_BLACK);
+  uint32_t kern_base = (uint32_t)&_kernel_start;
+  hex_to_ascii(kern_base, buf);
+  kprint("KERNEL VIRTUAL BASE: ");
+  kprint(buf);
+  kprint("\n");
+  buf[0] = '\0';
+  kern_base = virt_to_phys(kern_base);
+  hex_to_ascii(kern_base, buf);
+  kprint("KERNEL PHYSICAL BASE: ");
+  kprint(buf);
+  kprint("\n");
+  #endif
   if(magic != MULTIBOOT_BOOTLOADER_MAGIC){
     PANIC_M(": Kernel was not booted by a multiboot compliant bootloader!\n");
     return;
@@ -55,16 +70,14 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
     kprint_err("MULTIBOOT didn't supply APM table\n");
   }
   set_color(VGA_COLOR_LIGHT_BLUE, VGA_COLOR_BLACK);
-  kprint("Starting Rhino Copyright 2018 Thomas Woertman, The Netherlands\n");
-  char ramString[25] = "";
-  int_to_ascii(ramAmountMB, ramString);
+  kprint("Starting Rhino 0.2, Copyright 2018 Thomas Woertman, The Netherlands\n");
+  int_to_ascii(ramAmountMB, buf);
   kprint("Detected Memory: ");
-  kprint(ramString);
+  kprint(buf);
   kprint("MB\n");
 
   kprint("Date: ");
   time_t date = read_rtc();
-  char buf[25] = "";
   int_to_ascii(date.day, buf);
   kprint(buf);
   kprint("/");
@@ -82,7 +95,6 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   kprint(buf);
   kprint("\n");
 
-  buf[0] = '\0';
 
   kprint("\nEnabling Protected Mode..");
   gdt_install();
@@ -92,13 +104,15 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
 
   kprint("Loading Ramdisk..");
   ASSERT(mbd->mods_count >= 1);
-  uint32_t initrd_location = *((uint32_t*)phys_to_virt(mbd->mods_addr));
-  uint32_t initrd_end = *(uint32_t*)(phys_to_virt(mbd->mods_addr+4));
+  multiboot_module_t *initrd = (multiboot_module_t*)phys_to_virt(mbd->mods_addr);
+  uint32_t initrd_location = phys_to_virt(initrd->mod_start);//*((uint32_t*)phys_to_virt(mbd->mods_addr));
+  uint32_t initrd_end = phys_to_virt(initrd->mod_end);//*(uint32_t*)(phys_to_virt(mbd->mods_addr)+ 4);
   placement_address = initrd_end;
   kprint("done\n");
 
 
   kprint("Initializing Memory Management..");
+
   init_mm_phys_manager(mbd);
   init_mm_paging();
 
@@ -108,7 +122,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   kprint("Initializing Ramdisk..");
   fs_root = initialise_initrd(initrd_location);
   kprint("done\n");
-__asm__ ("cli; hlt");
+
   kprint("Enabling Multitasking..");
   initTasking();
   kprint("done\n");

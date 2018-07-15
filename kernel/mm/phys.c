@@ -89,6 +89,7 @@ void init_mm_phys_manager(multiboot_info_t *mbd){
     uint32_t mem = (((mbd->mem_lower * 1024) + (mbd->mem_upper * 1024)) / 1024 / 1024 + 1) * 0x100000;
     nframes = mem / 0x1000;
     frames = (uint32_t*)kmalloc(INDEX_FROM_BIT(nframes));
+
     memset(frames, 0, INDEX_FROM_BIT(nframes));
     kernel_start -= KERNEL_VBASE;
     _kernel_end -= KERNEL_VBASE;

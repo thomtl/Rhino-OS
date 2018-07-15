@@ -47,7 +47,7 @@ void init_mm_paging(){
 
 	uintptr_t address = 0x0;
 	unsigned int pidx = 0;
-	for(pidx = KERNEL_VBASE >> 22; pidx < (KERNEL_VBASE >> 22) + 4; pidx++){
+	for(pidx = KERNEL_VBASE >> 22; pidx < (KERNEL_VBASE >> 22) + 8; pidx++){
 		uintptr_t page_table = (uintptr_t)alloc_frame();
 
 		unsigned int pte;

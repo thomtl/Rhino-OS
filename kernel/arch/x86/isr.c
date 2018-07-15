@@ -124,6 +124,7 @@ void isr_handler(registers_t *r){
     kprint_err("\n");
     kprint_err(exception_messages[int_no]);
     kprint_err("\n");
+    while(1);
   }
 }
 

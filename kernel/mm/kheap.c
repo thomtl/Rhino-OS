@@ -140,7 +140,7 @@ void* kmalloc_int(size_t sz, int align, uint32_t *phys)
       }
       uint32_t tmp = placement_address;
       placement_address += sz;
-      return (void*)(tmp + KERNEL_VBASE);
+      return (void*)((tmp));
   }
 }
 void kfree(void *p)

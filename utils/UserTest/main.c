@@ -1,36 +1,18 @@
-#include <stdint.h>
-#include <stddef.h>
-void printf(char *c);
+
 void putchar(char c);
 
 void main(void){
-  putchar('H');
-  putchar('e');
-  putchar('l');
-  putchar('l');
-  putchar('o');
-  putchar(' ');
-  putchar('E');
-  putchar('x');
-  putchar('t');
-  putchar('e');
-  putchar('r');
-  putchar('n');
-  putchar('a');
-  putchar('l');
-  putchar(' ');
-  putchar('W');
-  putchar('o');
-  putchar('r');
-  putchar('l');
-  putchar('d');
+  putchar('1');
+  putchar('2');
+  putchar('3');
+  putchar('4');
+  putchar('5');
+  putchar('6');
+  putchar('7');
+  putchar('8');
+  putchar('9');
+  putchar('0');
   return;
-}
-
-void printf(char *c){
-  while(*c != '\0'){
-    putchar(++*c);
-  }
 }
 
 void putchar(char c){
