@@ -302,6 +302,7 @@ void user_input(char *input){
     return;
   }
   if(strcmp(input, "REBOOT") == 0) reboot();
+
   kprint(input);
   kprint(" is not an executable program.");
   kprint("\n$");

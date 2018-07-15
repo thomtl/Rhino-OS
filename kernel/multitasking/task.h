@@ -21,14 +21,19 @@ typedef struct Task {
   pid_t pid;
 } task_t;
 
-extern void initTasking();
-extern void createTask(task_t*, void(*)(), uint32_t, uint32_t*);
+void initTasking();
+
+void createTask(task_t*, void(*)(), uint32_t, uint32_t*);
+
 task_t* get_running_task();
 uint32_t get_current_pid();
 task_t* task_for_pid(uint32_t pid);
-extern task_t* fork(void);
-extern void exec(task_t* task, void(*main)());
-extern void yield();
+
+task_t* fork(void);
+void exec(task_t* task, void(*main)());
+void yield();
+void kill(uint32_t pid);
+
 extern void switchTask(task_registers_t *old, task_registers_t *new);
 
 #endif

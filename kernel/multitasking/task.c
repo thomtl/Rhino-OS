@@ -138,6 +138,16 @@ void createTask(task_t *task, void(*main)(), uint32_t flags, uint32_t *pagedir){
 }
 
 /**
+   @brief Kill a task.
+   @param args List of args.  args[0] is the pid of the task to kill.
+ */
+void kill(uint32_t pid){
+  task_t* task = task_for_pid(pid);
+  task->used = false;
+}
+
+
+/**
    @brief yield away from the current task into the next.
  */
 void yield(){
