@@ -13,6 +13,7 @@
 #include "fs/vfs.h"
 #include "fs/initrd.h"
 #include "multitasking/task.h"
+#include "multitasking/scheduler.h"
 #include "user/program.h"
 #include "power/power.h"
 #include "../drivers/screen.h"
@@ -134,6 +135,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   kprint("Rhino Kernel Internal Shell version 0.0.2");
   set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
   kprint("\n$");
+  enable_scheduling();
   while(1)
   {
     if(shouldExit == 1){

@@ -2,7 +2,7 @@
 #include "../../drivers/screen.h"
 #include "../../libc/include/string.h"
 #include "../mm/kheap.h"
-
+#include "scheduler.h"
 static task_t *runningTask;
 static task_t tasks[MAX_TASKS];
 //static task_t emptyTask;
@@ -69,17 +69,29 @@ static task_t* getTaskForPid(uint32_t pid){
 }
 
 static void diffrentMain(){
+  uint32_t a = 0;
+  char buf[25] = "";
   while(1){
-    kprint("B");
-    yield();
+    CLI();
+    int_to_ascii(a, buf);
+    kprint_at(buf, 0, 24, 1);
+    a++;
+    STI();
+    //yield();
   }
   while(1);
 }
 
 static void otherMain(){
+  uint32_t b = 0;
+  char buff[25] = "";
   while(1){
-    kprint("A");
-    yield();
+    CLI();
+    int_to_ascii(b, buff);
+    kprint_at(buff, 15, 24, 1);
+    b++;
+    STI();
+    //yield();
   }
   while(1);
 }
@@ -89,7 +101,9 @@ static void otherMain(){
    @brief Initialize tasking.
  */
 void initTasking(){
-  for(uint32_t i = 0; i < MAX_TASKS; i++) tasks[i].used = false;
+  for(uint32_t i = 0; i < MAX_TASKS; i++){
+    tasks[i].used = false;
+  }
 
 
   __asm__ __volatile__("movl %%cr3, %%eax; movl %%eax, %0;":"=m"(tasks[0].regs.cr3)::"%eax");
@@ -140,6 +154,7 @@ void yield(){
   }
   switchTask(&(last->regs), &(runningTask->regs));
 }
+
 
 /**
    @brief get a pointer to the current task.

@@ -2,6 +2,7 @@
 #define TASK_H
 #include <stdint.h>
 #include "../common.h"
+
 #define MAX_TASKS 256
 typedef struct {
   uint32_t eax, ebx, ecx, edx, esi, edi, esp, ebp, eip, eflags, cr3;
@@ -27,8 +28,6 @@ uint32_t get_current_pid();
 task_t* task_for_pid(uint32_t pid);
 extern task_t* fork(void);
 extern void exec(task_t* task, void(*main)());
-//task_t* fork();
-//void exec(task_t* task, void(*main)());
 extern void yield();
 extern void switchTask(task_registers_t *old, task_registers_t *new);
 
