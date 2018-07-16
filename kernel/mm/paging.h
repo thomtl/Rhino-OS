@@ -14,6 +14,8 @@
 
 void init_mm_paging();
 
+void map_phys_virt(uintptr_t page_directory, uintptr_t phys, uintptr_t virt);
+
 uintptr_t phys_to_virt(uintptr_t phys);
 uintptr_t virt_to_phys(uintptr_t virt);
 

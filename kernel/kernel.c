@@ -116,8 +116,6 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
 
   init_mm_phys_manager(mbd);
   init_mm_paging();
-
-  init_heap();
   kprint("done\n");
 
   kprint("Initializing Ramdisk..");
