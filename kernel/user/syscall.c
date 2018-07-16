@@ -4,6 +4,13 @@
 #include "../../libc/include/stdio.h"
 #include "../multitasking/task.h"
 
+static inline void sys_start_task_atomic(){
+  start_task_atomic();
+}
+
+static inline void sys_end_task_atomic(){
+  end_task_atomic();
+}
 
 static inline void sys_yield(){
   yield();
@@ -28,6 +35,12 @@ void syscall_handler(registers_t *regs){
           sys_yield();
           break;
         case 2:
+          sys_start_task_atomic();
+          break;
+        case 3:
+          sys_end_task_atomic();
+          break;
+        case 4:
           sys_exec((void(*)())regs->ecx);
           break;
         default:

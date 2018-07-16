@@ -24,3 +24,10 @@ void schedule(uint32_t tick){
 void enable_scheduling(){
   scheduling_enabled = true;
 }
+
+/**
+  @brief Disables scheduling
+ */
+void disable_scheduling(){
+  scheduling_enabled = false;
+}

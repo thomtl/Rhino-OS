@@ -10,4 +10,5 @@
 
 void schedule(uint32_t tick);
 void enable_scheduling();
+void disable_scheduling();
 #endif

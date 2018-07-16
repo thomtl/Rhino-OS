@@ -198,3 +198,12 @@ void exec(task_t* task, void(*main)()){
   task->regs.eip = (uint32_t) main;
   yield();
 }
+
+
+void start_task_atomic(){
+  disable_scheduling();
+}
+
+void end_task_atomic(){
+  enable_scheduling();
+}

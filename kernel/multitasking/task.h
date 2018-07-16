@@ -34,6 +34,11 @@ void exec(task_t* task, void(*main)());
 void yield();
 void kill(uint32_t pid);
 
+void start_task_atomic();
+void end_task_atomic();
+
+
+
 extern void switchTask(task_registers_t *old, task_registers_t *new);
 
 #endif
