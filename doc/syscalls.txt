@@ -3,8 +3,12 @@ EAX   EBX   ECX   EDX   NAME                FUNCTION                            
 0     2     0     0     Start Task Atomic   Starts atomicity for the current running task
 0     3     0     0     End Task Atomic     Ends atomicity for the current running task
 0     4     A     0     Exec                Calls Exec for the current task                 A = pointer to the main function
-0     5     A     0     Exit                Exits the program                               A = Exit status // todo
+0     5     0     0     Exit                Exits the program
 0     6     0     0     Fork                Fork                                                                                Pointer to task_t
 0     7     0     0     Get current pid     name                                                                                pid_t
 1     1     A     0     Printc              Prints whats the char in ecx                    A = char code to data
 1     2     0     0     Clear Screen        Clears the screen
+2	  1		A	  0		Malloc				malloc											A = size							Pointer to space
+2	  2		A	  0		free				free											A = pointer to free
+3	  1		A	  0		finddir_fs			name											A = name of file					fs_node_t of the file
+4	  A     B     C		read_fs				name											A = node, B = size, C = buffer		int with status

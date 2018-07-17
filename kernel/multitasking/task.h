@@ -33,6 +33,8 @@ task_t* fork(void);
 void exec(task_t* task, void(*main)());
 void yield();
 void kill(uint32_t pid);
+void waitpid(uint32_t pid);
+
 
 void start_task_atomic();
 void end_task_atomic();

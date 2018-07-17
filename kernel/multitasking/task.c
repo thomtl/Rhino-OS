@@ -177,7 +177,7 @@ task_t* fork(void){
   tasks[index].regs.eip = (uint32_t) get_running_task()->regs.eip;
   tasks[index].regs.cr3 = (uint32_t) get_running_task()->regs.cr3;
   uint32_t stack_bottom = (uint32_t)kmalloc(0x4000);
-  //memcpy((uint32_t*)stack_bottom, (uint32_t*)(get_running_task()->regs.esp - 0x4000), 0x4000);
+  memcpy((uint32_t*)stack_bottom, (uint32_t*)(get_running_task()->regs.esp - 0x4000), 0x4000);
   tasks[index].regs.esp = (uint32_t) stack_bottom + 0x4000;
   tasks[index].pid.pid = tasks[getFinalElement() - 1].pid.pid + 1;
   tasks[index].used = true;
@@ -196,14 +196,30 @@ void exec(task_t* task, void(*main)()){
   task->regs.esi = 0;
   task->regs.edi = 0;
   task->regs.eip = (uint32_t) main;
+  memset((void*)task->regs.esp, 0, 0x4000);
   yield();
 }
 
+/**
+   @brief waits until task with pid has exited.
+   @param args List of args.  args[0] is the pid of the task to wait for.
+ */
+void waitpid(uint32_t pid){
+  task_t* task = task_for_pid(pid);
+  if(task->used == false) return;
+  while(task->used);
+}
 
+/**
+   @brief starts a period of garanteed atomicity for the task.
+ */
 void start_task_atomic(){
   disable_scheduling();
 }
 
+/**
+   @brief stops a period of garanteed atomicity for the task.
+ */
 void end_task_atomic(){
   enable_scheduling();
 }
