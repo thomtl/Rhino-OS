@@ -1,5 +1,5 @@
 #include "kheap.h"
-#include "../../libc/include/string.h"
+#include "../../libk/include/string.h"
 #include "../../drivers/screen.h"
 #include "phys.h"
 #include "../common.h"

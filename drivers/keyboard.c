@@ -2,7 +2,7 @@
 #include "../kernel/arch/x86/ports.h"
 #include "../kernel/arch/x86/isr.h"
 #include "screen.h"
-#include "../libc/include/string.h"
+#include "../libk/include/string.h"
 #include "../kernel/common.h"
 #include "../kernel/kernel.h"
 

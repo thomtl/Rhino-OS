@@ -4,7 +4,7 @@
 #include "../fs/initrd.h"
 #include "../mm/kheap.h"
 #include "../common.h"
-#include "../../libc/include/string.h"
+#include "../../libk/include/string.h"
 #include "../multitasking/task.h"
 extern task_t* taskArray;
 /**

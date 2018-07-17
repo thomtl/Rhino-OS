@@ -6,7 +6,6 @@ uint32_t syscall(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx);
 
 void main(void){
   __asm__ ("sti");
-  syscall(0, 6, 0, 0);
   printf("Hello World");
   while(1);
 }

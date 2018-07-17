@@ -2,8 +2,8 @@
 #include "../common.h"
 #include "../mm/kheap.h"
 #include "../../drivers/screen.h"
-#include "../../libc/include/stdio.h"
-#include "../../libc/include/string.h"
+#include "../../libk/include/stdio.h"
+#include "../../libk/include/string.h"
 #include "../multitasking/task.h"
 #include "../fs/vfs.h"
 #include "../fs/initrd.h"
@@ -70,11 +70,6 @@ static inline void sys_putchar(uint8_t c){
 }
 
 void syscall_handler(registers_t *regs){
-  char buf[25] = "";
-  hex_to_ascii(regs->eip, buf);
-  kprint(buf);
-  kprint("\n");
-  for(int i = 0; i < 25; i++) buf[i] = '\0';
   switch (regs->eax) {
     case 0:
       switch(regs->ebx){

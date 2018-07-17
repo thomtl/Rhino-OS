@@ -1,6 +1,6 @@
 #include "initrd.h"
 #include "../mm/phys.h"
-#include "../../libc/include/string.h"
+#include "../../libk/include/string.h"
 initrd_header_t *initrd_header;
 initrd_file_header_t *file_headers;
 fs_node_t *initrd_root;

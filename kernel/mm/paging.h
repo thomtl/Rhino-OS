@@ -1,7 +1,7 @@
 #ifndef MM_PAGING_H
 #define MM_PAGING_H
 #include <stdint.h>
-#include "../../libc/include/string.h"
+#include "../../libk/include/string.h"
 #include "../arch/x86/isr.h"
 #include "kheap.h"
 #include "phys.h"

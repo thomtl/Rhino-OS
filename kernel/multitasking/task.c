@@ -1,6 +1,6 @@
 #include "task.h"
 #include "../../drivers/screen.h"
-#include "../../libc/include/string.h"
+#include "../../libk/include/string.h"
 #include "../mm/kheap.h"
 #include "scheduler.h"
 static task_t *runningTask;
@@ -120,7 +120,6 @@ void kill(uint32_t pid){
    @brief yield away from the current task into the next.
  */
 void yield(){
-  kprint("Yielding");
   task_t *last = runningTask;
 
   // dirty overflow trick
@@ -186,7 +185,6 @@ task_t* fork(void){
 }
 
 task_t* fork_sys(uint32_t eip){
-  kprint("Forking");
   get_running_task()->regs.eip = eip;
   uint32_t index = getFinalElement();
   tasks[index].regs.eax = get_running_task()->regs.eax;

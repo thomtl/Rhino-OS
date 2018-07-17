@@ -1,6 +1,6 @@
 #include "screen.h"
 #include "../kernel/arch/x86/ports.h"
-#include "./../libc/include/string.h"
+#include "./../libk/include/string.h"
 #include <stdint.h>
 // private helping funtions
 int get_cursor_offset();

@@ -2,10 +2,10 @@
 #include "idt.h"
 #include "../../../drivers/screen.h"
 #include "../../../drivers/keyboard.h"
-#include "../../../libc/include/string.h"
+#include "../../../libk/include/string.h"
 #include "timer.h"
 #include "ports.h"
-#include "../..//user/syscall.h"
+#include "../../user/syscall.h"
 isr_t interrupt_handlers[256];
 
 void isr_install() {
@@ -136,7 +136,7 @@ void irq_handler(registers_t *r){
   if(r->int_no >= 40) outb(0xA0, 0x20);
   outb(0x20, 0x20);
 
-  
+
   if(interrupt_handlers[r->int_no] != 0){
     isr_t handler = interrupt_handlers[r->int_no];
     handler(r);

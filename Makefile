@@ -1,5 +1,5 @@
-C_SOURCES = $(wildcard kernel/*.c kernel/mm/*.c kernel/types/*.c kernel/fs/*.c kernel/security/*.c kernel/multitasking/*.c kernel/power/*.c kernel/user/*.c drivers/*.c kernel/arch/x86/*.c libc/*.c libc/string/*.c libc/stdio/*.c libc/stdlib/*.c)
-HEADERS = $(wildcard kernel/*.h kernel/mm/*.h  kernel/types/*.h kernel/fs/*.h kernel/security/*.h kernel/multitasking/*.h kernel/power/*.h kernel/user/*.h drivers/*.h kernel/arch/x86/*.h libc/*.h libc/include/*.h libc/include/sys/*.h)
+C_SOURCES = $(wildcard kernel/*.c kernel/mm/*.c kernel/types/*.c kernel/fs/*.c kernel/security/*.c kernel/multitasking/*.c kernel/power/*.c kernel/user/*.c drivers/*.c kernel/arch/x86/*.c libk/*.c libk/string/*.c libk/stdio/*.c libk/stdlib/*.c)
+HEADERS = $(wildcard kernel/*.h kernel/mm/*.h  kernel/types/*.h kernel/fs/*.h kernel/security/*.h kernel/multitasking/*.h kernel/power/*.h kernel/user/*.h drivers/*.h kernel/arch/x86/*.h libk/*.h libk/include/*.h libk/include/sys/*.h)
 
 # Nice syntax for file extension replacement
 OBJ = ${C_SOURCES:.c=.o kernel/arch/x86/interrupt.o kernel/arch/x86/gdtlow.o kernel/multitasking/switch.o kernel/mm/mm.o kernel/power/power_low.o}
@@ -50,7 +50,7 @@ bochs: rhino.iso
 
 clean:
 	rm -rf *.bin *.dis *.o os-image.bin *.elf *.iso *.out
-	rm -rf kernel/*.o kernel/mm/*.o kernel/types/*.o kernel/fs/*.o kernel/security/*.o kernel/multitasking/*.o kernel/power/*.o kernel/user/*.o boot/*.bin drivers/*.o kernel/arch/x86/*.o libc/*.o libc/string/*.o libc/stdio/*.o libc/stdlib/*.o
+	rm -rf kernel/*.o kernel/mm/*.o kernel/types/*.o kernel/fs/*.o kernel/security/*.o kernel/multitasking/*.o kernel/power/*.o kernel/user/*.o boot/*.bin drivers/*.o kernel/arch/x86/*.o libk/*.o libk/string/*.o libk/stdio/*.o libk/stdlib/*.o
 	rm -rf build/sys
 	rm -rf log/*
 	rm -f initrd.img

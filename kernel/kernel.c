@@ -28,8 +28,8 @@
 #include "security/test_security.h"
 #include "kernel.h"
 #include "panic.h"
-#include "./../libc/include/string.h"
-#include "./../libc/include/stdio.h"
+#include "./../libk/include/string.h"
+#include "./../libk/include/stdio.h"
 #include <stdint.h>
 
 extern uint32_t placement_address;

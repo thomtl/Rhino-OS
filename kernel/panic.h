@@ -2,7 +2,7 @@
 #define KERNEL_PANIC_H
 #include <stdint.h>
 #include "../drivers/screen.h"
-#include "../libc/include/string.h"
+#include "../libk/include/string.h"
 __attribute__((noreturn))
 void panic();
 
