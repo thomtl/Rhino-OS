@@ -301,7 +301,7 @@ void user_input(char *input){
   }
   if(strcmp(input, "REBOOT") == 0) reboot();
   if(strcmp(input, "RUN") == 0){
-    init("test.prg");
+    init("shell.prg");
     kprint("\n$");
     return;
   }

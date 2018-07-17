@@ -5,29 +5,44 @@
   @brief        TSHELL
 *******************************************************************************/
 
-#include <sys/wait.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include "common.h"
 
 /*
   Function Declarations for builtin shell commands:
  */
-int t_cd(char **args);
+/*int t_cd(char **args);
 int t_help(char **args);
-int t_exit(char **args);
+int t_exit(char **args);*/
 
 /*
   List of builtin commands, followed by their corresponding functions.
  */
+int t_help();
+int t_exit();
+int t_num_builtins();
+int t_help(char *args);
+int t_exit(char *args);
+int t_execute(char *args);
+void t_loop(void);
+void main(void)
+{
+  __asm__ ("sti");
+  // Load config files, if any.
+  clear_screen();
+  // Run command loop.
+  t_loop();
+
+  // Perform any shutdown/cleanup.
+
+  exit();
+}
+
 char *builtin_str[] = {
   "help",
   "exit"
 };
 
-int (*builtin_func[]) (char **) = {
+int (*builtin_func[]) (char *) = {
   &t_help,
   &t_exit
 };
@@ -45,7 +60,7 @@ int t_num_builtins() {
    @param args List of args.  Not examined.
    @return Always returns 1, to continue executing.
  */
-int t_help(char **args)
+int t_help(char *args)
 {
   int i;
   printf("Thomas Woertmans's TSHELL\n");
@@ -53,10 +68,11 @@ int t_help(char **args)
   printf("The following are built in:\n");
 
   for (i = 0; i < t_num_builtins(); i++) {
-    printf("  %s\n", builtin_str[i]);
+    printf(builtin_str[i]);
   }
 
   printf("Use the man command for information on other programs.\n");
+  UNUSED(args);
   return 1;
 }
 
@@ -65,9 +81,11 @@ int t_help(char **args)
    @param args List of args.  Not examined.
    @return Always returns 0, to terminate execution.
  */
-int t_exit(char **args)
+int t_exit(char *args)
 {
-  return 0;
+  exit();
+  UNUSED(args);
+  return 1;
 }
 
 /**
@@ -75,7 +93,7 @@ int t_exit(char **args)
   @param args Null terminated list of arguments (including program).
   @return Always returns 1, to continue execution.
  */
-int t_launch(char **args)
+/*int t_launch(char **args)
 {
   pid_t pid;
   pid_t current_pid;
@@ -99,7 +117,7 @@ int t_launch(char **args)
   }
 
   return 1;
-}
+}*/
 
 /**
    @brief Execute shell built-in or launch program.
@@ -112,67 +130,24 @@ int t_execute(char *args)
 
   for (i = 0; i < t_num_builtins(); i++) {
     if (strcmp(args, builtin_str[i]) == 0) {
-      return (*builtin_func[i])();
+      return (*builtin_func[i])(args);
     }
   }
 
-  return t_launch(args);
+  return 1;//t_launch(args);
 }
 
-#define t_RL_BUFSIZE 1024
-/**
-   @brief Read a line of input from stdin.
-   @return The line from stdin.
- */
-char *t_read_line(void)
-{
-  int bufsize = t_RL_BUFSIZE;
-  int position = 0;
-  char *buffer = malloc(sizeof(char) * bufsize);
-  int c;
-
-  if (!buffer) {
-    printf("TSHELL: allocation error\n");
-    exit(EXIT_FAILURE);
-  }
-
-  while (1) {
-    // Read a character
-    c = getchar();
-
-    if (c == EOF) {
-      exit(EXIT_SUCCESS);
-    } else if (c == '\n') {
-      buffer[position] = '\0';
-      return buffer;
-    } else {
-      buffer[position] = c;
-    }
-    position++;
-
-    // If we have exceeded the buffer, reallocate.
-    if (position >= bufsize) {
-      bufsize += t_RL_BUFSIZE;
-      buffer = realloc(buffer, bufsize);
-      if (!buffer) {
-        printf("TSHELL: allocation error\n");
-        exit(EXIT_FAILURE);
-      }
-    }
-  }
-}
 
 /**
    @brief Loop getting input and executing it.
  */
 void t_loop(void)
 {
-  char *line;
+  char line[256] = "";;
   int status;
-  char path[1024];
   do {
     printf("> ");
-    line = t_read_line();
+    getline(line, 256);
     status = t_execute(line);
 
     free(line);
@@ -185,14 +160,4 @@ void t_loop(void)
    @param argv Argument vector.
    @return status code
  */
-int main(int argc, char **argv)
-{
-  // Load config files, if any.
 
-  // Run command loop.
-  t_loop();
-
-  // Perform any shutdown/cleanup.
-
-  return EXIT_SUCCESS;
-}
