@@ -1,6 +1,10 @@
-N   EAX   EBX   ECX   EDX   NAME                FUNCTION                                        DATA
-0   0     1     0     0     Yield               Yields away from the current task
-1   0     2     0     0     Start Task Atomic   Starts atomicity for the current running task
-2   0     3     0     0     End Task Atomic     Ends atomicity for the current running task
-3   0     4     A     0     Exec                Calls Exec for the current task                 A = pointer to the main function
-4   1     1     A     0     Printc              Prints whats the char in ecx                    A = char code to data
+EAX   EBX   ECX   EDX   NAME                FUNCTION                                        DATA                                RET
+0     1     0     0     Yield               Yields away from the current task
+0     2     0     0     Start Task Atomic   Starts atomicity for the current running task
+0     3     0     0     End Task Atomic     Ends atomicity for the current running task
+0     4     A     0     Exec                Calls Exec for the current task                 A = pointer to the main function
+0     5     A     0     Exit                Exits the program                               A = Exit status // todo
+0     6     0     0     Fork                Fork                                                                                Pointer to task_t
+0     7     0     0     Get current pid     name                                                                                pid_t
+1     1     A     0     Printc              Prints whats the char in ecx                    A = char code to data
+1     2     0     0     Clear Screen        Clears the screen
