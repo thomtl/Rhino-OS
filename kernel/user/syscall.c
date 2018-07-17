@@ -3,9 +3,15 @@
 #include "../mm/kheap.h"
 #include "../../drivers/screen.h"
 #include "../../libc/include/stdio.h"
+#include "../../libc/include/string.h"
 #include "../multitasking/task.h"
 #include "../fs/vfs.h"
 #include "../fs/initrd.h"
+#include "../../drivers/keyboard.h"
+
+static inline char sys_getchar(){
+  return kbd_getchar();
+}
 
 static inline fs_node_t* sys_finddir_fs(char* file){
   return finddir_fs(fs_root, file);
@@ -23,8 +29,8 @@ static inline uint32_t sys_read_fs(fs_node_t* node, uint32_t size, uint8_t* buff
   return read_fs(node, 0, size, buffer);
 }
 
-static inline task_t* sys_fork(){
-  return fork();
+static inline task_t* sys_fork(uint32_t eip){
+  return fork_sys(eip);
 }
 
 static inline void sys_exit(){
@@ -64,6 +70,11 @@ static inline void sys_putchar(uint8_t c){
 }
 
 void syscall_handler(registers_t *regs){
+  char buf[25] = "";
+  hex_to_ascii(regs->eip, buf);
+  kprint(buf);
+  kprint("\n");
+  for(int i = 0; i < 25; i++) buf[i] = '\0';
   switch (regs->eax) {
     case 0:
       switch(regs->ebx){
@@ -83,7 +94,7 @@ void syscall_handler(registers_t *regs){
           sys_exit();
           break;
         case 6:
-          regs->eax = (uint32_t)sys_fork();
+          regs->eax = (uint32_t)sys_fork(regs->eip);
           break;
         case 7:
           regs->eax = sys_current_pid();
@@ -128,6 +139,14 @@ void syscall_handler(registers_t *regs){
     case 4:
       regs->eax = sys_read_fs((fs_node_t*)regs->ebx, regs->ecx, (uint8_t*)regs->edx);
       break;
+    case 5:
+      switch(regs->ebx){
+        case 1:
+          regs->eax = sys_getchar();
+          break;
+        default:
+          break;
+      }
     default:
       return;
   }

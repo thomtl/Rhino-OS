@@ -9,6 +9,7 @@ bool scheduling_enabled = false;
    @param args List of args.  args[0] is the current tick count.
  */
 void schedule(uint32_t tick){
+  kprint("scheduling");
   seconds_passed = TICK_TO_SECONDS(tick);
   if(scheduling_enabled){
     if(seconds_passed % TASK_TIME_SLICE == 0){
