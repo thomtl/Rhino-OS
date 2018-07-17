@@ -28,6 +28,7 @@ loaded_program_t* load_program(char* filename, uint8_t type){
       uint32_t* buf = kmalloc(node->length);
       header->base = (uint32_t*)buf;
       header->end = (uint32_t*)(buf + node->length);
+      header->len = node->length;
       header->type = type;
       read_fs(node, 0, node->length, (uint8_t*)buf);
       return header;
@@ -44,7 +45,7 @@ loaded_program_t* load_program(char* filename, uint8_t type){
 void run_program(void *address){
   //call_module_t prog = (call_module_t) address;
   //prog();
-  
+
   createTask(address, taskArray[0].regs.eflags, (uint32_t*)taskArray[0].regs.cr3);
   return;
 }

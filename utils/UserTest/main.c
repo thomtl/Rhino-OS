@@ -1,12 +1,20 @@
 void start_task_atomic();
 void end_task_atomic();
 void putchar(char c);
+void printf(char *m);
+
 
 void main(void){
   __asm__ ("sti");
-  while(1){
+  putchar('x');
+  printf("Hello World");
+  while(1);
+}
+
+void printf(char *m){
+  while(*m){
+    putchar(*m++);
   }
-  return;
 }
 
 void putchar(char c){

@@ -15,6 +15,7 @@
 #include "multitasking/task.h"
 #include "multitasking/scheduler.h"
 #include "user/program.h"
+#include "user/init.h"
 #include "power/power.h"
 #include "../drivers/screen.h"
 #include "../drivers/keyboard.h"
@@ -113,7 +114,6 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
 
 
   kprint("Initializing Memory Management..");
-
   init_mm_phys_manager(mbd);
   init_mm_paging();
   kprint("done\n");
@@ -300,7 +300,11 @@ void user_input(char *input){
     return;
   }
   if(strcmp(input, "REBOOT") == 0) reboot();
-
+  if(strcmp(input, "RUN") == 0){
+    init("test.prg");
+    kprint("\n$");
+    return;
+  }
   kprint(input);
   kprint(" is not an executable program.");
   kprint("\n$");

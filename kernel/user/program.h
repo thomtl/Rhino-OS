@@ -9,6 +9,7 @@
 typedef struct loadedProgram{
     uint32_t* base;
     uint32_t* end;
+    uint32_t len;
     uint8_t type;
 } loaded_program_t;
 

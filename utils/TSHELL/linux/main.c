@@ -23,11 +23,13 @@ int t_exit(char **args);
   List of builtin commands, followed by their corresponding functions.
  */
 char *builtin_str[] = {
+  "cd",
   "help",
   "exit"
 };
 
 int (*builtin_func[]) (char **) = {
+  &t_cd,
   &t_help,
   &t_exit
 };
@@ -39,6 +41,23 @@ int t_num_builtins() {
 /*
   Builtin function implementations.
 */
+
+/**
+   @brief Bultin command: change directory.
+   @param args List of args.  args[0] is "cd".  args[1] is the directory.
+   @return Always returns 1, to continue executing.
+ */
+int t_cd(char **args)
+{
+  if (args[1] == NULL) {
+    printf("TSHELL: expected argument to \"cd\"\n");
+  } else {
+    if (chdir(args[1]) != 0) {
+     printf("TSHELL");
+    }
+  }
+  return 1;
+}
 
 /**
    @brief Builtin command: print help.
@@ -78,11 +97,10 @@ int t_exit(char **args)
 int t_launch(char **args)
 {
   pid_t pid;
-  pid_t current_pid;
   int status;
-  current_pid = get_current_pid();
+
   pid = fork();
-  if (pid != current_pid) {
+  if (pid == 0) {
     // Child process
     if (execvp(args[0], args) == -1) {
       printf("TSHELL: Child Process not started successfully!");
@@ -91,7 +109,7 @@ int t_launch(char **args)
   } else if (pid < 0) {
     // Error forking
     printf("TSHELL: Forking Error");
-  } else if (pid == current_pid){
+  } else {
     // Parent process
     do {
       waitpid(pid, &status, WUNTRACED);
@@ -106,13 +124,18 @@ int t_launch(char **args)
    @param args Null terminated list of arguments.
    @return 1 if the shell should continue running, 0 if it should terminate
  */
-int t_execute(char *args)
+int t_execute(char **args)
 {
   int i;
 
+  if (args[0] == NULL) {
+    // An empty command was entered.
+    return 1;
+  }
+
   for (i = 0; i < t_num_builtins(); i++) {
-    if (strcmp(args, builtin_str[i]) == 0) {
-      return (*builtin_func[i])();
+    if (strcmp(args[0], builtin_str[i]) == 0) {
+      return (*builtin_func[i])(args);
     }
   }
 
@@ -162,20 +185,64 @@ char *t_read_line(void)
   }
 }
 
+#define t_TOK_BUFSIZE 64
+#define t_TOK_DELIM " \t\r\n\a"
+/**
+   @brief Split a line into tokens (very naively).
+   @param line The line.
+   @return Null-terminated array of tokens.
+ */
+char **t_split_line(char *line)
+{
+  int bufsize = t_TOK_BUFSIZE, position = 0;
+  char **tokens = malloc(bufsize * sizeof(char*));
+  char *token, **tokens_backup;
+
+  if (!tokens) {
+    printf("TSHELL: allocation error\n");
+    exit(EXIT_FAILURE);
+  }
+
+  token = strtok(line, t_TOK_DELIM);
+  while (token != NULL) {
+    tokens[position] = token;
+    position++;
+
+    if (position >= bufsize) {
+      bufsize += t_TOK_BUFSIZE;
+      tokens_backup = tokens;
+      tokens = realloc(tokens, bufsize * sizeof(char*));
+      if (!tokens) {
+		free(tokens_backup);
+        printf("TSHELL: allocation error\n");
+        exit(EXIT_FAILURE);
+      }
+    }
+
+    token = strtok(NULL, t_TOK_DELIM);
+  }
+  tokens[position] = NULL;
+  return tokens;
+}
+
 /**
    @brief Loop getting input and executing it.
  */
 void t_loop(void)
 {
   char *line;
+  char **args;
   int status;
   char path[1024];
   do {
-    printf("> ");
+	getcwd(path, sizeof(path));
+    printf("%s> ", path);
     line = t_read_line();
-    status = t_execute(line);
+    args = t_split_line(line);
+    status = t_execute(args);
 
     free(line);
+    free(args);
   } while (status);
 }
 
