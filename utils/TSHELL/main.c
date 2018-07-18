@@ -17,16 +17,17 @@ int t_exit(char **args);*/
 /*
   List of builtin commands, followed by their corresponding functions.
  */
+ char line[256] = "";
 int t_help();
 int t_exit();
 int t_num_builtins();
 int t_help(char *args);
+int t_clear(char *args);
 int t_exit(char *args);
 int t_execute(char *args);
 void t_loop(void);
 void main(void)
 {
-  __asm__ ("sti");
   // Load config files, if any.
   clear_screen();
   // Run command loop.
@@ -38,13 +39,15 @@ void main(void)
 }
 
 char *builtin_str[] = {
-  "help",
-  "exit"
+  "HELP",
+  "EXIT",
+  "CLEAR"
 };
 
 int (*builtin_func[]) (char *) = {
   &t_help,
-  &t_exit
+  &t_exit,
+  &t_clear
 };
 
 int t_num_builtins() {
@@ -69,6 +72,7 @@ int t_help(char *args)
 
   for (i = 0; i < t_num_builtins(); i++) {
     printf(builtin_str[i]);
+    printf("\n");
   }
 
   printf("Use the man command for information on other programs.\n");
@@ -83,7 +87,18 @@ int t_help(char *args)
  */
 int t_exit(char *args)
 {
+  __asm__("cli");
+  clear_screen();
+  printf("Goodbye");
   exit();
+  while(1);
+  UNUSED(args);
+  return 1;
+}
+
+
+int t_clear(char *args){
+  clear_screen();
   UNUSED(args);
   return 1;
 }
@@ -143,15 +158,17 @@ int t_execute(char *args)
  */
 void t_loop(void)
 {
-  char line[256] = "";;
-  int status;
-  do {
+
+  //int status;
+
+  while(1) {
     printf("> ");
     getline(line, 256);
-    status = t_execute(line);
+  //  printf(line);
+    t_execute(line);
 
-    free(line);
-  } while (status);
+    //free(line);
+  }
 }
 
 /**
@@ -160,4 +177,3 @@ void t_loop(void)
    @param argv Argument vector.
    @return status code
  */
-

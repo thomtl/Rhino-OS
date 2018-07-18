@@ -12,7 +12,7 @@ void free(void* addr);
 void exit();
 char getchar();
 int strcmp(char s1[], char s2[]);
-char* getline(char lineptr[], size_t bufsize);
+char* getline(char *lineptr, size_t bufsize);
 void clear_screen();
 #define UNUSED(x) (void)(x)
 #endif

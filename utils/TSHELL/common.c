@@ -35,14 +35,16 @@ int strcmp(char s1[], char s2[]){
   return s1[i] - s2[i];
 }
 
-char* getline(char lineptr[], size_t bufsize){
+char* getline(char *lineptr, size_t bufsize){
   //char str[256] = "";
   for(uint16_t i = 0; i < bufsize; i++){
     lineptr[i] = '\0';
   }
+
   char c;
   uint32_t pos = 0;
   while(1){
+
     c = getchar();
     if(c == '\b'){
       lineptr[pos - 1] = ' ';

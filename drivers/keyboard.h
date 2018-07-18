@@ -19,4 +19,5 @@ uint8_t kbd_read(uint8_t reg);
 void kbd_write(uint8_t reg, uint8_t data);
 void init_keyboard();
 char kbd_getchar();
+char sys_kbd_getchar();
 #endif

@@ -9,10 +9,6 @@
 #include "../fs/initrd.h"
 #include "../../drivers/keyboard.h"
 
-static inline char sys_getchar(){
-  return kbd_getchar();
-}
-
 static inline fs_node_t* sys_finddir_fs(char* file){
   return finddir_fs(fs_root, file);
 }
@@ -137,7 +133,7 @@ void syscall_handler(registers_t *regs){
     case 5:
       switch(regs->ebx){
         case 1:
-          regs->eax = sys_getchar();
+          regs->eax = sys_kbd_getchar();
           break;
         default:
           break;

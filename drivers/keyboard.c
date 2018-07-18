@@ -11,8 +11,8 @@
 
 #define MAX_STDIN_LENGTH 256
 static char stdin[MAX_STDIN_LENGTH];
-static uint8_t stdinIndex = 0;
-static uint8_t readIndex = 0;
+static uint32_t stdinIndex = 0;
+static uint32_t readIndex = 0;
 static bool hasSecondChannel = true;
 #define SC_MAX 57
 
@@ -144,6 +144,14 @@ char kbd_getchar(){
   while(stdinIndex <= readIndex);
   char ascii = stdin[readIndex];
   readIndex++;
+  return ascii;
+}
+char sys_kbd_getchar(){
+  STI();
+  while(stdinIndex <= readIndex);
+  char ascii = stdin[readIndex];
+  readIndex++;
+  CLI();
   return ascii;
 }
 
