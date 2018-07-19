@@ -2,4 +2,4 @@
 
 ### System Requirements:
 
-  512 Megs ram
+      512 Megs ram
