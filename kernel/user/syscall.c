@@ -9,6 +9,10 @@
 #include "../fs/initrd.h"
 #include "../../drivers/keyboard.h"
 
+static inline void sys_set_color(uint8_t fg, uint8_t bg){
+  set_color(fg, bg);
+}
+
 static inline fs_node_t* sys_finddir_fs(char* file){
   return finddir_fs(fs_root, file);
 }
@@ -101,6 +105,9 @@ void syscall_handler(registers_t *regs){
           break;
         case 2:
           sys_clear_screen();
+          break;
+        case 3:
+          sys_set_color(regs->ecx, regs->edx);
           break;
         default:
           return;
