@@ -87,9 +87,11 @@ int t_help(char *args)
  */
 int t_exit(char *args)
 {
-  __asm__("cli");
+  __asm__ ("cli");
   clear_screen();
-  printf("Goodbye");
+  syscall(1, 3, 14, 0);
+  for(int i = 0; i < 980; i++) printf(" ");
+  printf("It is now safe to turn of your pc");
   exit();
   while(1);
   UNUSED(args);
@@ -148,7 +150,11 @@ int t_execute(char *args)
       return (*builtin_func[i])(args);
     }
   }
-
+  syscall(1, 3, 4, 0);
+  printf("[TSHELL] Could not run program \"");
+  printf(args);
+  printf("\"\n");
+  syscall(1, 3, 15, 0);
   return 1;//t_launch(args);
 }
 
@@ -162,6 +168,13 @@ void t_loop(void)
   //int status;
 
   while(1) {
+    syscall(1, 3, 2, 0);
+    printf("admin");
+    syscall(1, 3, 15, 0);
+    printf("@");
+    syscall(1, 3, 1, 0);
+    printf("localhost  ");
+    syscall(1, 3, 15, 0);
     printf("> ");
     getline(line, 256);
   //  printf(line);

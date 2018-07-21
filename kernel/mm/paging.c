@@ -110,6 +110,14 @@ void map_phys_virt(uintptr_t page_directory, uintptr_t phys, uintptr_t virt){
 	tlb_flush();
 }
 
+void unmap_phys_virt(uintptr_t page_directory, uintptr_t virt){
+	uint32_t pidx = virt >> 22;
+	uintptr_t page_table = ((uintptr_t*)page_directory)[pidx];
+	((uintptr_t*)page_directory)[pidx] = 0 | 2;
+	free_frame((void*)phys_to_virt(page_table));
+	tlb_flush();
+}
+
 uintptr_t phys_to_virt(uintptr_t phys){
 	return phys + KERNEL_VBASE;
 }
