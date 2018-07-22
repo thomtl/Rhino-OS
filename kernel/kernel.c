@@ -145,44 +145,45 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   }
 }
 void user_input(char *input){
-  if(strcmp(input, "EXIT") == 0){
+  if(strcmp(input, "exit") == 0){
     clear_screen();
     kprint("Shutting down Rhino");
     shouldExit = 1;
     return;
   }
-  if(strcmp(input, "HELP") == 0){
+  if(strcmp(input, "help") == 0){
     kprint("Showing Commands:\n");
     kprint("-------------------------------\n");
-    kprint("EXIT: Exit the Kernel\n");
-    kprint("HELP: To show this Page\n");
-    kprint("CLEAR: To clear the screen\n");
-    kprint("PID: To show the current tasks PID\n");
-    kprint("TASK: To yield\n");
-    kprint("EXT: To run an external program on the INITRD\n");
-    kprint("REBOOT: To reboot the machine\n");
+    kprint("run: run shell.prg to start the os");
+    kprint("exit: Exit the Kernel\n");
+    kprint("help: To show this Page\n");
+    kprint("clear: To clear the screen\n");
+    kprint("pid: To show the current tasks PID\n");
+    kprint("task: To yield\n");
+    kprint("ext: To run an external program on the INITRD\n");
+    kprint("reboot: To reboot the machine\n");
     #ifdef DEBUG
     kprint("Debug commands:\n");
-    kprint("PANIC: Panic the kernel\n");
-    kprint("INIT: To show the files on the initrd\n");
-    kprint("STACKSMASH: To smash the stack and test the stack smash protection\n");
-    kprint("SYSCALL: Simulate a bare syscall\n");
-    kprint("MMAP: Print the sections in the BIOS mmap\n");
-    kprint("FLOPPY: Show the floppy configuration of this machine\n");
+    kprint("panic: Panic the kernel\n");
+    kprint("init: To show the files on the initrd\n");
+    kprint("stacksmash: To smash the stack and test the stack smash protection\n");
+    kprint("syscall: Simulate a bare syscall\n");
+    kprint("mmap: Print the sections in the BIOS mmap\n");
+    kprint("floppy: Show the floppy configuration of this machine\n");
     #endif
     kprint("-------------------------------\n");
     kprint("$");
     return;
   }
-  if(strcmp(input, "CLEAR") == 0){
+  if(strcmp(input, "clear") == 0){
     clear_screen();
     kprint("$");
     return;
   }
-  if(strcmp(input, "PANIC") == 0){
+  if(strcmp(input, "panic") == 0){
     PANIC_M("Deliberate Kernel Panic");
   }
-  if(strcmp(input, "INIT") == 0){
+  if(strcmp(input, "init") == 0){
     int i = 0;
     struct dirent *node = 0;
     while ( (node = readdir_fs(fs_root, i)) != 0)
@@ -211,24 +212,24 @@ void user_input(char *input){
     kprint("$");
     return;
   }
-  if(strcmp(input, "STACKSMASH") == 0){
+  if(strcmp(input, "stacksmash") == 0){
     do_stacksmash("BLUBBLUBBLUBBLUBLUB");
     return;
   }
-  if(strcmp(input, "TASK") == 0){
+  if(strcmp(input, "task") == 0){
     kprint("Switching to other task\n");
     yield();
     kprint("ready\n$");
     return;
   }
-  if(strcmp(input, "PID") == 0){
+  if(strcmp(input, "pid") == 0){
     char c[25] = "";
     int_to_ascii(get_current_pid(), c);
     kprint(c);
     kprint("\n$");
     return;
   }
-  if(strcmp(input, "EXT") == 0){
+  if(strcmp(input, "ext") == 0){
     loaded_program_t* l = load_program("test.prg", PROGRAM_BINARY_TYPE_BIN);
     if(l == 0){
       kprint_err("load_program errored\n$");
@@ -244,12 +245,12 @@ void user_input(char *input){
     kprint("\n$");
     return;
   }
-  if(strcmp(input, "SYSCALL") == 0){
+  if(strcmp(input, "syscall") == 0){
     __asm__ __volatile__ ("int $0x80");
     kprint("\n$");
     return;
   }
-  if(strcmp(input, "MMAP") == 0){
+  if(strcmp(input, "mmap") == 0){
     set_color(VGA_COLOR_GREEN, VGA_COLOR_BLACK);
     uint8_t entryCount = 1;
     multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)phys_to_virt(multibootInfo->mmap_addr);
@@ -294,13 +295,13 @@ void user_input(char *input){
     kprint("$");
     return;
   }
-  if(strcmp(input, "FLOPPY") == 0){
+  if(strcmp(input, "floppy") == 0){
     display_floppy_drive_info();
     kprint("$");
     return;
   }
-  if(strcmp(input, "REBOOT") == 0) reboot();
-  if(strcmp(input, "RUN") == 0){
+  if(strcmp(input, "reboot") == 0) reboot();
+  if(strcmp(input, "run") == 0){
     init("shell.prg");
     kprint("\n$");
     return;

@@ -54,3 +54,4 @@ clean:
 	rm -rf build/sys
 	rm -rf log/*
 	rm -f initrd.img
+	rm -f snapshot.txt

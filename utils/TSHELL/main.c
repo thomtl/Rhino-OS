@@ -39,9 +39,9 @@ void main(void)
 }
 
 char *builtin_str[] = {
-  "HELP",
-  "EXIT",
-  "CLEAR"
+  "help",
+  "exit",
+  "clear"
 };
 
 int (*builtin_func[]) (char *) = {

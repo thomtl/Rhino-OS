@@ -8,12 +8,14 @@
 
 #define BACKSPACE 0x0E
 #define ENTER 0x1C
-
+#define LSHIFT 0x2A
+#define CAPS_LOCK 0x3A
 #define MAX_STDIN_LENGTH 256
 static char stdin[MAX_STDIN_LENGTH];
 static uint32_t stdinIndex = 0;
 static uint32_t readIndex = 0;
 static bool hasSecondChannel = true;
+static bool shiftPressed = false;
 #define SC_MAX 57
 
 const char *sc_name[] = { "ERROR", "Esc", "1", "2", "3", "4", "5", "6",
@@ -23,10 +25,10 @@ const char *sc_name[] = { "ERROR", "Esc", "1", "2", "3", "4", "5", "6",
         "LShift", "\\", "Z", "X", "C", "V", "B", "N", "M", ",", ".",
         "/", "RShift", "Keypad *", "LAlt", "Spacebar"};
 const char sc_ascii[] = { '?', '?', '1', '2', '3', '4', '5', '6',
-    '7', '8', '9', '0', '-', '=', '?', '?', 'Q', 'W', 'E', 'R', 'T', 'Y',
-        'U', 'I', 'O', 'P', '[', ']', '?', '?', 'A', 'S', 'D', 'F', 'G',
-        'H', 'J', 'K', 'L', ';', '\'', '`', '?', '\\', 'Z', 'X', 'C', 'V',
-'B', 'N', 'M', ',', '.', '/', '?', '?', '?', ' '};
+    '7', '8', '9', '0', '-', '=', '?', '?', 'q', 'w', 'e', 'r', 't', 'y',
+        'u', 'i', 'o', 'p', '[', ']', '?', '?', 'a', 's', 'd', 'f', 'g',
+        'h', 'j', 'k', 'l', ';', '\'', '`', '?', '\\', 'z', 'x', 'c', 'v',
+'b', 'n', 'm', ',', '.', '/', '?', '?', '?', ' '};
 
 static void kbd_irq(registers_t *regs){
   uint8_t scancode;
@@ -34,6 +36,10 @@ static void kbd_irq(registers_t *regs){
     scancode = inb(KBD_REG_DATA);
   } else {
     kprint_err("Keyboard sent IRQ but there was no data\n");
+    return;
+  }
+  if(scancode == CAPS_LOCK){
+    shiftPressed = !shiftPressed;
     return;
   }
   if(scancode > SC_MAX) return;
@@ -49,7 +55,9 @@ static void kbd_irq(registers_t *regs){
     append(stdin, '\b');
     stdinIndex++;
   } else {
-    append(stdin, sc_ascii[(int)scancode]);
+    char ascii = sc_ascii[(int)scancode];
+    if(shiftPressed) ascii -= 32;
+    append(stdin, ascii);
     char str[2] = {stdin[stdinIndex], '\0'};
     stdinIndex++;
     kprint(str);
