@@ -10,15 +10,15 @@ CC = i686-elf-gcc
 # -g: Use debugging symbols in gcc
 CFLAGS = -g -m32 -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs \
 					-Wall -Wextra -Werror -std=c99
-.PHONY: all clean run bochs
+.PHONY: all clean run bochs initrd
 all: run
 # First rule is run by default
 
-initrd.img:
+initrd:
 	rm -f initrd.img
 	./utils/initrdgen/genrd ./utils/initrdgen/test.txt test.txt ./utils/initrdgen/test1.txt test1.txt ./utils/UserTest/usertest test.prg ./utils/TSHELL/tshell shell.prg
 
-rhino.iso: kernel.bin initrd.img
+rhino.iso: kernel.bin initrd
 	mkdir -p build/sys/boot/grub
 	cp kernel.bin build/sys/boot/kernel.bin
 	cp initrd.img build/sys/boot/initrd.img
