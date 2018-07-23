@@ -30,6 +30,16 @@ void main(void)
 {
   // Load config files, if any.
   clear_screen();
+  syscall(1, 3, 9, 0);
+  printf("Starting TSHELL v0.0.1, Thomas Woertman 2018\n");
+  syscall(1, 3, 4, 0);
+  printf("            All Rights Reserved\n");
+  syscall(1, 3, 15, 0);
+  char buf[25] = "";
+  int_to_ascii(syscall(0,7,0,0), buf);
+  printf("PID: ");
+  printf(buf);
+  printf("\n");
   // Run command loop.
   t_loop();
 

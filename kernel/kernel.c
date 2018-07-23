@@ -41,6 +41,9 @@ uint32_t ramAmount = 0;
 
 void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   char buf[25] = "";
+  #ifndef DEBUG
+  clear_screen();
+  #endif
   #ifdef DEBUG
   set_color(VGA_COLOR_LIGHT_CYAN, VGA_COLOR_BLACK);
   uint32_t kern_base = (uint32_t)&_kernel_start;
@@ -113,10 +116,10 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   kprint("done\n");
 
 
-  kprint("Initializing Memory Management..");
+  kprint("Initializing Memory Manager..");
   init_mm_phys_manager(mbd);
   init_mm_paging();
-  kprint("done\n");
+  kprint("Memory Manager initialized\n");
 
   kprint("Initializing Ramdisk..");
   fs_root = initialise_initrd(initrd_location);

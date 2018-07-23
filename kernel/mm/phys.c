@@ -13,6 +13,7 @@ uint32_t kernel_end = (uint32_t)&_kernel_end;
 uint32_t kernel_start = (uint32_t)&_kernel_start;
 
 uint32_t nframes;
+uint32_t used_frames;
 uint32_t* frames;
 
 #define INDEX_FROM_BIT(a) ((a) / (8 * 4))
@@ -82,6 +83,7 @@ static uint32_t first_frame(){
    @param args List of args.  args[0] is the pointer to the multiboot info structure.
  */
 void init_mm_phys_manager(multiboot_info_t *mbd){
+    used_frames = 0;
     mboot_hdr = mbd;
     mboot_reserved_start = (uint32_t)(mboot_hdr - KERNEL_VBASE);
     mboot_reserved_end = (uint32_t)((mboot_hdr + sizeof(multiboot_info_t)) - KERNEL_VBASE);
@@ -93,6 +95,12 @@ void init_mm_phys_manager(multiboot_info_t *mbd){
     memset(frames, 0, INDEX_FROM_BIT(nframes));
     kernel_start -= KERNEL_VBASE;
     _kernel_end -= KERNEL_VBASE;
+
+    char buf[25] = "";
+    int_to_ascii(nframes, buf);
+    kprint("    [");
+    kprint(buf);
+    kprint(" free frames]\n");
 }
 
 
@@ -138,6 +146,7 @@ void* alloc_frame(){
     }
 
     set_frame(IDX_TO_ADDR(idx));
+    used_frames++;
     return (void*)(IDX_TO_ADDR(idx) + KERNEL_VBASE);
 }
 
@@ -147,4 +156,5 @@ void* alloc_frame(){
  */
 void free_frame(void* frame){
   if(test_frame((uint32_t)frame)) clear_frame((uint32_t)frame * 0x1000);
+  used_frames--;
 }
