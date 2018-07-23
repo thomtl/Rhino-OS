@@ -2,6 +2,7 @@
 
 extern uint32_t placement_address;
 uintptr_t page_directory;
+uintptr_t tab_addr;
 extern void tlb_flush();
 extern heap_t* kheap;
 
@@ -39,7 +40,7 @@ void init_mm_paging(){
   register_interrupt_handler(14, page_fault);
 
 	page_directory = (uintptr_t)alloc_frame();
-
+	tab_addr = (uintptr_t)alloc_frame();
 	unsigned int pde = 0;
 	for(pde = 0; pde < MM_PAGE_COMMON_SIZE; pde++){
 		((uintptr_t*)page_directory)[pde] = 0 | 2;
@@ -106,6 +107,7 @@ void map_phys_virt(uintptr_t page_directory, uintptr_t phys, uintptr_t virt){
 		}
 
 		((uintptr_t*)page_directory)[pidx] = virt_to_phys(page_table) | 3;
+		((uintptr_t*)tab_addr)[pidx] = page_table;
 	}
 	tlb_flush();
 }
