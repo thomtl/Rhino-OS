@@ -24,6 +24,7 @@ int t_num_builtins();
 int t_help(char *args);
 int t_clear(char *args);
 int t_exit(char *args);
+int t_color(char *args);
 int t_execute(char *args);
 void t_loop(void);
 void main(void)
@@ -51,17 +52,30 @@ void main(void)
 char *builtin_str[] = {
   "help",
   "exit",
-  "clear"
+  "clear",
+  "color"
 };
 
 int (*builtin_func[]) (char *) = {
   &t_help,
   &t_exit,
-  &t_clear
+  &t_clear,
+  &t_color
 };
 
 int t_num_builtins() {
   return sizeof(builtin_str) / sizeof(char *);
+}
+
+
+int t_color(char *args){
+  for(uint8_t i = 0; i < 16; i++){
+    syscall(1, 3, 0 , i);
+    printf(" ");
+  }
+  printf("\n");
+  UNUSED(args);
+  return 1;
 }
 
 /*
