@@ -41,6 +41,8 @@ void main(void)
   printf("PID: ");
   printf(buf);
   printf("\n");
+  t_color("col");
+  //printf("\n");
   // Run command loop.
   t_loop();
 
