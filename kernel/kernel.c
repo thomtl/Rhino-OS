@@ -34,6 +34,7 @@
 
 extern uint32_t placement_address;
 extern uint32_t _kernel_start;
+extern uintptr_t page_directory;
 uint8_t shouldExit = 0; //set this to 1 to exit the kernel
 multiboot_info_t* multibootInfo;
 uint32_t ramAmountMB = 0; // in MegaBytes
@@ -306,6 +307,11 @@ void user_input(char *input){
   if(strcmp(input, "reboot") == 0) reboot();
   if(strcmp(input, "run") == 0){
     init("shell.prg");
+    kprint("\n$");
+    return;
+  }
+  if(strcmp(input, "clone") == 0){
+    clone_dir(page_directory);
     kprint("\n$");
     return;
   }

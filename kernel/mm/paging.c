@@ -44,6 +44,7 @@ void init_mm_paging(){
 	unsigned int pde = 0;
 	for(pde = 0; pde < MM_PAGE_COMMON_SIZE; pde++){
 		((uintptr_t*)page_directory)[pde] = 0 | 2;
+		((uintptr_t*)tab_addr)[pde] = 0 | 2;
 	}
 
 	//for(uint32_t i = 0; i < placement_address; i += MM_PAGE_S){
@@ -116,6 +117,7 @@ void unmap_phys_virt(uintptr_t page_directory, uintptr_t virt){
 	uint32_t pidx = virt >> 22;
 	uintptr_t page_table = ((uintptr_t*)page_directory)[pidx];
 	((uintptr_t*)page_directory)[pidx] = 0 | 2;
+	((uintptr_t*)tab_addr)[pidx] = 0 | 2;
 	free_frame((void*)phys_to_virt(page_table));
 	tlb_flush();
 }
@@ -126,4 +128,36 @@ uintptr_t phys_to_virt(uintptr_t phys){
 
 uintptr_t virt_to_phys(uintptr_t virt){
 	return virt - KERNEL_VBASE;
+}
+
+static uintptr_t clone_tab(uintptr_t dir){
+	uintptr_t ret = (uintptr_t)alloc_frame();
+	for(uint32_t i = 0; i < MM_PAGE_COMMON_SIZE; i++){
+		//((uintptr_t*)ret)[i] = ((uintptr_t*)dir)[i];
+		memcpy(&(((uintptr_t*)ret)[i]), &(((uintptr_t*)dir)[i]), sizeof(uintptr_t));
+	}
+	//memcpy((uintptr_t*)ret, (uintptr_t*)dir, sizeof(uintptr_t) * MM_PAGE_COMMON_SIZE);
+	return ret;
+}
+
+//TODO: some kind of page structure that allows for tab_addr, now only main dir is cloneble
+uintptr_t clone_dir(uintptr_t dir){
+	uintptr_t ret = (uintptr_t)alloc_frame();
+	int y = 0;
+	char buf[25] = "";
+	for(uint32_t i = 0; i < MM_PAGE_COMMON_SIZE; i++){
+		int_to_ascii(y, buf);
+		kprint(buf);
+		kprint("\n");
+		y++;
+		if(((uintptr_t*)dir)[i] == (0 | 2)){
+			((uintptr_t*)ret)[i] = (0 | 2);
+		}
+		if((((uintptr_t*)tab_addr)[i] != (0 | 2)))
+		{
+			uintptr_t t = clone_tab(((uintptr_t*)tab_addr)[i]);
+			((uintptr_t*)ret)[i] = (virt_to_phys(t) | 3);
+		}
+	}
+	return ret;
 }

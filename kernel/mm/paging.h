@@ -21,5 +21,6 @@ uintptr_t phys_to_virt(uintptr_t phys);
 uintptr_t virt_to_phys(uintptr_t virt);
 
 // TODO: Clone page_dirs and give tasks own dir
+uintptr_t clone_dir(uintptr_t dir);
 
 #endif
