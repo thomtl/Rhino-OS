@@ -1,6 +1,7 @@
 #include "keyboard.h"
 #include "../kernel/arch/x86/ports.h"
 #include "../kernel/arch/x86/isr.h"
+#include "../kernel/arch/x86/timer.h"
 #include "screen.h"
 #include "../libk/include/string.h"
 #include "../kernel/common.h"
@@ -77,10 +78,8 @@ void init_keyboard(){
   // Disable the 2 devices, if the second channel doesn't exist it will ignore it
   outb(KBD_REG_COMMAND, KBD_REG_INT_DISABLE_DEV_1);
   outb(KBD_REG_COMMAND, KBD_REG_INT_DISABLE_DEV_2);
-
   // Flush the buffer
   for(uint8_t i = 0; i < KBD_BUF_FLUSH_LEN; i++) inb(KBD_REG_DATA);
-
   // Init the controller configuration byte
   conf = kbd_read(KBD_REG_INT_READ_CONF_BYTE);
   BIT_CLEAR(conf, 0);
@@ -135,14 +134,21 @@ void init_keyboard(){
   outb(KBD_REG_COMMAND, KBD_REG_INT_ENABLE_DEV_1);
   if(hasSecondChannel == true) outb(KBD_REG_COMMAND, KBD_REG_INT_ENABLE_DEV_2);
 
+
+  // Register the interrupt handler for the first channel
+  register_interrupt_handler(IRQ1, kbd_irq);
+
+  if (kbd_ch_1_write(0xFF) == 0xFC) PANIC_M("PS/2 Channel 1 Device Reset did not report success");
+
+  if(hasSecondChannel == true){
+
+    if (kbd_ch_2_write(0xFF) == 0xFC) PANIC_M("PS/2 Channel 2 Device Reset did not report success");
+  }
+
   conf = kbd_read(KBD_REG_INT_READ_CONF_BYTE);
   BIT_SET(conf, 0);
   BIT_SET(conf, 6);
   kbd_write(KBD_REG_INT_WRITE_CONF_BYTE, conf);
-
-
-  // Register the interrupt handler for the first channel
-  register_interrupt_handler(IRQ1, kbd_irq);
 
   // Restart interrupts
   STI();
@@ -172,4 +178,16 @@ uint8_t kbd_read(uint8_t reg){
 void kbd_write(uint8_t reg, uint8_t data){
   outb(KBD_REG_COMMAND, reg);
   outb(KBD_REG_DATA, data);
+}
+
+uint32_t kbd_ch_1_write(uint32_t data){
+  while(BIT_IS_SET(inb(KBD_REG_COMMAND), 1));
+  outb(KBD_REG_DATA, data);
+  return inb(KBD_REG_DATA);
+}
+uint32_t kbd_ch_2_write(uint32_t data){
+  outb(KBD_REG_COMMAND, 0xD4);
+  while(BIT_IS_SET(inb(KBD_REG_COMMAND), 1));
+  outb(KBD_REG_DATA, data);
+  return inb(KBD_REG_DATA);
 }
