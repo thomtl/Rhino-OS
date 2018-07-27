@@ -13,3 +13,4 @@ https://en.wikibooks.org/wiki/Computer_Programming/OS_Programming
 https://kukuruku.co/post/multitasking-management-in-the-operating-system-kernel/
 https://github.com/16Bitt/virtix
 https://anastas.io/osdev/memory/2016/08/08/page-frame-allocator.html
+https://seasonofcode.com/posts/how-x-window-managers-work-and-how-to-write-one-part-i.html
