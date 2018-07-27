@@ -13,7 +13,7 @@
 
 
 void init_mm_paging();
-
+void switch_dir(uintptr_t new_dir);
 void map_phys_virt(uintptr_t page_directory, uintptr_t phys, uintptr_t virt);
 void unmap_phys_virt(uintptr_t page_directory, uintptr_t virt);
 

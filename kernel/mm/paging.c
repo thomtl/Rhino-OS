@@ -95,6 +95,10 @@ void init_mm_paging(){
 	kheap = create_heap(KHEAP_START, KHEAP_START+KHEAP_INITIAL_SIZE, 0xDFFFF000, 0, 0);
 }
 
+void switch_dir(uintptr_t new_dir){
+	__asm__ __volatile__ ("mov %0, %%cr3":: "r"(virt_to_phys(new_dir)));
+}
+
 void map_phys_virt(uintptr_t page_directory, uintptr_t phys, uintptr_t virt){
 	uintptr_t address = phys;
 	unsigned int pidx = 0;
@@ -130,34 +134,38 @@ uintptr_t virt_to_phys(uintptr_t virt){
 	return virt - KERNEL_VBASE;
 }
 
-static uintptr_t clone_tab(uintptr_t dir){
-	uintptr_t ret = (uintptr_t)alloc_frame();
+/*static uintptr_t clone_tab(uintptr_t dir){
+	uintptr_t ret = (uintptr_t)kmalloc_a(0x1000);
 	for(uint32_t i = 0; i < MM_PAGE_COMMON_SIZE; i++){
 		//((uintptr_t*)ret)[i] = ((uintptr_t*)dir)[i];
 		memcpy(&(((uintptr_t*)ret)[i]), &(((uintptr_t*)dir)[i]), sizeof(uintptr_t));
 	}
 	//memcpy((uintptr_t*)ret, (uintptr_t*)dir, sizeof(uintptr_t) * MM_PAGE_COMMON_SIZE);
 	return ret;
-}
+}*/
 
 //TODO: some kind of page structure that allows for tab_addr, now only main dir is cloneble
 uintptr_t clone_dir(uintptr_t dir){
 	uintptr_t ret = (uintptr_t)alloc_frame();
-	int y = 0;
-	char buf[25] = "";
-	for(uint32_t i = 0; i < MM_PAGE_COMMON_SIZE; i++){
-		int_to_ascii(y, buf);
-		kprint(buf);
-		kprint("\n");
-		y++;
+
+	/*for(uint32_t i = 0; i < MM_PAGE_COMMON_SIZE; i++){
+		uint32_t t = ((uintptr_t*)dir)[i];
+		BIT_CLEAR(t, 0);
+		BIT_CLEAR(t, 1);
+		BIT_CLEAR(t, 2);
+		BIT_CLEAR(t, 5);
+		t = phys_to_virt(t);
 		if(((uintptr_t*)dir)[i] == (0 | 2)){
 			((uintptr_t*)ret)[i] = (0 | 2);
 		}
 		if((((uintptr_t*)tab_addr)[i] != (0 | 2)))
 		{
-			uintptr_t t = clone_tab(((uintptr_t*)tab_addr)[i]);
-			((uintptr_t*)ret)[i] = (virt_to_phys(t) | 3);
+			uintptr_t a = clone_tab(t);
+			((uintptr_t*)ret)[i] = ((a - 0xD0000000)| 3);
 		}
+	}*/
+	for(uint32_t i = 0; i < MM_PAGE_COMMON_SIZE; i++){
+		memcpy(&(((uintptr_t*)ret)[i]), &(((uintptr_t*)dir)[i]), sizeof(uintptr_t));
 	}
 	return ret;
 }

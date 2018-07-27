@@ -312,7 +312,7 @@ void user_input(char *input){
     return;
   }
   if(strcmp(input, "clone") == 0){
-    clone_dir(page_directory);
+    switch_dir(clone_dir(page_directory));
     kprint("\n$");
     return;
   }
