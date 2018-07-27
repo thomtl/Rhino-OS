@@ -1,4 +1,4 @@
-#define DEBUG
+//#define DEBUG
 
 #if defined(__linux__)
 #error "No cross compiler detected you will probably run into trouble"
@@ -132,6 +132,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
 
   #ifndef DEBUG
   clear_screen();
+  init("init.prg");
   #endif
 
   kprint("Rhino Kernel Internal Shell version 0.0.2");
@@ -306,7 +307,7 @@ void user_input(char *input){
   }
   if(strcmp(input, "reboot") == 0) reboot();
   if(strcmp(input, "run") == 0){
-    init("shell.prg");
+    init("init.prg");
     kprint("\n$");
     return;
   }
