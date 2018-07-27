@@ -46,7 +46,7 @@ void run_program(void *address){
   //call_module_t prog = (call_module_t) address;
   //prog();
 
-  createTask(address, taskArray[0].regs.eflags, (uint32_t*)taskArray[0].regs.cr3);
+  createTask(address, taskArray[0].regs.eflags, taskArray[0].regs.cr3);
   return;
 }
 

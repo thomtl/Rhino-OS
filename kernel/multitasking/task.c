@@ -90,7 +90,7 @@ void initTasking(){
    @brief Create a task.
    @param args List of args.  args[0] the pointer to where to locate the task.  args[1] is a pointer to the main function. args[2] is the EFLAGS register. args[3] is the cr3 register.
  */
-void createTask(void(*main)(), uint32_t flags, uint32_t *pagedir){
+void createTask(void(*main)(), uint32_t flags, uintptr_t pagedir){
   task_t* task = &tasks[getFinalElement()];
   task->regs.eax = 0;
   task->regs.ebx = 0;
@@ -100,7 +100,7 @@ void createTask(void(*main)(), uint32_t flags, uint32_t *pagedir){
   task->regs.edi = 0;
   task->regs.eflags = flags;
   task->regs.eip = (uint32_t) main;
-  task->regs.cr3 = (uint32_t) pagedir;
+  task->regs.cr3 = pagedir;
   task->regs.esp = (uint32_t) kmalloc(0x4000) + 0x4000;
   task->pid.pid = tasks[getFinalElement() - 1].pid.pid + 1;
   task->used = true;

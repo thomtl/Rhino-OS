@@ -28,13 +28,14 @@ void init(char *prg){
   kprint("Mapped Pages\n");
   switch_dir(dir);
   memcpy(PROGRAM_LOAD_ADDRESS, header->base, header->len);
+  switch_dir(page_directory);
   kprint("Program in designated zone\n");
 
   free_program(header);
   kprint("Loading Space Freed\n");
-
+  
   task_t* root = task_for_pid(0);
-  createTask(PROGRAM_LOAD_ADDRESS, root->regs.eflags, (uint32_t*)dir);
+  createTask(PROGRAM_LOAD_ADDRESS, root->regs.eflags, virt_to_phys(dir));
 
   kill(0);
   kprint("Kernel Task Killed\n");

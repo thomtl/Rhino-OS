@@ -39,6 +39,7 @@ switchTask:
     pop %eax
     mov 24(%eax), %esp #ESP
     push %eax
+
     mov 40(%eax), %eax #CR3
     mov %eax, %cr3
     pop %eax
