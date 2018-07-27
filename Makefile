@@ -45,9 +45,7 @@ bochs: rhino.iso
 	yasm $< -f elf -o $@ -p nasm
 %.o: %.s
 	yasm $< -f elf -o $@ -p gas
-%.bin: %.asm
-	nasm $< -f elf -o $@
-
+	
 clean:
 	rm -rf *.bin *.dis *.o os-image.bin *.elf *.iso *.out
 	rm -rf kernel/*.o kernel/mm/*.o kernel/types/*.o kernel/fs/*.o kernel/security/*.o kernel/multitasking/*.o kernel/power/*.o kernel/user/*.o boot/*.bin drivers/*.o kernel/arch/x86/*.o libk/*.o libk/string/*.o libk/stdio/*.o libk/stdlib/*.o

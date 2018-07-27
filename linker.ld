@@ -28,5 +28,4 @@ ENTRY(_kernel_early)
           _ebss = .;
       }
       _kernel_end = .;
-      end = .;
    }

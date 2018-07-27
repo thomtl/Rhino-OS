@@ -1,4 +1,4 @@
-//#define DEBUG
+#define DEBUG
 
 #if defined(__linux__)
 #error "No cross compiler detected you will probably run into trouble"
