@@ -27,6 +27,7 @@ int t_help(char *args);
 int t_clear(char *args);
 int t_exit(char *args);
 int t_color(char *args);
+int t_read(char *f);
 int t_execute(char *args);
 void t_loop(void);
 void main(void)
@@ -57,20 +58,29 @@ char *builtin_str[] = {
   "help",
   "exit",
   "clear",
-  "color"
+  "color",
+  "read"
 };
 
 int (*builtin_func[]) (char *) = {
   &t_help,
   &t_exit,
   &t_clear,
-  &t_color
+  &t_color,
+  &t_read
 };
 
 int t_num_builtins() {
   return sizeof(builtin_str) / sizeof(char *);
 }
-
+int t_read(char *f){
+  FILE* ff = fopen("test.txt");
+  void* prg = malloc(ff->length);
+  fread(prg, (size_t)ff->length, ff);
+  printf((char*)prg);
+  UNUSED(f);
+  return 1;
+}
 
 int t_color(char *args){
   for(uint8_t i = 0; i < 16; i++){

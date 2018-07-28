@@ -45,3 +45,11 @@ char* getline(char *lineptr, size_t bufsize){
 void clear_screen(){
     syscall(1, 2, 0, 0);
 }
+
+FILE* fopen(char* filename){
+  return (FILE*)syscall(3, 1, (uint32_t)filename, 0);
+}
+
+void fread(void* ptr, size_t size, FILE* file){
+  syscall(4, (uint32_t)file, size, (uint32_t)ptr);
+}
