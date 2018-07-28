@@ -1,13 +1,23 @@
+C_SOURCES = $(wildcard ./*.c libc/*.c)
+HEADERS = $(wildcard ./*.h libc/*.h)
+
+# Nice syntax for file extension replacement
+OBJ = ${C_SOURCES:.c=.o}
+
+
 CC = i686-elf-gcc
 LD = i686-elf-ld
 CFLAGS = -g -m32 -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs \
 					-Wall -Wextra -Werror -std=c99
 
-tshell:
-	yasm start.asm -f elf -o start.o -p nasm
-	${CC} ${CFLAGS} -ffreestanding -c main.c -o main.o
-	${CC} ${CFLAGS} -ffreestanding -c common.c -o common.o
-	${CC} -T link.ld -o $@ -ffreestanding -nostdlib start.o main.o common.o -lgcc
+tshell: ${OBJ}
+	${CC} -T link.ld -o $@ -ffreestanding -nostdlib $^ -lgcc
+
+
 clean:
 	rm -f tshell
-	rm -f main.o common.o
+	rm -f *.o
+	rm -f libc/*.o
+
+%.o: %.c ${HEADERS}
+	${CC} ${CFLAGS} -ffreestanding -c $< -o $@

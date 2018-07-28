@@ -5,8 +5,10 @@
   @brief        TSHELL
 *******************************************************************************/
 
-#include "common.h"
-
+//#include "common.h"
+#include "libc/include/stdio.h"
+#include "libc/include/stdlib.h"
+#include "libc/include/string.h"
 /*
   Function Declarations for builtin shell commands:
  */
