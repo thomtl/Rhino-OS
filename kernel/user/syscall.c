@@ -1,6 +1,7 @@
 #include "syscall.h"
 #include "../common.h"
 #include "../mm/kheap.h"
+#include "../mm/paging.h"
 #include "../../drivers/screen.h"
 #include "../../libk/include/stdio.h"
 #include "../../libk/include/string.h"
@@ -8,6 +9,10 @@
 #include "../fs/vfs.h"
 #include "../fs/initrd.h"
 #include "../../drivers/keyboard.h"
+extern uintptr_t page_directory;
+static inline void* sys_create_task_dir(){
+  return (void*)clone_dir(page_directory);
+}
 
 static inline void sys_set_color(uint8_t fg, uint8_t bg){
   set_color(fg, bg);
@@ -120,6 +125,9 @@ void syscall_handler(registers_t *regs){
           break;
         case 2:
           sys_free((void*)regs->ecx);
+          break;
+        case 3:
+          regs->eax = (uint32_t)sys_create_task_dir();
           break;
         default:
           break;

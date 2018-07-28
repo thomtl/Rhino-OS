@@ -23,6 +23,7 @@ void init(char *prg){
   uint32_t j = (uint32_t)PROGRAM_LOAD_ADDRESS;
   for(uint32_t i = FREE_PROG; i < (FREE_PROG + m); i += MM_PAGE_S) {
     map_phys_virt(dir, i, j);
+    reserve_addr((void*)i);
     j += MM_PAGE_S;
   }
   kprint("Mapped Pages\n");

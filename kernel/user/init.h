@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include "../common.h"
 #include "../mm/paging.h"
+#include "../mm/phys.h"
 #include "../multitasking/task.h"
 #include "../../drivers/screen.h"
 #include "program.h"

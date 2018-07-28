@@ -158,3 +158,12 @@ void free_frame(void* frame){
   if(test_frame((uint32_t)frame)) clear_frame((uint32_t)frame * 0x1000);
   used_frames--;
 }
+
+/**
+   @brief Reserves a frame.
+   @param args List of args.  args[0] is the address of the frame to reserve.
+ */
+void reserve_addr(void* addr){
+  set_frame((uint32_t)addr);
+  used_frames++;
+}
