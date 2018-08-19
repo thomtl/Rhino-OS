@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../common.h"
-#include "vmm.h"
-#include "../types/ordered_array.h"
+#include "../../../kernel/common.h"
+#include <rhino/mm/vmm.h>
+#include "../../../kernel/types/ordered_array.h"
 
 #define KHEAP_START 0xD0000000
 #define KHEAP_INITIAL_SIZE 0x100000

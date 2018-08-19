@@ -1,4 +1,4 @@
-#include "vmm.h"
+#include <rhino/mm/vmm.h>
 extern void tlb_flush();
 pdirectory* vmm_cur_directory = 0;
 pdirectory* kernel_directory = 0;

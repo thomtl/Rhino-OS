@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#include "./../kernel/common.h"
+#include "../../../common.h"
 #define VIDEO_ADDRESS (char*)(0xC00B8000)
 #define MAX_ROWS 25
 #define MAX_COLS 80

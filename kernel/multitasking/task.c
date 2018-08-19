@@ -1,7 +1,7 @@
 #include "task.h"
-#include "../../drivers/screen.h"
+#include "../arch/x86/drivers/screen.h"
 #include "../../libk/include/string.h"
-#include "../mm/hmm.h"
+#include <rhino/mm/hmm.h>
 #include "scheduler.h"
 static task_t *runningTask;
 task_t tasks[MAX_TASKS];

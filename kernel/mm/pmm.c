@@ -1,5 +1,5 @@
-#include "pmm.h"
-#include "../../drivers/screen.h"
+#include <rhino/mm/pmm.h>
+#include "../arch/x86/drivers/screen.h"
 extern uint32_t _kernel_end;
 extern uint32_t _kernel_start;
 multiboot_info_t* mbd;

@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 #include "vfs.h"
-#include "../mm/hmm.h"
+#include <rhino/mm/hmm.h>
 
 typedef struct {
   uint32_t nfiles;

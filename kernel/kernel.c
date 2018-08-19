@@ -6,9 +6,9 @@
 
 #include "common.h"
 #include "multiboot.h"
-#include "mm/vmm.h"
-#include "mm/pmm.h"
-#include "mm/hmm.h"
+#include <rhino/mm/vmm.h>
+#include <rhino/mm/pmm.h>
+#include <rhino/mm/hmm.h>
 #include "multitasking/task.h"
 #include "fs/vfs.h"
 #include "fs/initrd.h"
@@ -17,9 +17,9 @@
 #include "user/program.h"
 #include "user/init.h"
 #include "power/power.h"
-#include "../drivers/screen.h"
-#include "../drivers/keyboard.h"
-#include "../drivers/floppy.h"
+#include "arch/x86/drivers/screen.h"
+#include "arch/x86/drivers/keyboard.h"
+#include "arch/x86/drivers/floppy.h"
 #include "./arch/x86/isr.h"
 #include "./arch/x86/gdt.h"
 #include "./arch/x86/msr.h"

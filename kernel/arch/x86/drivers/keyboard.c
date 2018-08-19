@@ -1,11 +1,11 @@
 #include "keyboard.h"
-#include "../kernel/arch/x86/ports.h"
-#include "../kernel/arch/x86/isr.h"
-#include "../kernel/arch/x86/timer.h"
+#include "../ports.h"
+#include "../isr.h"
+#include "../timer.h"
 #include "screen.h"
-#include "../libk/include/string.h"
-#include "../kernel/common.h"
-#include "../kernel/kernel.h"
+#include "../../../../libk/include/string.h"
+#include "../../../common.h"
+#include "../../../kernel.h"
 
 #define BACKSPACE 0x0E
 #define ENTER 0x1C

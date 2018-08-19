@@ -1,5 +1,5 @@
 #include "ordered_array.h"
-#include "../mm/hmm.h"
+#include <rhino/mm/hmm.h>
 int8_t standard_lessthan_predicate(type_t a, type_t b){
   return (a<b)?1:0;
 }

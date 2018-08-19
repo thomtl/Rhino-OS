@@ -1,6 +1,6 @@
 #pragma once 
 
-#include "../kernel/arch/x86/type.h"
+#include "../type.h"
 
 #define KBD_REG_DATA 0x60
 #define KBD_REG_COMMAND 0x64

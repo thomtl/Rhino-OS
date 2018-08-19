@@ -1,14 +1,14 @@
 #include "syscall.h"
 #include "../common.h"
-#include "../mm/hmm.h"
-#include "../mm/vmm.h"
-#include "../../drivers/screen.h"
+#include <rhino/mm/hmm.h>
+#include <rhino/mm/vmm.h>
+#include "../arch/x86/drivers/screen.h"
 #include "../../libk/include/stdio.h"
 #include "../../libk/include/string.h"
 #include "../multitasking/task.h"
 #include "../fs/vfs.h"
 #include "../fs/initrd.h"
-#include "../../drivers/keyboard.h"
+#include "../arch/x86/drivers/keyboard.h"
 extern pdirectory* kernel_directory;
 static inline void* sys_create_task_dir(){
   return (void*)vmm_clone_dir(kernel_directory);

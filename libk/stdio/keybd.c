@@ -1,5 +1,5 @@
 #include "../include/stdio.h"
-#include "../../drivers/keyboard.h"
+#include "../../kernel/arch/x86/drivers/keyboard.h"
 char getchar(){
     return kbd_getchar();
 }

@@ -2,10 +2,10 @@
 
 #include <stdint.h>
 #include "../common.h"
-#include "../mm/vmm.h"
-#include "../mm/pmm.h"
+#include <rhino/mm/vmm.h>
+#include <rhino/mm/pmm.h>
 #include "../multitasking/task.h"
-#include "../../drivers/screen.h"
+#include "../arch/x86/drivers/screen.h"
 #include "program.h"
 #include "../../libk/include/string.h"
 

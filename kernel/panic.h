@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#include "../drivers/screen.h"
+#include "arch/x86/drivers/screen.h"
 #include "../libk/include/string.h"
 __attribute__((noreturn))
 void panic();

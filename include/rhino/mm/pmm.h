@@ -3,8 +3,8 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include "../multiboot.h"
-#include "../../libk/include/string.h"
+#include "../../../kernel/multiboot.h"
+#include "../../../libk/include/string.h"
 
 #define PHI_PMM_BLOCKS_PER_BYTE 8
 #define PHI_PMM_BLOCK_SIZE 4096

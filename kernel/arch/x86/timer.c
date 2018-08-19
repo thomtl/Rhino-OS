@@ -2,7 +2,7 @@
 #include "isr.h"
 #include "ports.h"
 #include "../../common.h"
-#include "../../../drivers/screen.h"
+#include "drivers/screen.h"
 #include "../../multitasking/scheduler.h"
 
 uint32_t tick = 0;

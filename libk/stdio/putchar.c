@@ -1,6 +1,6 @@
 #include "../include/stdio.h"
 
-#include "../../drivers/screen.h"
+#include "../../kernel/arch/x86/drivers/screen.h"
 
 int putchar(int ic){
   char c = (char) ic;
