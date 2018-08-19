@@ -29,7 +29,7 @@ kernel.bin: kernel/kernel_early.o ${OBJ}
 	${CC} -T linker.ld -o $@ -ffreestanding -O2 -nostdlib $^ -lgcc
 
 run: rhino.iso
-	DISPLAY=:0 qemu-system-x86_64 -m 512M -cdrom rhino.iso -d cpu_reset -D log/qemulog
+	DISPLAY=:0 qemu-system-x86_64 -m 256M -cdrom rhino.iso -d cpu_reset -D log/qemulog
 	rm -rf build/sys
 
 bochs: rhino.iso

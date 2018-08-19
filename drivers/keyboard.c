@@ -138,15 +138,16 @@ void init_keyboard(){
   // Register the interrupt handler for the first channel
   register_interrupt_handler(IRQ1, kbd_irq);
 
-  if (kbd_ch_1_write(0xFF) == 0xFC) PANIC_M("PS/2 Channel 1 Device Reset did not report success");
+  /*if (kbd_ch_1_write(0xFF) == 0xFC) PANIC_M("PS/2 Channel 1 Device Reset did not report success");
 
   if(hasSecondChannel == true){
 
     if (kbd_ch_2_write(0xFF) == 0xFC) PANIC_M("PS/2 Channel 2 Device Reset did not report success");
-  }
+  }*/
 
   conf = kbd_read(KBD_REG_INT_READ_CONF_BYTE);
   BIT_SET(conf, 0);
+  BIT_SET(conf, 1);
   BIT_SET(conf, 6);
   kbd_write(KBD_REG_INT_WRITE_CONF_BYTE, conf);
 
