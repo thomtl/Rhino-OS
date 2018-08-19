@@ -48,7 +48,7 @@ void init(char *prg){
   vmm_switch_pdirectory(kernel_directory);
   kprint("Program in designated zone\n");
 
-  //free_program(header);
+  free_program(header);
   kprint("Loading Space Freed\n");
 
   task_t* root = task_for_pid(0);

@@ -74,11 +74,12 @@ int t_num_builtins() {
   return sizeof(builtin_str) / sizeof(char *);
 }
 int t_read(char *f){
-  FILE* ff = fopen("test.txt");
+  FILE* ff = fopen("test.prg");
   void* prg = malloc(ff->length);
   fread(prg, (size_t)ff->length, ff);
   printf((char*)prg);
   UNUSED(f);
+  free(prg);
   return 1;
 }
 

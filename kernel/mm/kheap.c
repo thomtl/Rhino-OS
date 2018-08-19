@@ -3,7 +3,7 @@
 #include "../../drivers/screen.h"
 #include "phys.h"
 #include "../common.h"
-
+uint32_t heapPos = 0xD0000000;
 extern uint32_t _kernel_end;
 extern uintptr_t page_directory;
 uint32_t placement_address = (uint32_t)&_kernel_end;
@@ -405,4 +405,20 @@ void free_int(void *p, heap_t *heap)
     if (do_add == 1)
         insert_ordered_array((void*)header, &heap->index);
 
+}
+
+
+void init_heap(){
+  for(uint32_t i = 0; i < (KHEAP_INITIAL_SIZE / 4096); i++){
+    void* frame;
+    if(!(frame = pmm_alloc_block())){
+        kprint("[HMM]: Could not allocate physical page\n");
+        return;
+    }
+    vmm_map_page(frame, (void*)heapPos);
+    //hmm_kheap_bm_add_block(&kheap, (uintptr_t)heapPos, 4096, 16);
+    heapPos += 4096;
+}
+kheap = create_heap(KHEAP_START, KHEAP_START+KHEAP_INITIAL_SIZE, 0xDFFFF000, 0, 0);
+//hmm_kheap_bm_add_block(&kheap, (uintptr_t)HMM_INITIAL_ADDR, (32 * 4096), 16);
 }

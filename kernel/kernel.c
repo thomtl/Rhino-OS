@@ -120,6 +120,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   kprint("Initializing Memory Manager..");
   init_pmm(mbd);
   init_vmm();
+  init_heap();
   kprint("Memory Manager initialized\n");
 
   kprint("Initializing Ramdisk..");
