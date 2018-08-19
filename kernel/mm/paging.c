@@ -1,171 +1,183 @@
 #include "paging.h"
-
-extern uint32_t placement_address;
-uintptr_t page_directory;
-uintptr_t tab_addr;
 extern void tlb_flush();
-extern heap_t* kheap;
+pdirectory* vmm_cur_directory = 0;
+pdirectory* kernel_directory = 0;
+void vmm_pt_entry_add_attrib(pt_entry* e, uint32_t attrib){
+    *e |= attrib;
+}
+void vmm_pt_entry_del_attrib(pt_entry* e, uint32_t attrib){
+    *e &= ~attrib;
+}
+void vmm_pt_entry_set_frame(pt_entry* e, void* frame){
 
+    *e = (*e & ~PHI_PTE_FRAME) | (uint32_t)frame;
 
-void page_fault(registers_t* regs){
-	unsigned int err_pos;
-	__asm__ __volatile__ ("mov %%cr2, %0" : "=r" (err_pos));
-
-	kprint_err("Page fault occurred at ");
-  char address[35] = "";
-  hex_to_ascii(err_pos, address);
-  kprint_err(address);
-
-	kprint_err("\nReasons:");
-
-	int no_page = regs->err_code & 1;
-	int rw = regs->err_code & 2;
-	int um = regs->err_code & 4;
-	int re = regs->err_code & 8;
-	int dc = regs->err_code & 16;
-
-	if(dc)		kprint_err(" (Instruction decode error) ");
-	if(!no_page)	kprint_err(" (No page present) ");
-	if(um)		kprint_err(" (in user mode) ");
-	if(rw)		kprint_err(" (Write permissions) ");
-	if(re)		kprint_err(" (RE) ");
-
-	kprint_err("\n");
-  CLI();
-  while(1);
+}
+bool vmm_pt_entry_is_present(pt_entry e){
+    return e & PHI_PTE_PRESENT;
+}
+bool vmm_pt_entry_is_writable(pt_entry e){
+    return e & PHI_PTE_WRITABLE;
+}
+void* vmm_pt_entry_pfn(pt_entry e){
+    return (void*)(e & PHI_PTE_FRAME);
 }
 
-void init_mm_paging(){
-	//char buf[25] = "";
-  register_interrupt_handler(14, page_fault);
+void vmm_pd_entry_add_attrib(pd_entry* e, uint32_t attrib){
+    *e |= attrib;
+}
+void vmm_pd_entry_del_attrib(pd_entry* e, uint32_t attrib){
+    *e &= ~attrib;
+}
+void vmm_pd_entry_set_frame(pd_entry* e, void* frame){
+    *e = (*e & ~PHI_PDE_FRAME) | (uint32_t)frame;
+}
+bool vmm_pd_entry_is_present(pd_entry e){
+    return e & PHI_PDE_PRESENT;
+}
+bool vmm_pd_entry_is_user(pd_entry e){
+    return e & PHI_PDE_USER;
+}
+bool vmm_pd_entry_is_writable(pd_entry e){
+    return e & PHI_PDE_WRITABLE;
+}
+bool vmm_pd_entry_is_4mb(pd_entry e){
+    return e & PHI_PDE_4MB;
+}
+void* vmm_pd_entry_pfn(pd_entry e){
+    return (void*)(e & PHI_PDE_FRAME);
+}
 
-	page_directory = (uintptr_t)alloc_frame();
-	tab_addr = (uintptr_t)alloc_frame();
-	unsigned int pde = 0;
-	for(pde = 0; pde < MM_PAGE_COMMON_SIZE; pde++){
-		((uintptr_t*)page_directory)[pde] = 0 | 2;
-		((uintptr_t*)tab_addr)[pde] = 0 | 2;
-	}
-
-	//for(uint32_t i = 0; i < placement_address; i += MM_PAGE_S){
-		//map_phys_virt(page_directory, 0x0, phys_to_virt(0x0));
-		//map_phys_virt(page_directory, MM_PAGE_S, phys_to_virt(MM_PAGE_S));
-		//map_phys_virt(page_directory, MM_PAGE_S * 2, phys_to_virt(MM_PAGE_S * 2));
-		//map_phys_virt(page_directory, MM_PAGE_S * 3, phys_to_virt(MM_PAGE_S * 3));
-		//map_phys_virt(page_directory, MM_PAGE_S * 4, phys_to_virt(MM_PAGE_S * 4));
-	//}
-	for(uint32_t i = 0; i < MM_PAGE_S * 8; i += MM_PAGE_S){
-		map_phys_virt(page_directory, i, phys_to_virt(i));
-	}
-
-	for(uint32_t i = MM_PAGE_S * 8; i < MM_PAGE_S * 8 + KHEAP_INITIAL_SIZE; i+= MM_PAGE_S) {
-		map_phys_virt(page_directory, i, KHEAP_START);
-	}
-//__asm__ ("cli; hlt");
+void vmm_pd_entry_enable_global(pd_entry e){
+    e |= PHI_PDE_LV4_GLOBAL;
+}
 
 
+bool vmm_alloc_page(pt_entry* e){
+    void* p = (void*)((uint32_t)pmm_alloc_block() + KERNEL_VBASE);
+    if(!p) return false;
+    vmm_pt_entry_set_frame(e, p);
+    vmm_pt_entry_add_attrib(e, PHI_PTE_PRESENT);
+    return true;
+}
 
-	/*uintptr_t address = 0x0;
-	unsigned int pidx = 0;
-	for(pidx = KERNEL_VBASE >> 22; pidx < (KERNEL_VBASE >> 22) + 8; pidx++){
-		uintptr_t page_table = (uintptr_t)alloc_frame();
+void vmm_free_page(pt_entry* e){
+    void* p = vmm_pt_entry_pfn(*e);
+    if(p) pmm_free_block(p);
+    vmm_pt_entry_del_attrib(e, PHI_PTE_PRESENT);
+}
 
-		unsigned int pte;
-		for(pte = 0; pte < MM_PAGE_COMMON_SIZE; pte++){
-			((uint32_t*)page_table)[pte] = address | 3;
-			address += 0x1000;
-		}
+pt_entry* vmm_ptable_lookup_entry(ptable* p, void* addr){
+    if(p) return &p->m_entries[PAGE_TABLE_INDEX((uint32_t)addr)];
+    return 0;
+}
+pd_entry* vmm_pdirectory_lookup_entry(pdirectory* p, void* addr){
+    if(p) return &p->m_entries[PAGE_TABLE_INDEX((uint32_t)addr)];
+    return 0;
+}
 
-		((uintptr_t*)page_directory)[pidx] = virt_to_phys(page_table) | 3;
+bool vmm_switch_pdirectory(pdirectory* dir){
+    if(!dir) return false;
+
+    vmm_cur_directory = dir;
+    //TODO load dir into cr3
+    uint32_t phys = (uint32_t)((uint32_t)dir - (uint32_t)KERNEL_VBASE);
+    asm("mov %0, %%cr3":: "r"(phys));
+    return true;
+}
+pdirectory* vmm_get_directory(){
+    return vmm_cur_directory;
+}
+
+void vmm_flush_tlb_entry(void* addr){
+    asm("invlpg (%0)":: "r"(addr));
+}
+
+void vmm_map_page(void* phys, void* virt){
+    pdirectory* pageDirectory = vmm_get_directory();
+
+    pd_entry* e = &pageDirectory->m_entries[PAGE_DIRECTORY_INDEX((uint32_t)virt)];
+
+
+    if((*e & PHI_PTE_PRESENT) != PHI_PTE_PRESENT){
+        ptable* table = (ptable*)((uint32_t)pmm_alloc_block() + KERNEL_VBASE);
+        if(!table) return;
+        vmm_ptable_clear(table);
+
+
+        memset(table, 0, sizeof(ptable));
+
+        pd_entry* entry = &pageDirectory->m_entries[PAGE_DIRECTORY_INDEX((uint32_t)virt)];
+        vmm_pd_entry_add_attrib(entry, PHI_PDE_PRESENT);
+        vmm_pd_entry_add_attrib(entry, PHI_PDE_WRITABLE);
+
+        void* fr = (void*)((uint32_t)table - (uint32_t)KERNEL_VBASE);
+
+        vmm_pd_entry_set_frame(entry, fr);
+
+
+    }
+    ptable* table = (ptable*)PAGE_GET_PHYSICAL_ADDRESS(e);
+
+    pt_entry* page = &table->m_entries[PAGE_TABLE_INDEX((uint32_t)virt)];
+
+    pt_entry* pagv = (pt_entry*)((uint32_t)page + (uint32_t)KERNEL_VBASE);// convert page into virtual from physical
+
+    vmm_pt_entry_add_attrib(pagv, PHI_PTE_WRITABLE);
+    vmm_pt_entry_set_frame(pagv, (void*)phys);
+    vmm_pt_entry_add_attrib(pagv, PHI_PTE_PRESENT);
+    tlb_flush();
+}
+
+void vmm_ptable_clear(ptable* tab){
+    memset(tab, 0, sizeof(ptable));
+}
+
+void vmm_pdirectory_clear(pdirectory* dir){
+    memset(dir, 0, sizeof(pdirectory));
+}
+
+bool init_vmm(){
+    /*ptable* table = (ptable*)((uint32_t)pmm_alloc_block() + KERNEL_VBASE);
+    if(!table) return;
+    vmm_ptable_clear(table);
+	for (int i=0, frame=0x000000, virt=0xc0000000; i<1024; i++, frame+=4096, virt+=4096) {
+		pt_entry page=0;
+		vmm_pt_entry_add_attrib (&page, PHI_PTE_PRESENT);
+        vmm_pt_entry_add_attrib(&page, PHI_PTE_WRITABLE);
+		vmm_pt_entry_set_frame (&page, (void*)frame);
+		table->m_entries [PAGE_TABLE_INDEX (virt) ] = page;
 	}*/
 
-	__asm__ __volatile__ ("mov %0, %%cr3":: "r"(virt_to_phys(page_directory)));
+    pdirectory* dir = (pdirectory*)((uint32_t)pmm_alloc_block() + KERNEL_VBASE);
+		kernel_directory = dir;
+    if(!dir) return false;
 
-	/* clear 4MB page bit since we're switching to 4KB pages */
-	uint32_t cr4;
-	__asm__ __volatile__("mov %%cr4, %0": "=r" (cr4));
-	cr4 &= ~(0x00000010);
-	__asm__ __volatile__("mov %0, %%cr4":: "r" (cr4));
+    vmm_pdirectory_clear(dir);
 
-	/* read cr0, set paging bit, write it back */
-	uint32_t cr0;
-	__asm__ __volatile__("mov %%cr0, %0": "=r" (cr0));
-	cr0 |= 0x80000000;
-	__asm__ __volatile__("mov %0, %%cr0":: "r" (cr0));
-	kheap = create_heap(KHEAP_START, KHEAP_START+KHEAP_INITIAL_SIZE, 0xDFFFF000, 0, 0);
-}
+    vmm_cur_directory = dir;
 
-void switch_dir(uintptr_t new_dir){
-	__asm__ __volatile__ ("mov %0, %%cr3":: "r"(virt_to_phys(new_dir)));
-}
+    /*pd_entry* entry = &dir->m_entries [PAGE_DIRECTORY_INDEX (0xc0000000) ];
+    vmm_pd_entry_add_attrib(entry, PHI_PDE_PRESENT);
+    vmm_pd_entry_add_attrib(entry, PHI_PDE_WRITABLE);
+    uint32_t p = (uint32_t)((uint32_t)table - (uint32_t)KERNEL_VBASE);
+    vmm_pd_entry_set_frame(entry, (void*)p);*/
 
-void map_phys_virt(uintptr_t page_directory, uintptr_t phys, uintptr_t virt){
-	uintptr_t address = phys;
-	unsigned int pidx = 0;
-	for(pidx = virt >> 22; pidx < (virt >> 22) + 1; pidx++){
-		uintptr_t page_table = (uintptr_t)alloc_frame();
+    for (int i=0, frame=0x000000, virt=0xc0000000; i<1024; i++, frame+=4096, virt+=4096) {
 
-		unsigned int pte;
-		for(pte = 0; pte < MM_PAGE_COMMON_SIZE; pte++){
-			((uint32_t*)page_table)[pte] = address | 3;
-			address += 0x1000;
-		}
+		vmm_map_page((void*)frame, (void*)virt);
 
-		((uintptr_t*)page_directory)[pidx] = virt_to_phys(page_table) | 3;
-		((uintptr_t*)tab_addr)[pidx] = page_table;
 	}
-	tlb_flush();
+
+    vmm_switch_pdirectory(dir);
+    return true;
 }
 
-void unmap_phys_virt(uintptr_t page_directory, uintptr_t virt){
-	uint32_t pidx = virt >> 22;
-	uintptr_t page_table = ((uintptr_t*)page_directory)[pidx];
-	((uintptr_t*)page_directory)[pidx] = 0 | 2;
-	((uintptr_t*)tab_addr)[pidx] = 0 | 2;
-	free_frame((void*)phys_to_virt(page_table));
-	tlb_flush();
-}
+pdirectory* vmm_clone_dir(pdirectory* dir){
+	uintptr_t ret = (uintptr_t)((uint32_t)pmm_alloc_block() + KERNEL_VBASE);
 
-uintptr_t phys_to_virt(uintptr_t phys){
-	return phys + KERNEL_VBASE;
-}
-
-uintptr_t virt_to_phys(uintptr_t virt){
-	return virt - KERNEL_VBASE;
-}
-
-/*static uintptr_t clone_tab(uintptr_t dir){
-	uintptr_t ret = (uintptr_t)kmalloc_a(0x1000);
-	for(uint32_t i = 0; i < MM_PAGE_COMMON_SIZE; i++){
-		//((uintptr_t*)ret)[i] = ((uintptr_t*)dir)[i];
+	for(uint32_t i = 0; i < 1024; i++){
 		memcpy(&(((uintptr_t*)ret)[i]), &(((uintptr_t*)dir)[i]), sizeof(uintptr_t));
 	}
-	//memcpy((uintptr_t*)ret, (uintptr_t*)dir, sizeof(uintptr_t) * MM_PAGE_COMMON_SIZE);
-	return ret;
-}*/
-
-//TODO: some kind of page structure that allows for tab_addr, now only main dir is cloneble
-uintptr_t clone_dir(uintptr_t dir){
-	uintptr_t ret = (uintptr_t)alloc_frame();
-
-	/*for(uint32_t i = 0; i < MM_PAGE_COMMON_SIZE; i++){
-		uint32_t t = ((uintptr_t*)dir)[i];
-		BIT_CLEAR(t, 0);
-		BIT_CLEAR(t, 1);
-		BIT_CLEAR(t, 2);
-		BIT_CLEAR(t, 5);
-		t = phys_to_virt(t);
-		if(((uintptr_t*)dir)[i] == (0 | 2)){
-			((uintptr_t*)ret)[i] = (0 | 2);
-		}
-		if((((uintptr_t*)tab_addr)[i] != (0 | 2)))
-		{
-			uintptr_t a = clone_tab(t);
-			((uintptr_t*)ret)[i] = ((a - 0xD0000000)| 3);
-		}
-	}*/
-	for(uint32_t i = 0; i < MM_PAGE_COMMON_SIZE; i++){
-		memcpy(&(((uintptr_t*)ret)[i]), &(((uintptr_t*)dir)[i]), sizeof(uintptr_t));
-	}
-	return ret;
+	return (pdirectory*)ret;
 }

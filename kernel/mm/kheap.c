@@ -85,10 +85,10 @@ static void expand(uint32_t new_size, heap_t *heap)
     uint32_t i = old_size;
     while (i < new_size)
     {
-        //alloc_frame( get_page(heap->start_address+i, 1, kernel_directory),
+        //pmm_alloc_block( get_page(heap->start_address+i, 1, kernel_directory),
           //           (heap->supervisor)?1:0, (heap->readonly)?0:1);
-        void* frame = alloc_frame();
-        map_phys_virt(page_directory, (uint32_t)virt_to_phys((uintptr_t)frame), heap->start_address+1);
+        void* frame = pmm_alloc_block();
+        vmm_map_page((void*)((uintptr_t)frame - KERNEL_VBASE), (void*)heap->start_address+1);
         i += 0x1000 /* page size */;
     }
     heap->end_address = heap->start_address+new_size;

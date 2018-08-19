@@ -1,169 +1,126 @@
 #include "phys.h"
-#include "kheap.h"
 #include "../../drivers/screen.h"
-#include "../common.h"
-multiboot_info_t *mboot_hdr;
-uint32_t mboot_reserved_start;
-uint32_t mboot_reserved_end;
-
-extern uint32_t _kernel_start;
 extern uint32_t _kernel_end;
+extern uint32_t _kernel_start;
+multiboot_info_t* mbd;
+uint32_t kern_end = 0;
+uint32_t kern_start = 0;
+uint32_t mbd_start;
+uint32_t mbd_end;
 
-uint32_t kernel_end = (uint32_t)&_kernel_end;
-uint32_t kernel_start = (uint32_t)&_kernel_start;
+static uint32_t pmm_mem_s = 0;
+static uint32_t pmm_used_blocks = 0;
+static uint32_t pmm_max_blocks = 0;
+static uint32_t* pmm_bitmap = 0;
 
-uint32_t nframes;
-uint32_t used_frames;
-uint32_t* frames;
-
-#define INDEX_FROM_BIT(a) ((a) / (8 * 4))
-#define OFFSET_FROM_BIT(a) ((a) % (8 * 4))
-#define IDX_TO_ADDR(a) ((a) * (0x1000))
-#define ADDR_TO_IDX(a) ((a) / (0x1000))
-
-
-/**
-   @brief Sets a bit in the bitmap for a frame.
-   @param args List of args.  args[0] is the address of the frame to set.
- */
-static void set_frame(uint32_t addr){
-    uint32_t frame = ADDR_TO_IDX(addr);
-    uint32_t i = INDEX_FROM_BIT(frame);
-    uint32_t offset = OFFSET_FROM_BIT(frame);
-    frames[i] |= (0x1 << offset);
+void* pmm_early_kmalloc(size_t s){
+    uint32_t tmp = kern_end;
+    kern_end += s;
+    return (void*)tmp;
 }
 
-
-/**
-   @brief Clears a bit in the bitmap for a frame.
-   @param args List of args.  args[0] is the address of the frame to set.
- */
-static void clear_frame(uint32_t addr){
-    uint32_t frame = ADDR_TO_IDX(addr);
-    uint32_t i = INDEX_FROM_BIT(frame);
-    uint32_t offset = OFFSET_FROM_BIT(frame);
-    frames[i] &= ~(0x1 << offset);
+static inline void pmm_set(uint32_t bit){
+    pmm_bitmap[bit / 32] |= (1 << (bit % 32));
 }
 
-/**
-   @brief Checks if the bit in the bitmap is set for a frame.
-   @param args List of args.  args[0] is the address of the frame to check.
-   @return returns a bool for the state of the bit.
- */
-static bool test_frame(uint32_t addr){
-  uint32_t frame = ADDR_TO_IDX(addr);
-  uint32_t i = INDEX_FROM_BIT(frame);
-  uint32_t offset = OFFSET_FROM_BIT(frame);
-  return frames[i] & (0x1 << offset);
+static inline void pmm_clear(uint32_t bit){
+    pmm_bitmap[bit / 32] &= ~(1 << (bit % 32));
 }
 
+static inline bool pmm_test(uint32_t bit){
+    return pmm_bitmap[bit / 32] & (1 << (bit % 32));
+}
 
-/**
-   @brief Looks in the bitmap and finds the first free bit.
-   @return returns the index in the bitmap for the first free frame.
- */
-static uint32_t first_frame(){
-    uint32_t i, j;
-    for(i = 0; i < INDEX_FROM_BIT(nframes); i++){
-        if(frames[i] != 0xFFFFFFFF){
-            for(j = 0; j < 32; j++){
-                uint32_t toTest = 0x1 << j;
-                if(!(frames[i]&toTest)){
+static uint32_t pmm_get_block_count(){
+    return pmm_mem_s / 0x1000;
+}
+
+static uint32_t pmm_first_free(){
+    for(uint32_t i = 0; i < pmm_get_block_count() / 32; i++){
+        if(pmm_bitmap[i] != 0xffffffff){
+            for(uint32_t j = 0; j < 32; j++){
+                uint32_t bit = 1 << j;
+                if(! (pmm_bitmap[i] & bit)){
                     return i*4*8+j;
                 }
             }
         }
     }
-    return 0xDEADBEEF;
+    return -1;
 }
 
+//TODO: pmm_first_free_s(uint32_t blocks);
 
-/**
-   @brief Initialize the physical memory manager.
-   @param args List of args.  args[0] is the pointer to the multiboot info structure.
- */
-void init_mm_phys_manager(multiboot_info_t *mbd){
-    used_frames = 0;
-    mboot_hdr = mbd;
-    mboot_reserved_start = (uint32_t)(mboot_hdr - KERNEL_VBASE);
-    mboot_reserved_end = (uint32_t)((mboot_hdr + sizeof(multiboot_info_t)) - KERNEL_VBASE);
+bool init_pmm(multiboot_info_t* mstruc){
+    kern_start = (uint32_t)&_kernel_start;
+    kern_end = (uint32_t)&_kernel_end;
+    mbd = mstruc;
+    mbd_start = (uint32_t)mbd;
+    mbd_end = (uint32_t)(mbd + sizeof(multiboot_info_t));
 
-    uint32_t mem = (((mbd->mem_lower * 1024) + (mbd->mem_upper * 1024)) / 1024 / 1024 + 1) * 0x100000;
-    nframes = mem / 0x1000;
-    frames = (uint32_t*)kmalloc(INDEX_FROM_BIT(nframes));
+    pmm_mem_s = (((mbd->mem_lower * 1024) + (mbd->mem_upper * 1024)) / 1024 / 1024 + 1) * 0x100000;
+    pmm_used_blocks = pmm_get_block_count();
+    pmm_max_blocks = pmm_get_block_count();
+    pmm_bitmap = pmm_early_kmalloc((pmm_max_blocks / 32));
 
-    memset(frames, 0, INDEX_FROM_BIT(nframes));
-    kernel_start -= KERNEL_VBASE;
-    _kernel_end -= KERNEL_VBASE;
+    memset(pmm_bitmap, 0xf, pmm_get_block_count() / PHI_PMM_BLOCKS_PER_BYTE);
 
-    char buf[25] = "";
-    int_to_ascii(nframes, buf);
-    kprint("    [");
-    kprint(buf);
-    kprint(" free frames]\n");
-}
-
-
-/**
-   @brief Reads the memory map for a frame and checks if it is available.
-   @param args List of args.  args[0] is the frame to check for.
-   @return returns a bool for if it is reserved.
- */
-bool read_mmap(uint32_t addr){
-  multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)(mboot_hdr->mmap_addr + KERNEL_VBASE);
-  uintptr_t *mmap_end = (uintptr_t*)((mboot_hdr->mmap_addr + mboot_hdr->mmap_length) + KERNEL_VBASE);
-  while((uint32_t)mmap < (uint32_t)mmap_end){
-    if((addr >= mmap->addr) && (addr <= (mmap->addr + mmap->len))){
-      if((mmap->type == MULTIBOOT_MEMORY_RESERVED) || (mmap->type == MULTIBOOT_MEMORY_ACPI_RECLAIMABLE) || (mmap->type == MULTIBOOT_MEMORY_NVS) || (mmap->type == MULTIBOOT_MEMORY_BADRAM)){
-        return true;
-      } else if (mmap->type == MULTIBOOT_MEMORY_AVAILABLE){
-        return false;
+    multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)((uintptr_t)mbd->mmap_addr + (uintptr_t)KERNEL_VBASE);
+    uintptr_t *mmap_end = (uintptr_t*)((uintptr_t)(mbd->mmap_addr + mbd->mmap_length) + (uintptr_t)KERNEL_VBASE);
+    while((uint32_t)mmap < (uint32_t)mmap_end){
+      if(mmap->type == MULTIBOOT_MEMORY_AVAILABLE){
+          uint32_t* addr = (uint32_t*)((uint32_t)mmap->addr);
+          pmm_init_region(addr, mmap->len);
       }
+      mmap = (multiboot_memory_map_t*) ( (uintptr_t)mmap + mmap->size + sizeof(uintptr_t) );
     }
-    mmap = (multiboot_memory_map_t*) ( (uintptr_t)mmap + mmap->size + sizeof(uintptr_t) );
-  }
-  return true;
+    return true;
 }
 
-
-/**
-   @brief Allocates a physical frame.
-   @return returns a pointer to the allocated frame.
- */
-void* alloc_frame(){
-    uint32_t idx = first_frame();
-    if(idx == 0xDEADBEEF) PANIC_M("No free physical frames left");
-
-    bool reserved = read_mmap(IDX_TO_ADDR(idx));
-    if(reserved){
-      set_frame(IDX_TO_ADDR(idx));
-      return alloc_frame();
-    }
-    uint32_t addr = IDX_TO_ADDR(idx);
-    if((addr >= mboot_reserved_start && addr <= mboot_reserved_end ) || (addr >= kernel_start && addr <= kernel_end)){
-        set_frame(IDX_TO_ADDR(idx));
-        return alloc_frame();
+void pmm_init_region(uint32_t* base, size_t size){
+    int align = (uint32_t)base / PHI_PMM_BLOCK_SIZE;
+    int blocks = size / PHI_PMM_BLOCK_SIZE;
+    for(; blocks > 0; blocks--){
+        pmm_clear(align++);
+        pmm_used_blocks--;
     }
 
-    set_frame(IDX_TO_ADDR(idx));
-    used_frames++;
-    return (void*)(IDX_TO_ADDR(idx) + KERNEL_VBASE);
+    pmm_set(0);
 }
 
-/**
-   @brief Frees an allocated frame.
-   @param args List of args.  args[0] is the address of the frame to free.
- */
-void free_frame(void* frame){
-  if(test_frame((uint32_t)frame)) clear_frame((uint32_t)frame * 0x1000);
-  used_frames--;
+void pmm_deinit_region(uint32_t* base, size_t size){
+    int align = (uint32_t)base / PHI_PMM_BLOCK_SIZE;
+    int blocks = size /PHI_PMM_BLOCK_SIZE;
+
+    for(; blocks > 0; blocks--){
+        pmm_set(align++);
+        pmm_used_blocks++;
+    }
 }
 
-/**
-   @brief Reserves a frame.
-   @param args List of args.  args[0] is the address of the frame to reserve.
- */
-void reserve_addr(void* addr){
-  set_frame((uint32_t)addr);
-  used_frames++;
+void* pmm_alloc_block(){
+    uint32_t frame;
+    if((frame = pmm_first_free()) == (uint32_t)-1){
+        kprint("[PMM]: No free Blocks left\n");
+        return 0;
+    }
+    uint32_t addr = frame * PHI_PMM_BLOCK_SIZE;
+    if((addr >= (kern_start - (uint32_t)KERNEL_VBASE) && addr <= (kern_end - (uint32_t)KERNEL_VBASE)) || (addr >= (mbd_start - (uint32_t)KERNEL_VBASE) && addr <= (mbd_end - (uint32_t)KERNEL_VBASE))){
+        pmm_set(frame);
+        pmm_used_blocks++;
+        return pmm_alloc_block();
+    }
+    pmm_set(frame);
+
+    pmm_used_blocks++;
+    return (void*)addr;
+
+}
+void pmm_free_block(void* block){
+    uint32_t addr = (uint32_t)block;
+    int frame = addr / PHI_PMM_BLOCK_SIZE;
+
+    pmm_clear(frame);
+
+    pmm_used_blocks--;
 }

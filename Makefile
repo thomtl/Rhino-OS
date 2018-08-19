@@ -9,7 +9,7 @@ CC = i686-elf-gcc
 
 # -g: Use debugging symbols in gcc
 CFLAGS = -g -m32 -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs \
-					-Wall -Wextra -Werror -std=c99
+					-Wall -Wextra -Werror -std=gnu99
 .PHONY: all clean run bochs initrd
 all: run
 # First rule is run by default
@@ -45,7 +45,7 @@ bochs: rhino.iso
 	yasm $< -f elf -o $@ -p nasm
 %.o: %.s
 	yasm $< -f elf -o $@ -p gas
-	
+
 clean:
 	rm -rf *.bin *.dis *.o os-image.bin *.elf *.iso *.out
 	rm -rf kernel/*.o kernel/mm/*.o kernel/types/*.o kernel/fs/*.o kernel/security/*.o kernel/multitasking/*.o kernel/power/*.o kernel/user/*.o boot/*.bin drivers/*.o kernel/arch/x86/*.o libk/*.o libk/string/*.o libk/stdio/*.o libk/stdlib/*.o

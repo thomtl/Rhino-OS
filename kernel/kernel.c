@@ -34,7 +34,7 @@
 
 extern uint32_t placement_address;
 extern uint32_t _kernel_start;
-extern uintptr_t page_directory;
+extern pdirectory* vmm_cur_directory;
 uint8_t shouldExit = 0; //set this to 1 to exit the kernel
 multiboot_info_t* multibootInfo;
 uint32_t ramAmountMB = 0; // in MegaBytes
@@ -53,7 +53,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   kprint(buf);
   kprint("\n");
   buf[0] = '\0';
-  kern_base = virt_to_phys(kern_base);
+  kern_base = (kern_base - KERNEL_VBASE);
   hex_to_ascii(kern_base, buf);
   kprint("KERNEL PHYSICAL BASE: ");
   kprint(buf);
@@ -110,16 +110,16 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
 
   kprint("Loading Ramdisk..");
   ASSERT(mbd->mods_count >= 1);
-  multiboot_module_t *initrd = (multiboot_module_t*)phys_to_virt(mbd->mods_addr);
-  uint32_t initrd_location = phys_to_virt(initrd->mod_start);//*((uint32_t*)phys_to_virt(mbd->mods_addr));
-  uint32_t initrd_end = phys_to_virt(initrd->mod_end);//*(uint32_t*)(phys_to_virt(mbd->mods_addr)+ 4);
+  multiboot_module_t *initrd = (multiboot_module_t*)(mbd->mods_addr + KERNEL_VBASE);
+  uint32_t initrd_location = (initrd->mod_start + KERNEL_VBASE);//*((uint32_t*)phys_to_virt(mbd->mods_addr));
+  uint32_t initrd_end = (initrd->mod_end + KERNEL_VBASE);//*(uint32_t*)(phys_to_virt(mbd->mods_addr)+ 4);
   placement_address = initrd_end;
   kprint("done\n");
 
 
   kprint("Initializing Memory Manager..");
-  init_mm_phys_manager(mbd);
-  init_mm_paging();
+  init_pmm(mbd);
+  init_vmm();
   kprint("Memory Manager initialized\n");
 
   kprint("Initializing Ramdisk..");
@@ -258,8 +258,8 @@ void user_input(char *input){
   if(strcmp(input, "mmap") == 0){
     set_color(VGA_COLOR_GREEN, VGA_COLOR_BLACK);
     uint8_t entryCount = 1;
-    multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)phys_to_virt(multibootInfo->mmap_addr);
-    uintptr_t *mmap_end = (uintptr_t*)(phys_to_virt(multibootInfo->mmap_addr + multibootInfo->mmap_length));
+    multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)(multibootInfo->mmap_addr + KERNEL_VBASE);
+    uintptr_t *mmap_end = (uintptr_t*)((multibootInfo->mmap_addr + multibootInfo->mmap_length + KERNEL_VBASE));
     while((uint32_t)mmap < (uint32_t)mmap_end){
       char buf[128] = "";
       kprint("Entry: ");
@@ -312,7 +312,7 @@ void user_input(char *input){
     return;
   }
   if(strcmp(input, "clone") == 0){
-    switch_dir(clone_dir(page_directory));
+    vmm_switch_pdirectory(vmm_clone_dir(vmm_cur_directory));
     kprint("\n$");
     return;
   }

@@ -9,9 +9,9 @@
 #include "../fs/vfs.h"
 #include "../fs/initrd.h"
 #include "../../drivers/keyboard.h"
-extern uintptr_t page_directory;
+extern pdirectory* kernel_directory;
 static inline void* sys_create_task_dir(){
-  return (void*)clone_dir(page_directory);
+  return (void*)vmm_clone_dir(kernel_directory);
 }
 
 static inline void sys_set_color(uint8_t fg, uint8_t bg){
