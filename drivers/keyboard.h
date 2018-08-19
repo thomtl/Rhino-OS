@@ -1,5 +1,5 @@
-#ifndef KEYBOARD_H
-#define KEYBOARD_H
+#pragma once 
+
 #include "../kernel/arch/x86/type.h"
 
 #define KBD_REG_DATA 0x60
@@ -22,4 +22,3 @@ uint32_t kbd_ch_2_write(uint32_t data);
 void init_keyboard();
 char kbd_getchar();
 char sys_kbd_getchar();
-#endif

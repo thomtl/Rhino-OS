@@ -1,5 +1,5 @@
-#ifndef STDIO_H
-#define STDIO_H
+#pragma once
+
 #include <stddef.h>
 #define EOF (-1)
 
@@ -9,5 +9,3 @@ int puts(const char*);
 
 char getchar();
 char* getline(char lineptr[], size_t bufsize);
-
-#endif

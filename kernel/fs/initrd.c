@@ -1,5 +1,5 @@
 #include "initrd.h"
-#include "../mm/phys.h"
+#include "../mm/pmm.h"
 #include "../../libk/include/string.h"
 initrd_header_t *initrd_header;
 initrd_file_header_t *file_headers;

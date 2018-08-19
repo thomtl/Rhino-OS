@@ -1,5 +1,5 @@
-#ifndef STACK_SMASH_H
-#define STACK_SMASH_H
+#pragma once
+
 #include <stdint.h>
 #include "../common.h"
 #if UINT32_MAX == UINTPTR_MAX
@@ -10,4 +10,3 @@
 
 __attribute__((noreturn))
 void __stack_chk_fail(void);
-#endif

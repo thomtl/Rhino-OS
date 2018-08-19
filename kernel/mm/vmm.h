@@ -1,10 +1,9 @@
-#ifndef MM_PAGING_H
-#define MM_PAGING_H
+#pragma once
 
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include "phys.h"
+#include "pmm.h"
 #include "../common.h"
 
 #define PAGE_DIRECTORY_INDEX(x) (((x) >> 22) & 0x3ff)
@@ -92,5 +91,3 @@ void vmm_ptable_clear(ptable* tab);
 void vmm_pdirectory_clear(pdirectory* dir);
 
 bool init_vmm();
-
-#endif

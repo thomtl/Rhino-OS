@@ -1,5 +1,5 @@
-#ifndef SCREEN_H
-#define SCREEN_H
+#pragma once
+
 #include <stdint.h>
 #include "./../kernel/common.h"
 #define VIDEO_ADDRESS (char*)(0xC00B8000)
@@ -42,4 +42,3 @@ void kprint(char *message);
 void kprint_err(char *message);
 void kprint_warn(char *message);
 void kprint_backspace();
-#endif

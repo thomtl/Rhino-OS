@@ -1,5 +1,5 @@
-#ifndef MULTITASK_SHEDULER_H
-#define MULTITASK_SHEDULER_H
+#pragma once
+
 #include <stdint.h>
 #include "../common.h"
 #include "task.h"
@@ -11,4 +11,4 @@
 void schedule(uint32_t tick);
 void enable_scheduling();
 void disable_scheduling();
-#endif
+

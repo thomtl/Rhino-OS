@@ -1,8 +1,8 @@
-#ifndef INITRD_H
-#define INITRD_H
+#pragma once
+
 #include <stdint.h>
 #include "vfs.h"
-#include "../mm/kheap.h"
+#include "../mm/hmm.h"
 
 typedef struct {
   uint32_t nfiles;
@@ -15,4 +15,3 @@ typedef struct {
   uint32_t length;
 } initrd_file_header_t;
 fs_node_t *initialise_initrd(uint32_t location);
-#endif

@@ -1,8 +1,7 @@
-#ifndef KHEAP_H
-#define KHEAP_H
+#pragma once
 
 #include "../common.h"
-#include "paging.h"
+#include "vmm.h"
 #include "../types/ordered_array.h"
 
 #define KHEAP_START 0xD0000000
@@ -55,4 +54,3 @@ void kfree(void *p);
 
 void init_heap();
 
-#endif

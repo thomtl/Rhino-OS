@@ -1,5 +1,5 @@
-#ifndef STRING_H
-#define STRING_H
+#pragma once
+
 #include "sys/cdefs.h"
 #include <stdint.h>
 #include <stddef.h>
@@ -17,4 +17,3 @@ void reverse(char s[]);
 void backspace(char s[]);
 void append(char s[], char n);
 int strcmp(char s1[], char s2[]);
-#endif

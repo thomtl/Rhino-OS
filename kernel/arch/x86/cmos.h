@@ -1,5 +1,4 @@
-#ifndef CMOS_h
-#define CMOS_h
+#pragma once
 
 #include <stdint.h>
 #include "ports.h"
@@ -33,6 +32,3 @@ typedef struct {
 uint8_t read_cmos(uint8_t reg);
 void write_cmos(uint8_t reg, uint8_t val);
 time_t read_rtc();
-
-
-#endif

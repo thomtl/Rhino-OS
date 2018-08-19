@@ -6,9 +6,9 @@
 
 #include "common.h"
 #include "multiboot.h"
-#include "mm/paging.h"
-#include "mm/phys.h"
-#include "mm/kheap.h"
+#include "mm/vmm.h"
+#include "mm/pmm.h"
+#include "mm/hmm.h"
 #include "multitasking/task.h"
 #include "fs/vfs.h"
 #include "fs/initrd.h"

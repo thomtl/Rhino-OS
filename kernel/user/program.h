@@ -1,5 +1,5 @@
-#ifndef PROGRAM_H
-#define PROGRAM_H
+#pragma once
+
 #include <stdint.h>
 
 #define PROGRAM_BINARY_TYPE_BIN 0x0
@@ -18,5 +18,3 @@ typedef void (*call_module_t)(void);
 loaded_program_t* load_program(char* filename, uint8_t type);
 void free_program(loaded_program_t* header);
 void run_program(void *address);
-
-#endif

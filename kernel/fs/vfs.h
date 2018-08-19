@@ -1,5 +1,5 @@
-#ifndef VFS_H
-#define VFS_H
+#pragma once
+
 #include <stdint.h>
 #define FS_FILE        0x01
 #define FS_DIRECTORY   0x02
@@ -51,6 +51,3 @@ void open_fs(fs_node_t *node, uint8_t read, uint8_t write);
 void close_fs(fs_node_t *node);
 struct dirent *readdir_fs(fs_node_t *node, uint32_t index);
 fs_node_t *finddir_fs(fs_node_t *node, char *name);
-
-
-#endif

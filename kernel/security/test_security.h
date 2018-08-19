@@ -1,6 +1,5 @@
-#ifndef TEST_SECURITY_H
-#define TEST_SECURITY_H
+#pragma once
+
 #include <stdint.h>
 
 void do_stacksmash(char *bar);
-#endif

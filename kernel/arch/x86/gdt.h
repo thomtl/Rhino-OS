@@ -1,5 +1,5 @@
-#ifndef GDT_H
-#define GDT_H
+#pragma once
+
 #include <stdint.h>
 
 typedef struct {
@@ -16,8 +16,5 @@ typedef struct {
   uint32_t base;
 } __attribute__((packed)) gdt_ptr;
 
-gdt_entry gdt[3];
-gdt_ptr gdtptr;
 void gdt_set_gate(uint32_t n, uint32_t base, uint32_t limit, uint8_t access, uint8_t granularity);
 void gdt_install();
-#endif

@@ -1,5 +1,5 @@
-#ifndef KERNEL_PANIC_H
-#define KERNEL_PANIC_H
+#pragma once
+
 #include <stdint.h>
 #include "../drivers/screen.h"
 #include "../libk/include/string.h"
@@ -11,4 +11,3 @@ void panic_m(char* m, char *f);
 
 __attribute__((noreturn))
 void panic_assert(char *file, uint32_t line, char *desc);
-#endif

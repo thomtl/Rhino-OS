@@ -1,5 +1,5 @@
-#ifndef TASK_H
-#define TASK_H
+#pragma once
+
 #include <stdint.h>
 #include "../common.h"
 
@@ -44,5 +44,3 @@ void end_task_atomic();
 
 
 extern void switchTask(task_registers_t *old, task_registers_t *new);
-
-#endif

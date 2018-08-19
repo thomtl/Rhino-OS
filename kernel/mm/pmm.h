@@ -1,5 +1,5 @@
-#ifndef MM_PHYS_H
-#define MM_PHYS_H
+#pragma once
+
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -17,7 +17,3 @@ void pmm_init_region(uint32_t* base, size_t size);
 void pmm_deinit_region(uint32_t* base, size_t size);
 void* pmm_alloc_block();
 void pmm_free_block(void* block);
-
-
-
-#endif

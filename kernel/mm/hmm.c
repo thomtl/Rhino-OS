@@ -1,7 +1,7 @@
-#include "kheap.h"
+#include "hmm.h"
 #include "../../libk/include/string.h"
 #include "../../drivers/screen.h"
-#include "phys.h"
+#include "pmm.h"
 #include "../common.h"
 uint32_t heapPos = 0xD0000000;
 extern uint32_t _kernel_end;

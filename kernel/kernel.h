@@ -1,5 +1,4 @@
-#ifndef KERNEL_H
-#define KERNEL_H
+#pragma once
 
 typedef struct {
   uintptr_t start;
@@ -9,4 +8,3 @@ typedef struct {
 
 
 void user_input(char *input);
-#endif

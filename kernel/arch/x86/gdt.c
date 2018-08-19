@@ -1,4 +1,8 @@
 #include "gdt.h"
+
+gdt_entry gdt[3];
+gdt_ptr gdtptr;
+
 extern void gdt_flush();
 void gdt_set_gate(uint32_t n, uint32_t base, uint32_t limit, uint8_t access, uint8_t granularity){
   gdt[n].base_low = (base & 0xFFFF);

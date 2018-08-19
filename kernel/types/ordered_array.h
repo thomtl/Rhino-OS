@@ -1,5 +1,5 @@
-#ifndef ORDERED_ARRAY_H
-#define ORDERED_ARRAY_H
+#pragma once
+
 #include <stdint.h>
 
 #include "../../libk/include/string.h"
@@ -23,5 +23,3 @@ void destroy_ordered_array();//ordered_array_t *array);
 void insert_ordered_array(type_t item, ordered_array_t *array);
 type_t lookup_ordered_array(uint32_t i, ordered_array_t *array);
 void remove_ordered_array(uint32_t i, ordered_array_t *array);
-
-#endif

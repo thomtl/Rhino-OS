@@ -1,5 +1,5 @@
-#ifndef SERIAL_H
-#define SERIAL_H
+#pragma once
+
 #include "../kernel/arch/x86/ports.h"
 
 #define SERIAL_COM1_BASE 0x3F8
@@ -19,4 +19,3 @@ uint32_t serial_is_transmit_fifo_empty(uint32_t com);
 uint32_t serial_received();
 char read_serial(uint32_t com);
 void serial_write(uint32_t com, char a);
-#endif

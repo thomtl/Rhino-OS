@@ -1,6 +1,3 @@
-#ifndef POWER_H
-#define POWER_H
+#pragma once
 
 extern void reboot();
-
-#endif
