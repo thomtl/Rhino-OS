@@ -1,8 +1,8 @@
-C_SOURCES = $(wildcard kernel/*.c kernel/mm/*.c kernel/types/*.c kernel/fs/*.c kernel/security/*.c kernel/multitasking/*.c kernel/power/*.c kernel/user/*.c kernel/arch/x86/drivers/*.c kernel/arch/x86/*.c libk/*.c libk/string/*.c libk/stdio/*.c libk/stdlib/*.c)
-HEADERS = $(wildcard kernel/*.h kernel/mm/*.h  kernel/types/*.h kernel/fs/*.h kernel/security/*.h kernel/multitasking/*.h kernel/power/*.h kernel/user/*.h kernel/arch/x86/drivers/*.h kernel/arch/x86/*.h libk/*.h libk/include/*.h libk/include/sys/*.h)
+C_SOURCES = $(wildcard src/kernel/*.c src/kernel/mm/*.c src/kernel/types/*.c src/kernel/fs/*.c src/kernel/security/*.c src/kernel/multitasking/*.c src/kernel/power/*.c src/kernel/user/*.c src/kernel/arch/x86/drivers/*.c src/kernel/arch/x86/*.c src/libk/*.c src/libk/string/*.c src/libk/stdio/*.c src/libk/stdlib/*.c)
+HEADERS = $(wildcard src/kernel/*.h src/kernel/mm/*.h  src/kernel/types/*.h src/kernel/fs/*.h src/kernel/security/*.h src/kernel/multitasking/*.h src/kernel/power/*.h src/kernel/user/*.h src/kernel/arch/x86/drivers/*.h src/kernel/arch/x86/*.h src/libk/*.h src/libk/include/*.h src/libk/include/sys/*.h)
 
 # Nice syntax for file extension replacement
-OBJ = ${C_SOURCES:.c=.o kernel/arch/x86/interrupt.o kernel/arch/x86/gdtlow.o kernel/multitasking/switch.o kernel/mm/mm.o kernel/power/power_low.o}
+OBJ = ${C_SOURCES:.c=.o src/kernel/arch/x86/interrupt.o src/kernel/arch/x86/gdtlow.o src/kernel/multitasking/switch.o src/kernel/mm/mm.o src/kernel/power/power_low.o}
 
 # Change this if your cross-compiler is somewhere else
 CC = i686-elf-gcc
@@ -25,15 +25,15 @@ rhino.iso: kernel.bin initrd
 	cp build/grub.cfg build/sys/boot/grub/grub.cfg
 	grub-mkrescue -o ./rhino.iso build/sys
 
-kernel.bin: kernel/kernel_early.o ${OBJ}
+kernel.bin: src/kernel/kernel_early.o ${OBJ}
 	${CC} -T build/linker.ld -o $@ -ffreestanding -O2 -nostdlib $^ -lgcc
 
 run: rhino.iso
-	DISPLAY=:0 qemu-system-x86_64 -m 256M -cdrom rhino.iso -d cpu_reset -D log/qemulog
+	DISPLAY=:0 qemu-system-x86_64 -m 256M -cdrom rhino.iso -d cpu_reset -D build/log/qemu.log
 	rm -rf build/sys
 
 bochs: rhino.iso
-	DISPLAY=:0 bochs -f build/.bochsrc
+	DISPLAY=:0 bochs -f build/.bochsrc -q
 	rm -rf build/sys
 
 # Generic rules for wildcards
@@ -48,8 +48,8 @@ bochs: rhino.iso
 
 clean:
 	rm -rf *.bin *.dis *.o os-image.bin *.elf *.iso *.out
-	rm -rf kernel/*.o kernel/mm/*.o kernel/types/*.o kernel/fs/*.o kernel/security/*.o kernel/multitasking/*.o kernel/power/*.o kernel/user/*.o boot/*.bin kernel/arch/x86/drivers/*.o kernel/arch/x86/*.o libk/*.o libk/string/*.o libk/stdio/*.o libk/stdlib/*.o
+	rm -rf src/kernel/*.o src/kernel/mm/*.o src/kernel/types/*.o src/kernel/fs/*.o src/kernel/security/*.o src/kernel/multitasking/*.o src/kernel/power/*.o src/kernel/user/*.o src/kernel/arch/x86/drivers/*.o src/kernel/arch/x86/*.o src/libk/*.o src/libk/string/*.o src/libk/stdio/*.o src/libk/stdlib/*.o
 	rm -rf build/sys
-	rm -rf log/*
+	rm -rf build/log/*
 	rm -f initrd.img
 	rm -f snapshot.txt

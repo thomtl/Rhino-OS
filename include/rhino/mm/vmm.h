@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <rhino/mm/pmm.h>
-#include "../../../kernel/common.h"
+#include <rhino/common.h>
 
 #define PAGE_DIRECTORY_INDEX(x) (((x) >> 22) & 0x3ff)
 #define PAGE_TABLE_INDEX(x) (((x) >> 12) & 0x3ff)

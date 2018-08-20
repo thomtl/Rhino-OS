@@ -2,9 +2,9 @@ ata0-master: type=cdrom, path=rhino.iso, status=inserted
 clock: sync=realtime
 cpu: ips=1000000, reset_on_triple_fault=0
 megs: 512
-log: ./log/bochs.out
+log: build/log/bochs.out
 boot: cdrom
-display_library: sdl, options="gui_debug"
+display_library: x, options="gui_debug"
 romimage: file=$BXSHARE/BIOS-bochs-latest
 vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
-com1: enabled=1, mode=file, dev=./log/com1.txt
+com1: enabled=1, mode=file, dev=build/log/com1.txt
