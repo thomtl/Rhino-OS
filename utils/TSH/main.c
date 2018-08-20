@@ -2,7 +2,7 @@
   @file         main.c
   @author       Thomas Woertman
   @date         Saturday,  9 June 2018
-  @brief        TSHELL
+  @brief        TSH
 *******************************************************************************/
 
 //#include "common.h"
@@ -28,6 +28,7 @@ int t_clear(char *args);
 int t_exit(char *args);
 int t_color(char *args);
 int t_read(char *f);
+int t_nothing(char *f);
 int t_execute(char *args);
 void t_loop(void);
 void main(void)
@@ -35,7 +36,7 @@ void main(void)
   // Load config files, if any.
   clear_screen();
   syscall(1, 3, 9, 0);
-  printf("Starting TSHELL v0.0.1, Thomas Woertman 2018\n");
+  printf("Starting TSH v0.0.1, Thomas Woertman 2018\n");
   syscall(1, 3, 4, 0);
   printf("            All Rights Reserved\n");
   syscall(1, 3, 15, 0);
@@ -59,7 +60,8 @@ char *builtin_str[] = {
   "exit",
   "clear",
   "color",
-  "read"
+  "read",
+  ""
 };
 
 int (*builtin_func[]) (char *) = {
@@ -67,7 +69,8 @@ int (*builtin_func[]) (char *) = {
   &t_exit,
   &t_clear,
   &t_color,
-  &t_read
+  &t_read,
+  &t_nothing
 };
 
 int t_num_builtins() {
@@ -93,6 +96,11 @@ int t_color(char *args){
   return 1;
 }
 
+int t_nothing(char *args){
+  UNUSED(args);
+  return 1;
+}
+
 /*
   Builtin function implementations.
 */
@@ -105,7 +113,7 @@ int t_color(char *args){
 int t_help(char *args)
 {
   int i;
-  printf("Thomas Woertmans's TSHELL\n");
+  printf("Thomas Woertmans's TSH\n");
   printf("Type program names and arguments, and hit enter.\n");
   printf("The following are built in:\n");
 
@@ -190,7 +198,7 @@ int t_execute(char *args)
     }
   }
   syscall(1, 3, 4, 0);
-  printf("[TSHELL] Could not run program \"");
+  printf("[TSH] Could not run program \"");
   printf(args);
   printf("\"\n");
   syscall(1, 3, 15, 0);

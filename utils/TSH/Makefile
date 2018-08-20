@@ -10,12 +10,12 @@ LD = i686-elf-ld
 CFLAGS = -g -m32 -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs \
 					-Wall -Wextra -Werror -std=gnu99
 
-tshell: ${OBJ}
+tsh: ${OBJ}
 	${CC} -T link.ld -o $@ -ffreestanding -nostdlib $^ -lgcc
 
 
 clean:
-	rm -f tshell
+	rm -f tsh
 	rm -f *.o
 	rm -f libc/*.o
 
