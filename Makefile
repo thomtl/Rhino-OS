@@ -1,8 +1,8 @@
-C_SOURCES = $(wildcard src/kernel/*.c src/kernel/mm/*.c src/kernel/types/*.c src/kernel/fs/*.c src/kernel/security/*.c src/kernel/multitasking/*.c src/kernel/power/*.c src/kernel/user/*.c src/kernel/arch/x86/drivers/*.c src/kernel/arch/x86/*.c src/libk/*.c src/libk/string/*.c src/libk/stdio/*.c src/libk/stdlib/*.c)
-HEADERS = $(wildcard src/kernel/*.h src/kernel/mm/*.h  src/kernel/types/*.h src/kernel/fs/*.h src/kernel/security/*.h src/kernel/multitasking/*.h src/kernel/power/*.h src/kernel/user/*.h src/kernel/arch/x86/drivers/*.h src/kernel/arch/x86/*.h src/libk/*.h src/libk/include/*.h src/libk/include/sys/*.h)
+C_SOURCES = $(wildcard src/kernel/*.c src/kernel/mm/*.c src/kernel/types/*.c src/kernel/fs/*.c src/kernel/security/*.c src/kernel/multitasking/*.c src/kernel/pwr/*.c src/kernel/user/*.c src/kernel/arch/x86/drivers/*.c src/kernel/arch/x86/*.c src/libk/*.c src/libk/string/*.c src/libk/stdio/*.c src/libk/stdlib/*.c)
+#HEADERS = $(wildcard src/kernel/*.h src/kernel/mm/*.h  src/kernel/types/*.h src/kernel/fs/*.h src/kernel/security/*.h src/kernel/multitasking/*.h src/kernel/power/*.h src/kernel/user/*.h src/kernel/arch/x86/drivers/*.h src/kernel/arch/x86/*.h src/libk/*.h src/libk/include/*.h src/libk/include/sys/*.h)
 
 # Nice syntax for file extension replacement
-OBJ = ${C_SOURCES:.c=.o src/kernel/arch/x86/interrupt.o src/kernel/arch/x86/gdtlow.o src/kernel/multitasking/switch.o src/kernel/mm/mm.o src/kernel/power/power_low.o}
+OBJ = ${C_SOURCES:.c=.o src/kernel/arch/x86/interrupt.o src/kernel/arch/x86/gdtlow.o src/kernel/multitasking/switch.o src/kernel/mm/mm.o src/kernel/pwr/power_low.o}
 
 # Change this if your cross-compiler is somewhere else
 CC = i686-elf-gcc
@@ -38,7 +38,7 @@ bochs: rhino.iso
 
 # Generic rules for wildcards
 # To make an object, always compile from its .c
-%.o: %.c ${HEADERS}
+%.o: %.c #${HEADERS}
 	${CC} ${CFLAGS} -ffreestanding -c $< -o $@
 
 %.o: %.asm
@@ -48,7 +48,7 @@ bochs: rhino.iso
 
 clean:
 	rm -rf *.bin *.dis *.o os-image.bin *.elf *.iso *.out
-	rm -rf src/kernel/*.o src/kernel/mm/*.o src/kernel/types/*.o src/kernel/fs/*.o src/kernel/security/*.o src/kernel/multitasking/*.o src/kernel/power/*.o src/kernel/user/*.o src/kernel/arch/x86/drivers/*.o src/kernel/arch/x86/*.o src/libk/*.o src/libk/string/*.o src/libk/stdio/*.o src/libk/stdlib/*.o
+	rm -rf src/kernel/*.o src/kernel/mm/*.o src/kernel/types/*.o src/kernel/fs/*.o src/kernel/security/*.o src/kernel/multitasking/*.o src/kernel/pwr/*.o src/kernel/user/*.o src/kernel/arch/x86/drivers/*.o src/kernel/arch/x86/*.o src/libk/*.o src/libk/string/*.o src/libk/stdio/*.o src/libk/stdlib/*.o
 	rm -rf build/sys
 	rm -rf build/log/*
 	rm -f initrd.img
