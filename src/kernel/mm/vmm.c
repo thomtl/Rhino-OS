@@ -102,6 +102,7 @@ void vmm_map_page(void* phys, void* virt){
     if((*e & PHI_PTE_PRESENT) != PHI_PTE_PRESENT){
         ptable* table = (ptable*)((uint32_t)pmm_alloc_block() + KERNEL_VBASE);
         if(!table) return;
+        //if((uint32_t)table > 0xC03FFFFF) vmm_map_page((void*)((uint32_t)table - (uint32_t)KERNEL_VBASE), (void*)(table));
         vmm_ptable_clear(table);
 
 
@@ -117,6 +118,7 @@ void vmm_map_page(void* phys, void* virt){
 
 
     }
+
     ptable* table = (ptable*)PAGE_GET_PHYSICAL_ADDRESS(e);
 
     pt_entry* page = &table->m_entries[PAGE_TABLE_INDEX((uint32_t)virt)];
@@ -163,7 +165,7 @@ bool init_vmm(){
     uint32_t p = (uint32_t)((uint32_t)table - (uint32_t)KERNEL_VBASE);
     vmm_pd_entry_set_frame(entry, (void*)p);*/
 
-    for (int i=0, frame=0x000000, virt=0xc0000000; i<1024; i++, frame+=4096, virt+=4096) {
+    for (int i=0, frame=0x000000, virt=0xc0000000; i<(1024 * 16); i++, frame+=4096, virt+=4096) {
 
 		vmm_map_page((void*)frame, (void*)virt);
 
@@ -174,10 +176,11 @@ bool init_vmm(){
 }
 
 pdirectory* vmm_clone_dir(pdirectory* dir){
-	uintptr_t ret = (uintptr_t)((uint32_t)pmm_alloc_block() + KERNEL_VBASE);
-
+	uint32_t ret = (uint32_t)((uint32_t)pmm_alloc_block() + KERNEL_VBASE);
+  //vmm_map_page((void*)((uint32_t)ret - (uint32_t)KERNEL_VBASE), (void*)(ret));
 	for(uint32_t i = 0; i < 1024; i++){
 		memcpy(&(((uintptr_t*)ret)[i]), &(((uintptr_t*)dir)[i]), sizeof(uintptr_t));
 	}
+
 	return (pdirectory*)ret;
 }

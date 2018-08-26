@@ -77,12 +77,34 @@ int t_num_builtins() {
   return sizeof(builtin_str) / sizeof(char *);
 }
 int t_read(char *f){
+  /*FILE* ff = fopen("test.prg");
+  void* prg = malloc(ff->length);
+  fread(prg, (size_t)ff->length, ff);
+  printf((char*)prg);*/
+  UNUSED(f);
+  //free(prg);
+  printf("Creating Task\n");
+  char* m = malloc(sizeof(char) * 9);
+  m [0] = 't';
+  m[1] = 'e';
+  m[2] = 's';
+  m[3] = 't';
+  m[4] = '.';
+  m[5] = 'p';
+  m[6] = 'r';
+  m[7] = 'g';
+  m[8] = '\0';
+  //= "test.prg\0";
+  syscall(2,3,(uint32_t)m,0);
+
+  /*printf("Reading program");
   FILE* ff = fopen("test.prg");
   void* prg = malloc(ff->length);
   fread(prg, (size_t)ff->length, ff);
   printf((char*)prg);
-  UNUSED(f);
-  free(prg);
+
+  free(prg);*/
+
   return 1;
 }
 

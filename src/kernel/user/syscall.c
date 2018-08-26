@@ -9,9 +9,10 @@
 #include <rhino/fs/vfs.h>
 #include <rhino/fs/initrd.h>
 #include <rhino/arch/x86/drivers/keyboard.h>
+#include <rhino/user/init.h>
 extern pdirectory* kernel_directory;
-static inline void* sys_create_task_dir(){
-  return (void*)vmm_clone_dir(kernel_directory);
+static inline void sys_create_process(char* prg){
+  create_process(prg);
 }
 
 static inline void sys_set_color(uint8_t fg, uint8_t bg){
@@ -127,7 +128,7 @@ void syscall_handler(registers_t *regs){
           sys_free((void*)regs->ecx);
           break;
         case 3:
-          regs->eax = (uint32_t)sys_create_task_dir();
+          sys_create_process((char*)regs->ecx);
           break;
         default:
           break;

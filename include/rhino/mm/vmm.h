@@ -82,7 +82,7 @@ pd_entry* vmm_pdirectory_lookup_entry(pdirectory* p, void* addr);
 bool vmm_switch_pdirectory(pdirectory* dir);
 pdirectory* vmm_get_directory();
 
-pdirectory* vmm_clone_dir(pdirectory* clone);
+pdirectory* vmm_clone_dir(pdirectory* dir);
 
 void vmm_flush_tlb_entry(void* addr);
 void vmm_map_page(void* phys, void* virt);
