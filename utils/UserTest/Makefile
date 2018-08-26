@@ -1,11 +1,22 @@
+C_SOURCES = $(wildcard ./*.c)
+HEADERS = $(wildcard ./*.h)
+
+# Nice syntax for file extension replacement
+OBJ = ${C_SOURCES:.c=.o}
+
+
 CC = i686-elf-gcc
 LD = i686-elf-ld
 CFLAGS = -g -m32 -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs \
-					-Wall -Wextra -Werror -std=c99
+					-Wall -Wextra -Werror -std=gnu99
 
-usertest:
-	${CC} ${CFLAGS} -ffreestanding -c main.c -o main.o
-	${CC} ${CFLAGS} -T link.ld -o $@ main.o #--oformat binary
+usertest: ${OBJ}
+	${CC} -T link.ld -o $@ -ffreestanding -nostdlib $^ -lgcc
+
+
 clean:
 	rm -f usertest
-	rm -f main.o
+	rm -f *.o
+
+%.o: %.c ${HEADERS}
+	${CC} ${CFLAGS} -ffreestanding -c $< -o $@

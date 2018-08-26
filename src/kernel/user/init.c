@@ -6,8 +6,6 @@ void init(char *prg){
   pdirectory* dir;
   set_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLUE);
 
-  start_task_atomic();
-
   kprint("Loading ");
   kprint(prg);
   kprint("\n");
@@ -65,11 +63,9 @@ void init(char *prg){
 }
 
 void create_process(char* prg){
+  pdirectory* old = (pdirectory*)((uint32_t)(task_for_pid(1)->regs.cr3) + (uint32_t)KERNEL_VBASE);
   uint8_t attr = get_color();
-  pdirectory* dir;
   set_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLUE);
-
-  start_task_atomic();
 
   kprint("Loading ");
   kprint(prg);
@@ -80,16 +76,15 @@ void create_process(char* prg){
 
 
   kprint("Cloning Dir\n");
-  dir = vmm_clone_dir(kernel_directory);
+  pdirectory* dir = vmm_clone_dir(kernel_directory);
   kprint("Cloned Dir\n");
-  if((uint32_t)dir == 0x1790) kprint("AAHAHAHHA");
   kprint("Mapping Pages\n");
 
   vmm_switch_pdirectory(dir);
 
   //uint32_t m = (header->len / 4096) + 1;
   //for(uint32_t j = 0; j < m; j++){                               //should be 1024 but page fault investigate
-    for (int i=0, virt=(uint32_t)0x0 + (0 * 4096); i<1023; i++, virt+=4096){
+    for (int i=0, virt=(uint32_t)PROGRAM_LOAD_ADDRESS + (0 * 4096); i<1023; i++, virt+=4096){
       void* frame = pmm_alloc_block();
       vmm_map_page((void*)frame, (void*)virt);
     }
@@ -107,10 +102,8 @@ void create_process(char* prg){
 
 
   kprint("Mapped Pages\n");
-  vmm_switch_pdirectory(dir);
   //asm("cli; hlt");
   memcpy(PROGRAM_LOAD_ADDRESS, header->base, header->len);
-  //vmm_switch_pdirectory(kernel_directory);
   kprint("Program in designated zone\n");
 
   free_program(header);
@@ -122,8 +115,9 @@ void create_process(char* prg){
 
   kprint("Program Loading Done");
   set_raw_color(attr);
-  //__asm__ ("cli; hlt");
 
+  vmm_switch_pdirectory(old);
+  //__asm__ ("cli; hlt");
   yield();
   //__asm__ ("cli; hlt");
 }

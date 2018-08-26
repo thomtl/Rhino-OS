@@ -1,16 +1,15 @@
-#include <stdint.h>
-int putchar(char c);
-void clear_screen();
+//#include <stdint.h>
+/*int putchar(char c);
 void printf(char *m);
-uint32_t syscall(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx);
+uint32_t syscall(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx);*/
 
 void main(void){
-  __asm__ ("sti");
-  printf("Hello World");
-  while(1);
+  asm ("cli;hlt");
+  //printf("Hello World");
+  //while(1);
 }
 
-void printf(char *m){
+/*void printf(char *m){
   while(*m){
     putchar(*m++);
   }
@@ -33,4 +32,4 @@ uint32_t syscall(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx){
   uint32_t ret = 80;
   __asm__ __volatile__ ("int $0x80" : "=a"(ret): "a"(eax), "b"(ebx), "c"(ecx), "d" (edx));
   return ret;
-}
+}*/

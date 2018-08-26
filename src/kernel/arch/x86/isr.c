@@ -124,6 +124,10 @@ void isr_handler(registers_t *r){
     kprint_err("\n");
     kprint_err(exception_messages[int_no]);
     kprint_err("\n");
+    char buf[8];
+    hex_to_ascii(r->eip, buf);
+    kprint_err(buf);
+    kprint_err("\n");
     while(1);
   }
 }
