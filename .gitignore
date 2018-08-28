@@ -2,10 +2,8 @@
 *.img
 *.o
 *.iso
-/toolchain
 /build/sys
 /build/log
 /old
-/log
 /.vscode
 bx_enh_dbg.ini

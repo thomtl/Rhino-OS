@@ -1,6 +1,6 @@
-# Project Rhino is a work in progress UNIXlike x86 Operating System (Deprecated) New Project is Project Phi
+# Project Rhino is a work in progress UNIXlike x86 Operating System
 ### System Requirements:
 
-      8 Megs ram
+      32 Megs ram
 
       At least a 80586 aka Intel Pentium I
