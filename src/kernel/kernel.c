@@ -55,7 +55,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   hex_to_ascii(kern_base, buf);
   kprint("KERNEL PHYSICAL BASE: ");
   kprint(buf);
-  kprint("\n");
+  kprint("\n\n");
   #endif
   if(magic != MULTIBOOT_BOOTLOADER_MAGIC){
     PANIC_M(": Kernel was not booted by a multiboot compliant bootloader!\n");
@@ -69,9 +69,9 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
     PANIC_M("bootloader did not supply memory info");
   }
   if(BIT_IS_SET(mbd->flags, 10)){
-    kprint_warn("MULTIBOOT Supplied apm table\n");
+    kprint_warn("MULTIBOOT Supplied apm table\n\n");
   } else {
-    kprint_err("MULTIBOOT didn't supply APM table\n");
+    kprint_err("MULTIBOOT didn't supply APM table\n\n");
   }
   set_color(VGA_COLOR_LIGHT_BLUE, VGA_COLOR_BLACK);
   kprint("Starting Rhino 0.2, Copyright 2018 Thomas Woertman, The Netherlands\n");

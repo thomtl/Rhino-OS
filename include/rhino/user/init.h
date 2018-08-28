@@ -9,7 +9,7 @@
 #include <rhino/user/program.h>
 #include <libk/string.h>
 
-#define PROGRAM_LOAD_ADDRESS 0x0000
+#define PROGRAM_LOAD_ADDRESS 0x1000
 
 void init(char *prg);
 void create_process(char* prg);

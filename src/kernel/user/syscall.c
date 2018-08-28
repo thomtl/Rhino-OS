@@ -11,6 +11,11 @@
 #include <rhino/arch/x86/drivers/keyboard.h>
 #include <rhino/user/init.h>
 extern pdirectory* kernel_directory;
+
+static inline void sys_kill(uint32_t pid){
+  kill(pid);
+}
+
 static inline void sys_create_process(char* prg){
   create_process(prg);
 }
@@ -129,6 +134,9 @@ void syscall_handler(registers_t *regs){
           break;
         case 3:
           sys_create_process((char*)regs->ecx);
+          break;
+        case 4:
+          sys_kill(regs->ecx);
           break;
         default:
           break;
