@@ -89,7 +89,7 @@ void pmm_init_region(uint32_t* base, size_t size){
 }
 
 void pmm_deinit_region(uint32_t* base, size_t size){
-    int align = (uint32_t)base / PHI_PMM_BLOCK_SIZE;
+    int align = ((uint32_t)base) / PHI_PMM_BLOCK_SIZE;
     int blocks = size /PHI_PMM_BLOCK_SIZE;
 
     for(; blocks > 0; blocks--){

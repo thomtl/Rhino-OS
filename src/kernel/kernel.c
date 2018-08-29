@@ -18,7 +18,7 @@
 #include <rhino/pwr/power.h>
 #include <rhino/arch/x86/drivers/screen.h>
 #include <rhino/arch/x86/drivers/keyboard.h>
-#include <rhino/arch/x86/drivers/floppy.h>
+#include <rhino/arch/x86/drivers/fdc.h>
 #include <rhino/arch/x86/isr.h>
 #include <rhino/arch/x86/gdt.h>
 #include <rhino/arch/x86/msr.h>
@@ -120,6 +120,10 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   init_vmm();
   init_heap();
   kprint("Memory Manager initialized\n");
+
+  kprint("Initializing other drivers..");
+  init_fdc();
+  kprint("done\n");
 
   kprint("Initializing Ramdisk..");
   fs_root = initialise_initrd(initrd_location);
