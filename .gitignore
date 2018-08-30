@@ -2,6 +2,7 @@
 *.img
 *.o
 *.iso
+*.flp
 /build/sys
 /build/log
 /old
