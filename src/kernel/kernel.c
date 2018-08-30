@@ -300,16 +300,16 @@ void user_input(char *input){
   }
   if(strcmp(input, "floppy") == 0){
     //display_floppy_drive_info();
-    uint8_t* s = fdc_read_sector(1);
+    uint8_t* s = fdc_read_sector(0);
     s = (uint8_t*)((uint32_t)s + (uint32_t)KERNEL_VBASE);
     if(s != 0){
       int i = 0;
-      for(int c = 0; c < 4; c++){
+      for(int c = 0; c < 2; c++){
         for(int j = 0; j < 128; j++){
           char buf[25] = "";
           hex_to_ascii(s[i + j], buf);
           kprint(buf);
-          kprint("  ");
+          kprint(" ");
         }
         i+= 128;
 

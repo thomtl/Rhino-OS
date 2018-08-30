@@ -99,7 +99,7 @@ void init_fdc(){
   }
 
   dma_frame = (uint32_t*)pmm_alloc_block();
-  memset((void*)((uint32_t)dma_frame + (uint32_t)KERNEL_VBASE), 0xFFFFFFFF, 0x1000);
+  //memset((void*)((uint32_t)dma_frame + (uint32_t)KERNEL_VBASE), 0xABCDEFF, 0x1000);
   fdc_reset();
 
   fdc_drive_data(13, 1, 0xf, true);
@@ -107,32 +107,33 @@ void init_fdc(){
 }
 
 void fdc_write_dor(uint8_t val){
-  outb(FLPYDSK_DOR, val);
+  outb(FDCDSK_DOR, val);
 }
 
 uint8_t fdc_read_status(){
-  return inb(FLPYDSK_MSR);
+  return inb(FDCDSK_MSR);
 }
 
 void fdc_send_command(uint8_t cmd){
     for(uint16_t i = 0; i < 500; i++){
-      if(fdc_read_status() & FLPYDSK_MSR_MASK_DATAREG){
-        return outb(FLPYDSK_FIFO, cmd);
+      if(fdc_read_status() & FDCDSK_MSR_MASK_DATAREG){
+        outb(FDCDSK_FIFO, cmd);
+        return;
       }
     }
 }
 
 uint8_t fdc_read_data(){
   for(uint16_t i = 0; i < 500; i++){
-    if(fdc_read_status() & FLPYDSK_MSR_MASK_DATAREG){
-      return inb(FLPYDSK_FIFO);
+    if(fdc_read_status() & FDCDSK_MSR_MASK_DATAREG){
+      return inb(FDCDSK_FIFO);
     }
   }
-  return -1;
+  return 0;
 }
 
 void fdc_write_ccr(uint8_t val){
-  outb(FLPYDSK_CTRL, val);
+  outb(FDCDSK_CTRL, val);
 }
 
 
@@ -146,9 +147,9 @@ void fdc_read_sector_imp(uint8_t head, uint8_t track, uint8_t sector){
   fdc_send_command(track);
   fdc_send_command(head);
   fdc_send_command(sector);
-  fdc_send_command(FLPYDSK_SECTOR_DTL_512);
-  fdc_send_command (( ( sector + 1 ) >= 80 ) ? 80 : sector + 1 );
-  fdc_send_command(FLPYDSK_GAP3_LENGTH_3_5);
+  fdc_send_command(FDCDSK_SECTOR_DTL_512);
+  fdc_send_command (( ( sector + 1 ) >= FDC_SECTORS_PER_TRACK ) ? FDC_SECTORS_PER_TRACK : sector + 1 );
+  fdc_send_command(FDCDSK_GAP3_LENGTH_3_5);
   fdc_send_command(0xFF);
 
   fdc_wait_irq();
@@ -169,7 +170,7 @@ void fdc_drive_data(uint32_t stepr, uint32_t loadt, uint32_t unloadt, bool dma){
   data = ((stepr & 0xF) << 4) | (unloadt & 0xF);
   fdc_send_command(data);
 
-  data = (loadt) << 1 | (dma == true) ? 1 : 0;
+  data = (loadt) << 1 | (dma) ? 0 : 1;
   fdc_send_command(data);
 }
 
@@ -224,7 +225,7 @@ void fdc_disable_controller(){
 }
 
 void fdc_enable_controller(){
-  fdc_write_dor(FLPYDSK_DOR_MASK_RESET | FLPYDSK_DOR_MASK_DMA);
+  fdc_write_dor(FDCDSK_DOR_MASK_RESET | FDCDSK_DOR_MASK_DMA);
 }
 
 void fdc_reset(){
@@ -245,9 +246,9 @@ void fdc_reset(){
 }
 
 void fdc_lba_chs(int lba, int* head, int* track, int* sector){
-    *head = (lba % (80 * 2)) / 80;
-    *track = lba / (80 * 2);
-    *sector = lba % 80 + 1;
+    *head = (lba % (FDC_SECTORS_PER_TRACK * 2)) / FDC_SECTORS_PER_TRACK;
+    *track = lba / (FDC_SECTORS_PER_TRACK * 2);
+    *sector = lba % FDC_SECTORS_PER_TRACK + 1;
 }
 
 uint8_t* fdc_read_sector(int sectorLBA){
@@ -256,14 +257,13 @@ uint8_t* fdc_read_sector(int sectorLBA){
   int head, track, sector;
 
   fdc_lba_chs(sectorLBA, &head, &track, &sector);
-  kprint("A");
   fdc_control_motor(true);
   if(fdc_seek(track, head) != 0) return 0;
-kprint("A");
+
   fdc_read_sector_imp(head, track, sector);
-  kprint("A");
+
   fdc_control_motor(false);
-kprint("A");
+
   return (uint8_t*)dma_frame;
 }
 
@@ -274,23 +274,23 @@ void fdc_control_motor(bool b){
 
   switch (_CurrentDrive) {
     case 0:
-      motor = FLPYDSK_DOR_MASK_DRIVE0_MOTOR;
+      motor = FDCDSK_DOR_MASK_DRIVE0_MOTOR;
       break;
     case 1:
-      motor = FLPYDSK_DOR_MASK_DRIVE1_MOTOR;
+      motor = FDCDSK_DOR_MASK_DRIVE1_MOTOR;
       break;
     case 2:
-      motor = FLPYDSK_DOR_MASK_DRIVE2_MOTOR;
+      motor = FDCDSK_DOR_MASK_DRIVE2_MOTOR;
       break;
     case 3:
-      motor = FLPYDSK_DOR_MASK_DRIVE3_MOTOR;
+      motor = FDCDSK_DOR_MASK_DRIVE3_MOTOR;
       break;
     default:
       return;
   }
 
-  if(b) fdc_write_dor(_CurrentDrive | motor | FLPYDSK_DOR_MASK_RESET | FLPYDSK_DOR_MASK_DMA);
-  else fdc_write_dor(FLPYDSK_DOR_MASK_RESET);
+  if(b) fdc_write_dor(_CurrentDrive | motor | FDCDSK_DOR_MASK_RESET | FDCDSK_DOR_MASK_DMA);
+  else fdc_write_dor(FDCDSK_DOR_MASK_RESET);
 
   for(int i = 0; i < 999; i++); // Delay because no sleep yet
 }

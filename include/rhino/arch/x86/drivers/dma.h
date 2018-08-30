@@ -110,4 +110,4 @@ void dma_unmask_channel(uint8_t channel);
 void dma_reset_flipflop(uint8_t dma);
 void dma_reset(uint8_t dma);
 void dma_unmask_all(uint8_t dma);
-bool dma_initialize_floppy(uint8_t* buffer, uint32_t length);
+bool dma_initialize_floppy(uint8_t* buffer, unsigned length);

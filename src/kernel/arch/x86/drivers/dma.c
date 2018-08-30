@@ -135,27 +135,27 @@ void dma_unmask_channel(uint8_t channel){
 }
 
 void dma_reset_flipflop(uint8_t dma){
-  if(dma > 2) return;
+  if(dma < 2) return;
   outb((dma == 0) ? DMA0_CLEARBYTE_FLIPFLOP_REG : DMA1_CLEARBYTE_FLIPFLOP_REG, 0xFF);
 }
 
 void dma_reset(uint8_t dma){
-  if(dma > 2) return;
-  outb((dma == 0) ? 0x0D : 0xD8, 0xFF);
+  outb(DMA0_TEMP_REG, 0xFF);
+  (void)(dma);
 }
 
 void dma_unmask_all(uint8_t dma){
-  if(dma > 2) return;
-  outb((dma == 0) ? 0x0E : 0xDC, 0xFF);
+  outb(DMA1_UNMASK_ALL_REG, 0xFF);
+  (void)(dma);
 }
 
-bool dma_initialize_floppy(uint8_t* buffer, uint32_t length){
+bool dma_initialize_floppy(uint8_t* buffer, unsigned length){
   union {
     uint8_t byte[4];
-    uint32_t l;
+    unsigned long l;
   } a, c;
-  a.l = (uint32_t)buffer;
-  c.l = length-1;
+  a.l = (unsigned)buffer;
+  c.l = (unsigned)length-1;
   if ((a.l >> 24) || (c.l >> 16) || (((a.l & 0xffff)+c.l) >> 16)){
     return false;
   }
@@ -166,6 +166,8 @@ bool dma_initialize_floppy(uint8_t* buffer, uint32_t length){
   dma_set_address(2, a.byte[0], a.byte[1]);
   dma_reset_flipflop(1);
   dma_set_count(2, c.byte[0], c.byte[1]);
+  dma_reset_flipflop(1);
+  dma_set_external_page_register(2, a.byte[2]);
   dma_set_read(2);
   dma_unmask_all(1);
   return true;
