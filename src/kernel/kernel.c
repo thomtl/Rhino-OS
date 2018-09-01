@@ -44,6 +44,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   #ifndef DEBUG
   clear_screen();
   #endif
+
   #ifdef DEBUG
   set_color(VGA_COLOR_LIGHT_CYAN, VGA_COLOR_BLACK);
   uint32_t kern_base = (uint32_t)&_kernel_start;
@@ -58,24 +59,23 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   kprint(buf);
   kprint("\n\n");
   #endif
+
   if(magic != MULTIBOOT_BOOTLOADER_MAGIC){
     PANIC_M(": Kernel was not booted by a multiboot compliant bootloader!\n");
     return;
   }
+
   multibootInfo = mbd;
+
   if(BIT_IS_SET(mbd->flags, 1) && BIT_IS_SET(mbd->flags, 6)){
     ramAmountMB = ((((mbd->mem_lower * 1024) + (mbd->mem_upper * 1024)) / 1024) / 1024) + 1; // Formula for converting from Kibibyte to Megabyte so: Megabyte = (Kibibyte * 1024) / 1024 / 1024 + 1
     ramAmount = (((mbd->mem_lower * 1024) + (mbd->mem_upper * 1024)) / 1024 / 1024 + 1) * 0x100000;
   } else {
     PANIC_M("bootloader did not supply memory info");
   }
-  if(BIT_IS_SET(mbd->flags, 10)){
-    kprint_warn("MULTIBOOT Supplied apm table\n\n");
-  } else {
-    kprint_err("MULTIBOOT didn't supply APM table\n\n");
-  }
+
   set_color(VGA_COLOR_LIGHT_BLUE, VGA_COLOR_BLACK);
-  kprint("Starting Rhino 0.2, Copyright 2018 Thomas Woertman, The Netherlands\n");
+  kprint("Starting Rhino 0.2.5, Copyright 2018 Thomas Woertman, The Netherlands\n");
   int_to_ascii(ramAmountMB, buf);
   kprint("Detected Memory: ");
   kprint(buf);
@@ -104,30 +104,25 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   kprint("\nEnabling Protected Mode..");
   gdt_install();
   isr_install();
-  irq_install();
   kprint("done\n");
 
-  kprint("Loading Ramdisk..");
+  kprint("Initializing Memory Manager..");
+
   ASSERT(mbd->mods_count >= 1);
   multiboot_module_t *initrd = (multiboot_module_t*)(mbd->mods_addr + KERNEL_VBASE);
   uint32_t initrd_location = (initrd->mod_start + KERNEL_VBASE);//*((uint32_t*)phys_to_virt(mbd->mods_addr));
   uint32_t initrd_end = (initrd->mod_end + KERNEL_VBASE);//*(uint32_t*)(phys_to_virt(mbd->mods_addr)+ 4);
   placement_address = initrd_end;
-  kprint("done\n");
 
-
-  kprint("Initializing Memory Manager..");
   init_pmm(mbd);
   init_vmm();
   init_heap();
-  kprint("Memory Manager initialized\n");
+  kprint("done\n");
 
   kprint("Initializing other drivers..");
   init_fdc();
-  kprint("done\n");
-
-  kprint("Initializing Ramdisk..");
   fs_root = initialise_initrd(initrd_location);
+  irq_install();
   kprint("done\n");
 
   kprint("Enabling Multitasking..");
@@ -163,21 +158,18 @@ void user_input(char *input){
   if(strcmp(input, "help") == 0){
     kprint("Showing Commands:\n");
     kprint("-------------------------------\n");
-    kprint("run: run shell.prg to start the os");
-    kprint("exit: Exit the Kernel\n");
-    kprint("help: To show this Page\n");
-    kprint("clear: To clear the screen\n");
-    kprint("pid: To show the current tasks PID\n");
-    kprint("task: To yield\n");
-    kprint("ext: To run an external program on the INITRD\n");
-    kprint("reboot: To reboot the machine\n");
+    kprint("run: run shell.prg to start the os.");
+    kprint("exit: Exit the Kernel.\n");
+    kprint("help: To show this Page.\n");
+    kprint("clear: To clear the screen.\n");
+    kprint("reboot: To reboot the machine.\n");
     #ifdef DEBUG
     kprint("Debug commands:\n");
-    kprint("panic: Panic the kernel\n");
-    kprint("init: To show the files on the initrd\n");
-    kprint("syscall: Simulate a bare syscall\n");
-    kprint("mmap: Print the sections in the BIOS mmap\n");
-    kprint("floppy: Show the floppy configuration of this machine\n");
+    kprint("pid: To show the current PID.\n");
+    kprint("panic: Panic the kernel.\n");
+    kprint("init: To show the files on the initrd.\n");
+    kprint("mmap: Print the sections in the BIOS mmap.\n");
+    kprint("floppy: Read sector 0 of floppy drive 0.\n");
     #endif
     kprint("-------------------------------\n");
     kprint("$");
@@ -220,40 +212,15 @@ void user_input(char *input){
     kprint("$");
     return;
   }
-  if(strcmp(input, "task") == 0){
-    kprint("Switching to other task\n");
-    yield();
-    kprint("ready\n$");
-    return;
-  }
   if(strcmp(input, "pci") == 0){
     for(int i = 0; i < 256; i++) pci_check_bus(i);
+    kprint("$");
+    return;
   }
   if(strcmp(input, "pid") == 0){
     char c[25] = "";
     int_to_ascii(get_current_pid(), c);
     kprint(c);
-    kprint("\n$");
-    return;
-  }
-  if(strcmp(input, "ext") == 0){
-    loaded_program_t* l = load_program("test.prg", PROGRAM_BINARY_TYPE_BIN);
-    if(l == 0){
-      kprint_err("load_program errored\n$");
-      return;
-    }
-    char j[25];
-    hex_to_ascii((uint32_t)l->base, j);
-    kprint(j);
-    kprint("\n");
-    j[0] = '\0';
-    run_program(l->base);
-    free_program(l);
-    kprint("\n$");
-    return;
-  }
-  if(strcmp(input, "syscall") == 0){
-    asm("int $0x80");
     kprint("\n$");
     return;
   }
@@ -328,11 +295,6 @@ void user_input(char *input){
   if(strcmp(input, "reboot") == 0) reboot();
   if(strcmp(input, "run") == 0){
     init("init.prg");
-    kprint("\n$");
-    return;
-  }
-  if(strcmp(input, "clone") == 0){
-    vmm_switch_pdirectory(vmm_clone_dir(vmm_cur_directory));
     kprint("\n$");
     return;
   }

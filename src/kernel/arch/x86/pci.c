@@ -7,6 +7,7 @@ static inline uint8_t pci_get_class(uint8_t bus, uint8_t device, uint8_t functio
   uint16_t t = pci_config_read_word(bus, device, function, 10);
   return t >> 8;
 }
+
 static inline uint8_t pci_get_subclass(uint8_t bus, uint8_t device, uint8_t function){
   uint16_t t = pci_config_read_word(bus, device, function, 10);
   return t & 0xFF;
@@ -27,33 +28,7 @@ uint16_t pci_config_read_word(uint8_t bus, uint8_t slot, uint8_t function, uint8
   return tmp;
 }
 
-uint16_t pci_check_vendor(uint8_t bus, uint8_t slot){
-  uint16_t vendor, device;
-  if((vendor = pci_config_read_word(bus, slot,0,0)) != 0xFFFF){
-    device = pci_config_read_word(bus, slot, 0, 2);
-    //if(device != 0){
-      char buf[25] = "";
-      hex_to_ascii(device, buf);
-      kprint(buf);
-      kprint(" : ");
-      for(int i = 0; i < 25; i++) buf[i] = '\0';
-
-      hex_to_ascii(pci_config_read_word(bus, slot, 0, 11), buf);
-      kprint(buf);
-      kprint("\n");
-      for(int i = 0; i < 25; i++) buf[i] = '\0';
-    //}
-  }
-  return device;
-}
-
 uint16_t pci_get_vendor_id(uint8_t bus, uint8_t device, uint8_t function){
-  /*uint32_t tmp;
-  uint_t tmp1, tmp2;
-  tmp1 = pci_config_read_word(bus, device, function, 0);
-  tmp2 = pci_config_read_word(bus, device, function, 1);
-
-  tmp = (tmp1) | (tmp2 << 8);*/
   return pci_config_read_word(bus, device, function, 0);
 }
 
@@ -63,9 +38,21 @@ uint8_t pci_get_header_type(uint8_t bus, uint8_t device, uint8_t function){
 
 void pci_check_function(uint8_t bus, uint8_t device, uint8_t function){
   if(pci_get_vendor_id(bus, device, function) == 0xFFFF) return;
-  char buf[25];
-  hex_to_ascii(/*pci_config_read_word(bus, device, function, 10)*/pci_get_class(bus, device, function), buf);
+  char buf[25] = "";
+  kprint("Class: ");
+  hex_to_ascii(pci_get_class(bus, device, function), buf);
   kprint(buf);
+  for(int i = 0; i < 25; i++) buf[i] = '\0';
+
+  kprint(", Subclass: ");
+  hex_to_ascii(pci_get_subclass(bus, device, function), buf);
+  kprint(buf);
+  for(int i = 0; i < 25; i++) buf[i] = '\0';
+
+  kprint(", VendorID: ");
+  hex_to_ascii(pci_get_vendor_id(bus, device, function), buf);
+  kprint(buf);
+
   kprint("\n");
 }
 

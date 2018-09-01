@@ -6,10 +6,6 @@
 #define PCI_IO_CMD 0xCF8
 #define PCI_IO_DAT 0XCFC
 
-union pci_class{
-  uint16_t class_word;
-  uint8_t bytes[2];
-};
 
 uint16_t pci_config_read_word(uint8_t bus, uint8_t slot, uint8_t function, uint8_t offset);
 uint16_t pci_check_vendor(uint8_t bus, uint8_t slot);
