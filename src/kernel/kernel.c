@@ -227,7 +227,7 @@ void user_input(char *input){
     return;
   }
   if(strcmp(input, "pci") == 0){
-    for(uint16_t i = 0; i < 256; i++) pci_check_bus(i);
+    for(int i = 0; i < 256; i++) pci_check_bus(i);
   }
   if(strcmp(input, "pid") == 0){
     char c[25] = "";
