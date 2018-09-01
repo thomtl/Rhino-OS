@@ -20,6 +20,7 @@
 #include <rhino/arch/x86/drivers/keyboard.h>
 #include <rhino/arch/x86/drivers/fdc.h>
 #include <rhino/arch/x86/isr.h>
+#include <rhino/arch/x86/pci.h>
 #include <rhino/arch/x86/gdt.h>
 #include <rhino/arch/x86/msr.h>
 #include <rhino/arch/x86/ports.h>
@@ -224,6 +225,9 @@ void user_input(char *input){
     yield();
     kprint("ready\n$");
     return;
+  }
+  if(strcmp(input, "pci") == 0){
+    for(uint16_t i = 0; i < 256; i++) pci_check_bus(i);
   }
   if(strcmp(input, "pid") == 0){
     char c[25] = "";
