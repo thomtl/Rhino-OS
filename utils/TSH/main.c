@@ -96,7 +96,8 @@ int t_read(char *f){
   m[8] = '\0';
   //= "test.prg\0";
   syscall(2,3,(uint32_t)m,0);
-
+  syscall(0,8,2,0);
+//  syscall(2,4,2,0);
   /*printf("Reading program");
   FILE* ff = fopen("test.prg");
   void* prg = malloc(ff->length);
@@ -115,6 +116,7 @@ int t_color(char *args){
   }
   printf("\n");
   UNUSED(args);
+
   return 1;
 }
 

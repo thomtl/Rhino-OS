@@ -90,7 +90,7 @@ void initTasking(){
    @brief Create a task.
    @param args List of args.  args[0] the pointer to where to locate the task.  args[1] is a pointer to the main function. args[2] is the EFLAGS register. args[3] is the cr3 register.
  */
-void createTask(void(*main)(), uint32_t flags, uintptr_t pagedir){
+task_t* createTask(void(*main)(), uint32_t flags, uintptr_t pagedir){
   task_t* task = &tasks[getFinalElement()];
   task->regs.eax = 0;
   task->regs.ebx = 0;
@@ -104,6 +104,8 @@ void createTask(void(*main)(), uint32_t flags, uintptr_t pagedir){
   task->regs.esp = (uint32_t) kmalloc(0x4000) + 0x4000;
   task->pid.pid = tasks[getFinalElement() - 1].pid.pid + 1;
   task->used = true;
+  task->res.frameIndex = 0;
+  return task;
 }
 
 /**
@@ -113,6 +115,8 @@ void createTask(void(*main)(), uint32_t flags, uintptr_t pagedir){
 void kill(uint32_t pid){
   task_t* task = task_for_pid(pid);
   task->used = false;
+  for(uint32_t i = task->res.frameIndex; i > 0; i--) pmm_free_block(task->res.frames[i]);
+  task->res.frameIndex = 0;
 }
 
 
@@ -225,9 +229,11 @@ void exec(task_t* task, void(*main)()){
    @param args List of args.  args[0] is the pid of the task to wait for.
  */
 void waitpid(uint32_t pid){
+  asm("sti");
   task_t* task = task_for_pid(pid);
-  if(task->used == false) return;
   while(task->used);
+
+  asm("cli");
 }
 
 /**
@@ -242,4 +248,10 @@ void start_task_atomic(){
  */
 void end_task_atomic(){
   enable_scheduling();
+}
+
+void task_register_frame(task_t* task, void* frame){
+  if(task->res.frameIndex == TASK_MAX_FRAMES) PANIC_M("Task has tried to allocate more than the max frames\n");
+  task->res.frames[task->res.frameIndex] = frame;
+  task->res.frameIndex++;
 }

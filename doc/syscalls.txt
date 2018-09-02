@@ -6,6 +6,7 @@ EAX   EBX   ECX   EDX   NAME                FUNCTION                            
 0     5     0     0     Exit                Exits the program
 0     6     0     0     Fork                Fork                                                                                Pointer to task_t
 0     7     0     0     Get current pid     name                                                                                pid_t
+0     8     A     0     waitpid             wait until process with pid A has been Killed   A = pid of process to wait on
 1     1     A     0     Printc              Prints whats the char in ecx                    A = char code to data
 1     2     0     0     Clear Screen        Clears the screen
 1     3     A     B     set_term_colour     Sets the colour of the terminal                 A = Foreground B = background

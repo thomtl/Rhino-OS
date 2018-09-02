@@ -12,6 +12,10 @@
 #include <rhino/user/init.h>
 extern pdirectory* kernel_directory;
 
+static inline void sys_waitpid(uint8_t pid){
+  waitpid(pid);
+}
+
 static inline void sys_kill(uint32_t pid){
   kill(pid);
 }
@@ -104,6 +108,9 @@ void syscall_handler(registers_t *regs){
           break;
         case 7:
           regs->eax = sys_current_pid();
+          break;
+        case 8:
+          sys_waitpid(regs->ecx);
           break;
         default:
           return;
