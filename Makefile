@@ -8,7 +8,7 @@ CC = i686-elf-gcc
 AS = yasm
 QEMU = qemu-system-x86_64
 
-QEMUFLAGS = -m 256M -cdrom rhino.iso -d cpu_reset -D build/log/qemu.log -fda flp.flp
+QEMUFLAGS = -m 256M -cdrom rhino.iso -d cpu_reset -D build/log/qemu.log -fda flp.flp -rtc base=localtime -monitor stdio
 
 CFLAGS = -g -m32 -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs \
 					-Wall -Wextra -Werror -std=gnu99 -I include/

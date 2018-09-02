@@ -213,7 +213,8 @@ void user_input(char *input){
     return;
   }
   if(strcmp(input, "pci") == 0){
-    for(int i = 0; i < 256; i++) pci_check_bus(i);
+    //pci_check_bus(0);
+    pci_check_all_buses();
     kprint("$");
     return;
   }
