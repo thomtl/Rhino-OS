@@ -1,8 +1,5 @@
 #include <rhino/arch/x86/pci.h>
 
-#include <rhino/arch/x86/drivers/screen.h>
-#include <libk/string.h>
-
 static inline uint8_t pci_get_class(uint8_t bus, uint8_t device, uint8_t function){
   uint16_t t = pci_config_read_word(bus, device, function, 10);
   return t >> 8;
@@ -88,7 +85,7 @@ void pci_check_function(uint8_t bus, uint8_t device, uint8_t function){
   baseClass = pci_get_class(bus, device, function);
   subClass = pci_get_subclass(bus, device, function);
 
-  if( (baseClass == 0x06) && (subClass == 0x04)){
+  if( (baseClass == PCI_CLASS_BRIDGE) && (subClass == PCI_SUBCLASS_BRIDGE_PCI_TO_PCI)){
     pci_check_bus(pci_get_secondary_bus(bus, device, function));
   }
 
