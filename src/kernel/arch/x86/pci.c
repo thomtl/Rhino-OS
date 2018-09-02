@@ -21,7 +21,7 @@ static inline uint16_t pci_get_vendor_id(uint8_t bus, uint8_t device, uint8_t fu
 }
 
 static inline uint8_t pci_get_header_type(uint8_t bus, uint8_t device, uint8_t function){
-  uint16_t t = pci_config_read_word(bus, device, function, 0xE0);
+  uint16_t t = pci_config_read_word(bus, device, function, 0x0F);
   return t & 0xFF;
 }
 
@@ -88,9 +88,9 @@ void pci_check_function(uint8_t bus, uint8_t device, uint8_t function){
   if( (baseClass == PCI_CLASS_BRIDGE) && (subClass == PCI_SUBCLASS_BRIDGE_PCI_TO_PCI)){
     pci_check_bus(pci_get_secondary_bus(bus, device, function));
   }
-
+  #ifdef DEBUG
   pci_print_device_info(bus, device, function);
-
+  #endif
 }
 
 void pci_check_device(uint8_t bus, uint8_t device){
@@ -99,7 +99,7 @@ void pci_check_device(uint8_t bus, uint8_t device){
   if(vendorID == PCI_VENDOR_UNUSED) return;
   pci_check_function(bus, device, function);
   uint8_t headerType = pci_get_header_type(bus, device, function);
-  if((headerType & PCI_MULTIFUNCTION_MASK) == 0){
+  if((headerType & PCI_MULTIFUNCTION_MASK) != 0){
     for(function = 1; function < PCI_FUNCTION_N; function++){
       pci_check_function(bus, device, function);
     }
@@ -117,7 +117,7 @@ void pci_check_all_buses(void){
   uint8_t headerType;
 
   headerType = pci_get_header_type(0, 0, function);
-  if( (headerType & PCI_MULTIFUNCTION_MASK) == 0){
+  if( (headerType & PCI_MULTIFUNCTION_MASK) != 0){
     pci_check_bus(0);
   } else {
     for(function = 0; function < PCI_FUNCTION_N; function++){

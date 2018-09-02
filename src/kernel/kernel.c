@@ -1,5 +1,3 @@
-#define DEBUG
-
 #if defined(__linux__)
 #error "No cross compiler detected you will probably run into trouble"
 #endif
@@ -170,6 +168,7 @@ void user_input(char *input){
     kprint("init: To show the files on the initrd.\n");
     kprint("mmap: Print the sections in the BIOS mmap.\n");
     kprint("floppy: Read sector 0 of floppy drive 0.\n");
+    kprint("lspci: list pci devices.\n");
     #endif
     kprint("-------------------------------\n");
     kprint("$");
@@ -212,7 +211,7 @@ void user_input(char *input){
     kprint("$");
     return;
   }
-  if(strcmp(input, "pci") == 0){
+  if(strcmp(input, "lspci") == 0){
     //pci_check_bus(0);
     pci_check_all_buses();
     kprint("$");

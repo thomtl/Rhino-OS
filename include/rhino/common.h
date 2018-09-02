@@ -13,3 +13,6 @@
 #define STI() __asm__ __volatile__ ("sti")
 #define UNUSED(x) (void)(x)
 #define PANIC_M(x) (panic_m(x, __FILE__))
+
+
+#define DEBUG
