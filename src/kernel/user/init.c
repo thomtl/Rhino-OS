@@ -58,7 +58,7 @@ void init(char *prg){
 
 
 
-  kill(0);
+  kill_kern();
   kprint("Kernel Task Killed\n");
 
   kprint("Program Loading Done");

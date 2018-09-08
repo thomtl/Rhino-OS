@@ -1,11 +1,15 @@
 #include <stdint.h>
 int putchar(char c);
 void printf(char *m);
+void dummymain(void);
 uint32_t syscall(uint32_t eax, uint32_t ebx, uint32_t ecx, uint32_t edx);
-
-void main(void){
-  //asm ("cli;hlt");
-  syscall(1, 3, 15, 0);
+void main(void) {
+  dummymain();
+  return;
+}
+void dummymain(void){
+  asm("xchgw %bx, %bx");
+  syscall(1, 3, 0, 15);
   printf("Hello World");
   asm("sti");
   uint32_t j = syscall(0,7,0,0);

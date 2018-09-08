@@ -34,6 +34,7 @@ void t_loop(void);
 void main(void)
 {
   // Load config files, if any.
+  asm("xchgw %bx, %bx");;
   clear_screen();
   syscall(1, 3, 9, 0);
   printf("Starting TSH v0.0.1, Thomas Woertman 2018\n");

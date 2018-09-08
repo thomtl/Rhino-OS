@@ -24,7 +24,7 @@ static inline void sys_create_process(char* prg){
   create_process(prg);
 }
 
-static inline void sys_set_color(uint8_t fg, uint8_t bg){
+void sys_set_color(uint8_t fg, uint8_t bg){
   set_color(fg, bg);
 }
 

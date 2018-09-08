@@ -43,6 +43,7 @@ task_t* fork_sys(uint32_t eip);
 void exec(task_t* task, void(*main)());
 void yield();
 void kill(uint32_t pid);
+void kill_kern();
 void waitpid(uint32_t pid);
 
 

@@ -101,7 +101,7 @@ task_t* createTask(void(*main)(), uint32_t flags, uintptr_t pagedir){
   task->regs.eflags = flags;
   task->regs.eip = (uint32_t) main;
   task->regs.cr3 = pagedir;
-  task->regs.esp = (uint32_t) kmalloc(0x4000) + 0x4000;
+  task->regs.esp = (uint32_t) kmalloc(0x1000) + 0x1000;
   task->pid.pid = tasks[getFinalElement() - 1].pid.pid + 1;
   task->used = true;
   task->res.frameIndex = 0;
@@ -115,10 +115,18 @@ task_t* createTask(void(*main)(), uint32_t flags, uintptr_t pagedir){
 void kill(uint32_t pid){
   task_t* task = task_for_pid(pid);
   task->used = false;
+  task->regs.esp -= 0x1000;
+  kfree((void*)task->regs.esp);
   for(uint32_t i = task->res.frameIndex; i > 0; i--) pmm_free_block(task->res.frames[i]);
   task->res.frameIndex = 0;
 }
 
+void kill_kern(){
+  task_t* task = task_for_pid(0);
+  task->used = false;
+  for(uint32_t i = task->res.frameIndex; i > 0; i--) pmm_free_block(task->res.frames[i]);
+  task->res.frameIndex = 0;
+}
 
 /**
    @brief yield away from the current task into the next.

@@ -9,3 +9,4 @@ display_library: x, options="gui_debug"
 romimage: file=$BXSHARE/BIOS-bochs-latest
 vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
 com1: enabled=1, mode=file, dev=build/log/com1.txt
+magic_break: enabled=1
