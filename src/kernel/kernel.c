@@ -7,6 +7,7 @@
 #include <rhino/mm/vmm.h>
 #include <rhino/mm/pmm.h>
 #include <rhino/mm/hmm.h>
+#include <rhino/Deer/deer.h>
 #include <rhino/fs/vfs.h>
 #include <rhino/fs/initrd.h>
 #include <rhino/multitasking/task.h>
@@ -221,6 +222,11 @@ void user_input(char *input){
     char c[25] = "";
     int_to_ascii(get_current_pid(), c);
     kprint(c);
+    kprint("\n$");
+    return;
+  }
+  if(strcmp(input, "deer") == 0){
+    deer_start();
     kprint("\n$");
     return;
   }
