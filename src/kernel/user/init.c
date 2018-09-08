@@ -81,8 +81,7 @@ void create_process(char* prg){
     vmm_map_page((void*)frame, (void*)virt);
     task_register_frame(task, frame);
   }
-  vmm_map_page((void*)0x0, (void*)0xFFFFF000);
-  vmm_map_page((void*)0x0, (void*)0x83042000);
+
   loaded_program_t* header = load_program(prg, PROGRAM_BINARY_TYPE_BIN);
   memcpy((void*)PROGRAM_LOAD_ADDRESS, header->base, header->len);
 
