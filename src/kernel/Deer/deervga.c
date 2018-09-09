@@ -4,7 +4,6 @@
 //	BIOSless VGA mode code by Chris Giese <geezer@execpc.com> http://my.execpc.com/~geezer
 //-----------------------------------------------------------------------------------
 
-
 //#define	_vmemwr(DS,DO,S,N)	memcpy((char *)((DS) * 16 + (DO)), S, N)
 #define	VGA_AC_INDEX		0x3C0
 #define	VGA_AC_WRITE		0x3C0
@@ -78,10 +77,6 @@ unsigned char g_320x200x256[] =
 	0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
 	0x41, 0x00, 0x0F, 0x00,	0x00
 };
-
-
-
-
 
 void vga_write_regs(unsigned char *regs)
 {

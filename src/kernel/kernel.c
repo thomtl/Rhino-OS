@@ -227,7 +227,6 @@ void user_input(char *input){
   }
   if(strcmp(input, "deer") == 0){
     deer_start();
-    kprint("\n$");
     return;
   }
   if(strcmp(input, "mmap") == 0){
