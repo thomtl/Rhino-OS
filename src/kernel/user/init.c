@@ -68,12 +68,17 @@ void init(char *prg){
   //__asm__ ("cli; hlt");
 }
 
-void create_process(char* prg){
+bool create_process(char* prg){
   pdirectory* cur = (pdirectory*)((uint32_t)get_running_task()->regs.cr3 + (uint32_t)KERNEL_VBASE);
+  loaded_program_t* header = load_program(prg, PROGRAM_BINARY_TYPE_BIN);
+  if(header == 0){
+    return false;
+  }
   pdirectory* dir = vmm_clone_dir(kernel_directory);
 
   // Set Interrupt bit
   task_t* task = createTask((void*)PROGRAM_LOAD_ADDRESS, task_for_pid(0)->regs.eflags, ((uint32_t)dir - (uint32_t)KERNEL_VBASE));
+
 
   vmm_switch_pdirectory(dir);
   for (int i=0, virt=(uint32_t)0x0 + (0 * 4096); i<60; i++, virt+=4096){
@@ -82,12 +87,12 @@ void create_process(char* prg){
     task_register_frame(task, frame);
   }
 
-  loaded_program_t* header = load_program(prg, PROGRAM_BINARY_TYPE_BIN);
+
   memcpy((void*)PROGRAM_LOAD_ADDRESS, header->base, header->len);
 
 
 
   vmm_switch_pdirectory(cur);
   free_program(header);
-
+  return true;
 }

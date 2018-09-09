@@ -17,7 +17,7 @@ loaded_program_t* load_program(char* filename, uint8_t type){
       fs_node_t *node = 0;
       node = finddir_fs(fs_root, filename);
       if(node == 0){
-        kprint_err("program.c: Could not find program on the INITRD\n");
+        //kprint_err("program.c: Could not find program on the INITRD\n");
         return 0;
       }
       if((node->flags & 0x7) == FS_DIRECTORY){

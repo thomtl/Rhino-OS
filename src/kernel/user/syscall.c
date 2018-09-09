@@ -20,8 +20,8 @@ static inline void sys_kill(uint32_t pid){
   kill(pid);
 }
 
-static inline void sys_create_process(char* prg){
-  create_process(prg);
+static inline bool sys_create_process(char* prg){
+  return create_process(prg);
 }
 
 void sys_set_color(uint8_t fg, uint8_t bg){
@@ -140,7 +140,7 @@ void syscall_handler(registers_t *regs){
           sys_free((void*)regs->ecx);
           break;
         case 3:
-          sys_create_process((char*)regs->ecx);
+          regs->eax = sys_create_process((char*)regs->ecx);
           break;
         case 4:
           sys_kill(regs->ecx);

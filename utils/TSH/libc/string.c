@@ -8,6 +8,12 @@ int strcmp(char s1[], char s2[]){
   return s1[i] - s2[i];
 }
 
+char * strcpy(char *strDest, char *strSrc)
+{
+    char *temp = strDest;
+    while((*strDest++ = *strSrc++)); // or while((*strDest++=*strSrc++) != '\0');
+    return temp;
+}
  
 
 size_t strlen(const char* str) {

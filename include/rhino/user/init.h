@@ -12,4 +12,4 @@
 #define PROGRAM_LOAD_ADDRESS 0x1000
 
 void init(char *prg);
-void create_process(char* prg);
+bool create_process(char* prg);

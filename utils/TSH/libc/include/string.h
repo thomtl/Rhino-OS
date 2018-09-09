@@ -6,7 +6,7 @@
 
 int strcmp(char s1[], char s2[]);
 
- 
+char * strcpy(char *strDest, char *strSrc);
 
 size_t strlen(const char* str);
 

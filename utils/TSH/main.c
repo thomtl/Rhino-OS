@@ -61,7 +61,6 @@ char *builtin_str[] = {
   "exit",
   "clear",
   "color",
-  "read",
   ""
 };
 
@@ -70,42 +69,29 @@ int (*builtin_func[]) (char *) = {
   &t_exit,
   &t_clear,
   &t_color,
-  &t_read,
   &t_nothing
 };
 
 int t_num_builtins() {
   return sizeof(builtin_str) / sizeof(char *);
 }
-int t_read(char *f){
-  /*FILE* ff = fopen("test.prg");
-  void* prg = malloc(ff->length);
-  fread(prg, (size_t)ff->length, ff);
-  printf((char*)prg);*/
-  UNUSED(f);
-  //free(prg);
-  printf("Creating Task\n");
-  char* m = malloc(sizeof(char) * 9);
-  m [0] = 't';
-  m[1] = 'e';
-  m[2] = 's';
-  m[3] = 't';
-  m[4] = '.';
-  m[5] = 'p';
-  m[6] = 'r';
-  m[7] = 'g';
-  m[8] = '\0';
-  //= "test.prg\0";
-  syscall(2,3,(uint32_t)m,0);
-  syscall(0,8,2,0);
-//  syscall(2,4,2,0);
-  /*printf("Reading program");
-  FILE* ff = fopen("test.prg");
-  void* prg = malloc(ff->length);
-  fread(prg, (size_t)ff->length, ff);
-  printf((char*)prg);
+int t_launch(char* args){
+  char* m = malloc(sizeof(char) * strlen(args));
+  strcpy(m, args);
 
-  free(prg);*/
+  if(!syscall(2,3,(uint32_t)m,0)){
+    syscall(1, 3, 4, 0);
+    printf("[TSH] Could not run program \"");
+    printf(args);
+    printf("\"\n");
+    syscall(1, 3, 15, 0);
+    return 0;
+  }
+  syscall(0,8,2,0);
+
+  //free(m);
+
+  /**/
 
   return 1;
 }
@@ -222,12 +208,8 @@ int t_execute(char *args)
       return (*builtin_func[i])(args);
     }
   }
-  syscall(1, 3, 4, 0);
-  printf("[TSH] Could not run program \"");
-  printf(args);
-  printf("\"\n");
-  syscall(1, 3, 15, 0);
-  return 1;//t_launch(args);
+
+  return t_launch(args);
 }
 
 
