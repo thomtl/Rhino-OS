@@ -5,10 +5,9 @@
   @brief        TSH
 *******************************************************************************/
 
-//#include "common.h"
-#include "libc/include/stdio.h"
-#include "libc/include/stdlib.h"
-#include "libc/include/string.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 /*
   Function Declarations for builtin shell commands:
  */
