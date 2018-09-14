@@ -5,4 +5,4 @@
 
       At least a 80586 aka Intel Pentium I
 
-for an example of an application go to '''user/example'''
+for an example of an application go to "user/example"
