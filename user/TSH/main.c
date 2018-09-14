@@ -77,8 +77,8 @@ int t_num_builtins() {
 int t_launch(char* args){
   char* m = malloc(sizeof(char) * strlen(args));
   strcpy(m, args);
-
-  if(!syscall(2,3,(uint32_t)m,0)){
+  uint32_t pid;
+  if(!syscall(2,3,(uint32_t)m,(uint32_t)(&pid))){
     syscall(1, 3, 4, 0);
     printf("[TSH] Could not run program \"");
     printf(args);
@@ -86,7 +86,7 @@ int t_launch(char* args){
     syscall(1, 3, 15, 0);
     return 0;
   }
-  syscall(0,8,2,0);
+  syscall(0,8,pid,0);
 
   //free(m);
 

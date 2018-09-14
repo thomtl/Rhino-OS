@@ -49,5 +49,6 @@ typedef struct file_node {
 } FILE;
 
 FILE* fopen(char* filename);
+FILE* fread_dir(uint32_t index);
 void fread(void* ptr, size_t size, FILE* file);
 #endif

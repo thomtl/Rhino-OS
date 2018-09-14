@@ -44,7 +44,7 @@ void init(char *prg){
   end_task_atomic();
 }
 
-bool create_process(char* prg){
+uint32_t create_process(char* prg, uint32_t* pid){
   pdirectory* cur = (pdirectory*)((uint32_t)get_running_task()->regs.cr3 + (uint32_t)KERNEL_VBASE);
   loaded_program_t* header = load_program(prg, PROGRAM_BINARY_TYPE_BIN);
   if(header == 0){
@@ -66,5 +66,6 @@ bool create_process(char* prg){
 
   vmm_switch_pdirectory(cur);
   free_program(header);
+  *pid = task->pid.pid;
   return true;
 }

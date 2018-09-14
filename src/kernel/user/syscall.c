@@ -12,7 +12,11 @@
 #include <rhino/user/init.h>
 extern pdirectory* kernel_directory;
 
-static inline void sys_waitpid(uint8_t pid){
+struct dirent* sys_readir(uint32_t i){
+  return readdir_fs(fs_root, i);
+}
+
+static inline void sys_waitpid(uint32_t pid){
   waitpid(pid);
 }
 
@@ -20,8 +24,8 @@ static inline void sys_kill(uint32_t pid){
   kill(pid);
 }
 
-static inline bool sys_create_process(char* prg){
-  return create_process(prg);
+static inline bool sys_create_process(char* prg, uint32_t* pid){
+  return create_process(prg, pid);
 }
 
 void sys_set_color(uint8_t fg, uint8_t bg){
@@ -140,7 +144,7 @@ void syscall_handler(registers_t *regs){
           sys_free((void*)regs->ecx);
           break;
         case 3:
-          regs->eax = sys_create_process((char*)regs->ecx);
+          regs->eax = sys_create_process((char*)regs->ecx, (uint32_t*)regs->edx);
           break;
         case 4:
           sys_kill(regs->ecx);
@@ -154,6 +158,8 @@ void syscall_handler(registers_t *regs){
         case 1:
           regs->eax = (uint32_t)sys_finddir_fs((char*)regs->ecx);
           break;
+        case 2:
+          regs->eax = (uint32_t)sys_readir(regs->ecx);
         default:
           break;
       }

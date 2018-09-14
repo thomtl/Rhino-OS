@@ -114,18 +114,18 @@ task_t* createTask(void(*main)(), uint32_t flags, uintptr_t pagedir){
  */
 void kill(uint32_t pid){
   task_t* task = task_for_pid(pid);
-  task->used = false;
   task->regs.esp -= 0x1000;
   kfree((void*)task->regs.esp);
   for(uint32_t i = task->res.frameIndex; i > 0; i--) pmm_free_block(task->res.frames[i]);
   task->res.frameIndex = 0;
+  task->used = false;
 }
 
 void kill_kern(){
   task_t* task = task_for_pid(0);
-  task->used = false;
   for(uint32_t i = task->res.frameIndex; i > 0; i--) pmm_free_block(task->res.frames[i]);
   task->res.frameIndex = 0;
+  task->used = false;
 }
 
 /**
@@ -239,8 +239,7 @@ void exec(task_t* task, void(*main)()){
 void waitpid(uint32_t pid){
   asm("sti");
   task_t* task = task_for_pid(pid);
-  while(task->used);
-
+  while(task->used == true);
   asm("cli");
 }
 

@@ -7,7 +7,18 @@ void eexit();
 
 void main(void){
   start();
-  printf("DEEEEEEEEER\n");
+  int i = 0;
+  FILE *node = 0;
+  while ( (node = fread_dir(i)) != 0)
+  {
+    if ((node->flags&0x7) == RHINO_LIBC_FS_DIRECTORY) syscall(1, 3, 1, 0);
+    else syscall(1, 3, 2, 0);
+    printf(node->name);
+    syscall(1, 3, 15, 0);
+    printf("  ");
+    i++;
+  }
+  printf("\n");
   eexit();
 }
 

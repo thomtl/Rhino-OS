@@ -53,3 +53,10 @@ FILE* fopen(char* filename){
 void fread(void* ptr, size_t size, FILE* file){
   syscall(4, (uint32_t)file, size, (uint32_t)ptr);
 }
+
+FILE* fread_dir(uint32_t index){
+  uint32_t dirent = syscall(3, 2, index, 0);
+  if(dirent == 0) return 0;
+
+  return fopen(((struct dirent*)dirent)->name);
+}
