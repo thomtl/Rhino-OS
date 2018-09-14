@@ -18,7 +18,7 @@ all: run
 
 initrd:
 	rm -f initrd.img
-	./utils/initrdgen/genrd ./utils/initrdgen/test.txt test.txt ./utils/initrdgen/test1.txt test1.txt ./user/example/example example.prg ./user/TSH/tsh init.prg
+	./utils/initrdgen/genrd ./utils/initrdgen/test.txt test.txt ./utils/initrdgen/test1.txt test1.txt ./user/example/example example ./user/TSH/tsh init.prg ./user/dir/dir dir
 
 rhino.iso: kernel.bin initrd
 	mkdir -p build/sys/boot/grub
