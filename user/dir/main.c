@@ -54,6 +54,6 @@ void start(){
 }
 
 void eexit(){
-  syscall(2, 4, syscall(0, 7, 0, 0), 0);
+  syscall(0, 14, syscall(0, 7, 0, 0), 0);
   while(1);
 }

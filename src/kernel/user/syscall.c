@@ -144,6 +144,12 @@ void syscall_handler(registers_t *regs){
         case 12:
           regs->eax = sys_task_get_argc(regs->ecx);
           break;
+        case 13:
+          regs->eax = sys_create_process((char*)regs->ecx, (uint32_t*)regs->edx);
+          break;
+        case 14:
+          sys_kill(regs->ecx);
+          break;
         default:
           return;
       }
@@ -170,12 +176,6 @@ void syscall_handler(registers_t *regs){
           break;
         case 2:
           sys_free((void*)regs->ecx);
-          break;
-        case 3:
-          regs->eax = sys_create_process((char*)regs->ecx, (uint32_t*)regs->edx);
-          break;
-        case 4:
-          sys_kill(regs->ecx);
           break;
         default:
           break;

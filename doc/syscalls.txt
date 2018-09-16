@@ -11,13 +11,13 @@ EAX   EBX   ECX   EDX   NAME                FUNCTION                            
 0     10    A     0     get task argv       name                                            A = pid                             argv
 0     11    A     B     set task argc       name                                            A = pid B = argc
 0     12    A     0     get task argc       name                                            A = pid                             argc
+0,    13     A     B     create Process      Create process                                  A = name of process b = &pid
+0,    14     A     0     kill process        names                                           A = pid
 1     1     A     0     Printc              Prints whats the char in ecx                    A = char code to data
 1     2     0     0     Clear Screen        Clears the screen
 1     3     A     B     set_term_colour     Sets the colour of the terminal                 A = Foreground B = background
 2	  1	  	A	  0     Malloc				malloc											                    A = size							              SPointer to space
 2	  2	  	A	  0	    free				free											                      A = pointer to free
-2,    3     A     B     create Process      Create process                                  A = name of process b = &pid
-2,    4     A     0     kill process        names                                           A = pid
 3	  1 	A	  0	    finddir_fs			name											                      A = name of file					          fs_node_t of the file
 3,    2     A     0     readdir_fs          name                                            A = index                           struct dirent
 4	  A     B     C	    read_fs				name											                      A = node, B = size, C = buffer		  int with status

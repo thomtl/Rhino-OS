@@ -79,7 +79,7 @@ int t_launch(char** args){
   strcpy(m, args[0]);
   uint32_t pid;
   asm("cli");
-  if(!syscall(2,3,(uint32_t)m,(uint32_t)(&pid))){
+  if(!syscall(0,13,(uint32_t)m,(uint32_t)(&pid))){
     asm("sti");
     syscall(1, 3, 4, 0);
     printf("[TSH] Could not run program \"");
