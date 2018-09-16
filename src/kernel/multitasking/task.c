@@ -75,6 +75,7 @@ static task_t* getTaskForPid(uint32_t pid){
 void initTasking(){
   for(uint32_t i = 0; i < MAX_TASKS; i++){
     tasks[i].used = false;
+    tasks[i].blocked = false;
   }
 
 
@@ -113,6 +114,10 @@ task_t* createTask(void(*main)(), uint32_t flags, uintptr_t pagedir){
    @param args List of args.  args[0] is the pid of the task to kill.
  */
 void kill(uint32_t pid){
+  if(pid == 0){
+    kill_kern();
+    return;
+  }
   task_t* task = task_for_pid(pid);
   task->regs.esp -= 0x1000;
   kfree((void*)task->regs.esp);
@@ -123,9 +128,10 @@ void kill(uint32_t pid){
 
 void kill_kern(){
   task_t* task = task_for_pid(0);
-  for(uint32_t i = task->res.frameIndex; i > 0; i--) pmm_free_block(task->res.frames[i]);
-  task->res.frameIndex = 0;
-  task->used = false;
+  /*for(uint32_t i = task->res.frameIndex; i > 0; i--) pmm_free_block(task->res.frames[i]);
+  task->res.frameIndex = 0;*/
+  task->blocked = true;
+
 }
 
 /**
@@ -137,7 +143,7 @@ void yield(){
   // dirty overflow trick
   uint8_t i = getIndexForTask(*runningTask) + 1;
   while(1){
-    if(tasks[i].used == true){
+    if(tasks[i].used == true && tasks[i].blocked == false){
       runningTask = &tasks[i];
       break;
     }
@@ -261,4 +267,20 @@ void task_register_frame(task_t* task, void* frame){
   if(task->res.frameIndex == TASK_MAX_FRAMES) PANIC_M("Task has tried to allocate more than the max frames\n");
   task->res.frames[task->res.frameIndex] = frame;
   task->res.frameIndex++;
+}
+
+void task_set_argv(pid_t pid, uint32_t argv){
+  task_for_pid(pid)->argv = argv;
+}
+
+uint32_t task_get_argv(pid_t pid){
+  return task_for_pid(pid)->argv;
+}
+
+void task_set_argc(pid_t pid, uint32_t argc){
+  task_for_pid(pid)->argc = argc;
+}
+
+uint32_t task_get_argc(pid_t pid){
+  return task_for_pid(pid)->argc;
 }

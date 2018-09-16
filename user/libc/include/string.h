@@ -14,4 +14,11 @@ void reverse(char s[]);
 
 void int_to_ascii(int n, char str[]);
 
+char *strchr(const char *s, int c);
+
+size_t strcspn(const char *s1, const char *s2);
+
+size_t strspn(const char *s1, const char *s2);
+
+char *strtok(char* str, const char* restrict delim);
 #endif

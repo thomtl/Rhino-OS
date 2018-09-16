@@ -10,13 +10,13 @@ typedef struct {
   uint32_t eax, ebx, ecx, edx, esi, edi, esp, ebp, eip, eflags;
   uintptr_t cr3;
 } task_registers_t;
-
+typedef uint8_t pid_t;
 typedef struct {
-  uint32_t pid;
+  pid_t pid;
   uint32_t user;
   uint32_t flags;
   char *path;
-} pid_t;
+} process_data_t;
 
 typedef struct {
   void* frames[TASK_MAX_FRAMES];
@@ -26,7 +26,10 @@ typedef struct {
 typedef struct Task {
   task_registers_t regs;
   bool used;
-  pid_t pid;
+  bool blocked;
+  uint32_t argv;
+  uint32_t argc;
+  process_data_t pid;
   task_resources_t res;
 } task_t;
 
@@ -51,5 +54,10 @@ void start_task_atomic();
 void end_task_atomic();
 void task_register_frame(task_t* task, void* frame);
 
+void task_set_argv(pid_t pid, uint32_t argv);
+uint32_t task_get_argv(pid_t pid);
+
+void task_set_argc(pid_t pid, uint32_t argc);
+uint32_t task_get_argc(pid_t pid);
 
 extern void switchTask(task_registers_t *old, task_registers_t *new);

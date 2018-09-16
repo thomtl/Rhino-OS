@@ -12,7 +12,23 @@
 #include <rhino/user/init.h>
 extern pdirectory* kernel_directory;
 
-struct dirent* sys_readir(uint32_t i){
+static inline void sys_task_set_argv(pid_t pid, uint32_t argv){
+  task_set_argv(pid, argv);
+}
+
+static inline uint32_t sys_task_get_argv(pid_t pid){
+  return task_get_argv(pid);
+}
+
+static inline void sys_task_set_argc(pid_t pid, uint32_t argc){
+  task_set_argc(pid, argc);
+}
+
+static inline uint32_t sys_task_get_argc(pid_t pid){
+  return task_get_argc(pid);
+}
+
+static inline struct dirent* sys_readir(uint32_t i){
   return readdir_fs(fs_root, i);
 }
 
@@ -28,7 +44,7 @@ static inline bool sys_create_process(char* prg, uint32_t* pid){
   return create_process(prg, pid);
 }
 
-void sys_set_color(uint8_t fg, uint8_t bg){
+static inline void sys_set_color(uint8_t fg, uint8_t bg){
   set_color(fg, bg);
 }
 
@@ -115,6 +131,18 @@ void syscall_handler(registers_t *regs){
           break;
         case 8:
           sys_waitpid(regs->ecx);
+          break;
+        case 9:
+          sys_task_set_argv((pid_t)regs->ecx, regs->edx);
+          break;
+        case 10:
+          regs->eax = sys_task_get_argv(regs->ecx);
+          break;
+        case 11:
+          sys_task_set_argc((pid_t)regs->ecx, regs->edx);
+          break;
+        case 12:
+          regs->eax = sys_task_get_argc(regs->ecx);
           break;
         default:
           return;
