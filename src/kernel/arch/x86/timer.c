@@ -28,3 +28,27 @@ void init_timer(uint32_t freq){
 uint32_t get_tick(){
   return tick;
 }
+
+static void play_sound(uint32_t frq){
+  uint32_t div;
+  uint8_t tmp;
+
+  div = 1193180 / frq;
+  outb(0x43, 0xb6);
+  outb(0x42, (uint8_t)(div));
+  outb(0x42, (uint8_t)(div >> 8));
+
+  tmp = inb(0x61);
+  if(tmp != (tmp | 3)) outb(0x61, tmp | 3);
+}
+
+static void total_silence(){
+  uint8_t tmp = inb(0x61) & 0xFC;
+  outb(0x61, tmp);
+}
+
+void beep(){
+  play_sound(1000);
+  for(int i = 0; i < 999999; i++);
+  total_silence();
+}

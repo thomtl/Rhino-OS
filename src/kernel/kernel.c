@@ -24,6 +24,7 @@
 #include <rhino/arch/x86/msr.h>
 #include <rhino/arch/x86/ports.h>
 #include <rhino/arch/x86/cmos.h>
+#include <rhino/arch/x86/timer.h>
 #include <rhino/kernel.h>
 #include <rhino/panic.h>
 #include <libk/string.h>
@@ -173,6 +174,7 @@ void user_input(char *input){
     #endif
     kprint("-------------------------------\n");
     kprint("$");
+    beep();
     return;
   }
   if(strcmp(input, "clear") == 0){
