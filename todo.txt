@@ -1,0 +1,4 @@
+building usermode
+now test transition back to pl 0
+interrupts
+revise idt.h and idt.c and isr.h and isr.c with phi

@@ -111,7 +111,7 @@ void vmm_map_page(void* phys, void* virt){
         pd_entry* entry = &pageDirectory->m_entries[PAGE_DIRECTORY_INDEX((uint32_t)virt)];
         vmm_pd_entry_add_attrib(entry, PHI_PDE_PRESENT);
         vmm_pd_entry_add_attrib(entry, PHI_PDE_WRITABLE);
-
+        vmm_pd_entry_add_attrib(entry, PHI_PDE_USER);
         void* fr = (void*)((uint32_t)table - (uint32_t)KERNEL_VBASE);
 
         vmm_pd_entry_set_frame(entry, fr);
@@ -128,6 +128,7 @@ void vmm_map_page(void* phys, void* virt){
     vmm_pt_entry_add_attrib(pagv, PHI_PTE_WRITABLE);
     vmm_pt_entry_set_frame(pagv, (void*)phys);
     vmm_pt_entry_add_attrib(pagv, PHI_PTE_PRESENT);
+    vmm_pt_entry_add_attrib(pagv, PHI_PTE_USER);
     tlb_flush();
 }
 

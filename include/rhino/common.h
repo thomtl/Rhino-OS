@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stddef.h>
 #include <stdbool.h>
 #include <rhino/panic.h>
 #define KERNEL_VBASE 0xC0000000

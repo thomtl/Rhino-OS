@@ -27,6 +27,7 @@ KERNEL_PAGE_NUMBER equ (KERNEL_VIRTUAL_BASE >> 22)
 
 [section .bss]
 align 16
+global stack_top
 stack_bottom:
   resb 16384
 stack_top:
