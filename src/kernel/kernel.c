@@ -150,7 +150,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   }*/
   switch_to_usermode();
   //switch_to_kernmode();
-  asm("int $0x80");
+  asm("int $0x80" :: "a"(1), "b"(1), "c"('q'), "d" (0));
   while(1);
 }
 void user_input(char *input){

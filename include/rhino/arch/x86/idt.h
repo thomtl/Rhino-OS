@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdint.h>
+#include <rhino/common.h>
 #define KERNEL_CS 0x08
 // how every Interrupt gate handler is defined
 typedef struct {
@@ -27,5 +27,5 @@ typedef struct {
 #define IDT_ENTRIES 256
 
 
-void set_idt_gate(int n, uint32_t handler);
+void set_idt_gate(int n, uint32_t handler, uint16_t sel, uint8_t dpl);
 void set_idt();
