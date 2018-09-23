@@ -139,7 +139,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
   kprint("\n$");
   enable_scheduling();
-  /*while(1)
+  while(1)
   {
     if(shouldExit == 1){
         return;
@@ -147,10 +147,10 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
     char c[256] = "";
     getline(c, 256);
     user_input(c);
-  }*/
-  switch_to_usermode();
+  }
+  //switch_to_usermode();
   //switch_to_kernmode();
-  asm("int $0x80" :: "a"(1), "b"(1), "c"('q'), "d" (0));
+  //asm("int $0x80" :: "a"(1), "b"(1), "c"('q'), "d" (0));
   while(1);
 }
 void user_input(char *input){
