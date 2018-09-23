@@ -105,8 +105,8 @@ task_t* createTask(void(*main)(), uint32_t flags, uintptr_t pagedir){
   task->regs.esp = (uint32_t) kmalloc(0x1000) + 0x1000;
   task->pid.pid = tasks[getFinalElement() - 1].pid.pid + 1;
   task->res.frameIndex = 0;
-  task->regs.ss = 0x10; // KERNEL RING 0 VALUE is 0x10
-  task->regs.cs = 0x8; // KERNEL RING 0 VALUE is 0x08
+  task->regs.ss = 0x23; // KERNEL RING 0 VALUE is 0x10
+  task->regs.cs = 0x1B; // KERNEL RING 0 VALUE is 0x08
   task->used = true;
   return task;
 }
