@@ -1,4 +1,4 @@
 building usermode
-now test transition back to pl 0
-interrupts
-revise idt.h and idt.c and isr.h and isr.c with phi
+better context switch: half done
+cs and ss and ds not getting set correctly, maybe the old ds es fs gs values in isr common stub are causing it?
+remove fork and exec functions they are broken and obsolete

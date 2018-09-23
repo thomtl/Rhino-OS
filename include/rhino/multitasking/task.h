@@ -2,12 +2,13 @@
 
 #include <stdint.h>
 #include <rhino/common.h>
+#include <rhino/arch/x86/isr.h>
 
 #define MAX_TASKS 256
 #define TASK_MAX_FRAMES 64
 
 typedef struct {
-  uint32_t eax, ebx, ecx, edx, esi, edi, esp, ebp, eip, eflags;
+  uint32_t eax, ebx, ecx, edx, esi, edi, esp, ebp, eip, eflags, ss, cs;
   uintptr_t cr3;
 } task_registers_t;
 typedef uint8_t pid_t;
@@ -44,7 +45,7 @@ task_t* task_for_pid(uint32_t pid);
 task_t* fork(void);
 task_t* fork_sys(uint32_t eip);
 void exec(task_t* task, void(*main)());
-void yield();
+void yield(registers_t* regs);
 void kill(uint32_t pid);
 void kill_kern();
 void waitpid(uint32_t pid);
@@ -60,4 +61,4 @@ uint32_t task_get_argv(pid_t pid);
 void task_set_argc(pid_t pid, uint32_t argc);
 uint32_t task_get_argc(pid_t pid);
 
-extern void switchTask(task_registers_t *old, task_registers_t *new);
+void switch_context(task_t *old, task_t *new, registers_t* r);

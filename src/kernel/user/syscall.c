@@ -90,7 +90,7 @@ static inline void sys_end_task_atomic(){
 }
 
 static inline void sys_yield(){
-  yield();
+  //yield();
   return;
 }
 

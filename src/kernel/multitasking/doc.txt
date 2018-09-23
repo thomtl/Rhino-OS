@@ -1,4 +1,4 @@
-Documentation for the Coöperative Multitasking system:
+Documentation for the Preemptive Multitasking system:
     Max 256 Tasks, Planned Linked list.
     Runs Tasks in from 0 to the 256 so for example:
-    Task 0 then 1 then 2
+    Task 0 then 1 then 2 and so on to 256 then 0 again

@@ -8,7 +8,7 @@
 
 #define TASK_TIME_SLICE 1
 
-void schedule(uint32_t tick);
+void schedule(uint32_t tick, registers_t* regs);
 void enable_scheduling();
 void disable_scheduling();
 

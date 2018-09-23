@@ -88,7 +88,7 @@ void initTasking(){
 }
 
 /**
-   @brief Create a task.
+   @brief Create a user task.
    @param args List of args.  args[0] the pointer to where to locate the task.  args[1] is a pointer to the main function. args[2] is the EFLAGS register. args[3] is the cr3 register.
  */
 task_t* createTask(void(*main)(), uint32_t flags, uintptr_t pagedir){
@@ -104,8 +104,10 @@ task_t* createTask(void(*main)(), uint32_t flags, uintptr_t pagedir){
   task->regs.cr3 = pagedir;
   task->regs.esp = (uint32_t) kmalloc(0x1000) + 0x1000;
   task->pid.pid = tasks[getFinalElement() - 1].pid.pid + 1;
-  task->used = true;
   task->res.frameIndex = 0;
+  task->regs.ss = 0x10; // KERNEL RING 0 VALUE is 0x10
+  task->regs.cs = 0x8; // KERNEL RING 0 VALUE is 0x08
+  task->used = true;
   return task;
 }
 
@@ -134,10 +136,43 @@ void kill_kern(){
 
 }
 
+void switch_context(task_t *old, task_t *new, registers_t *regs){
+  old->regs.eax = regs->eax;
+  old->regs.ebx = regs->ebx;
+  old->regs.ecx = regs->ecx;
+  old->regs.edx = regs->edx;
+  old->regs.esi = regs->esi;
+  old->regs.edi = regs->edi;
+  old->regs.ebp = regs->ebp;
+  old->regs.eflags = regs->eflags;
+  old->regs.eip = regs->eip;
+  old->regs.esp = regs->esp;
+  old->regs.ss = regs->ss;
+  old->regs.cs = regs->cs;
+  asm volatile("movl %%cr3, %%eax; movl %%eax, %0;":"=m"(old->regs.cr3)::"%eax");
+
+
+  regs->eax = new->regs.eax;
+  regs->ebx = new->regs.ebx;
+  regs->ecx = new->regs.ecx;
+  regs->edx = new->regs.edx;
+  regs->esi = new->regs.esi;
+  regs->edi = new->regs.edi;
+  regs->ebp = new->regs.ebp;
+  regs->eflags = new->regs.eflags;
+  BIT_SET(regs->eflags, 9);
+  regs->eip = new->regs.eip;
+  regs->esp = new->regs.esp;
+  regs->ss = new->regs.ss;
+  regs->cs = new->regs.cs;
+  asm("mov %0, %%cr3":: "r"(new->regs.cr3));
+}
+
+
 /**
    @brief yield away from the current task into the next.
  */
-void yield(){
+void yield(registers_t* regs){
   task_t *last = runningTask;
 
   // dirty overflow trick
@@ -149,7 +184,8 @@ void yield(){
     }
     i++;
   }
-  switchTask(&(last->regs), &(runningTask->regs));
+  //switchTask(&(last->regs), &(runningTask->regs));
+  switch_context(last, runningTask, regs);
 }
 
 
@@ -235,7 +271,7 @@ void exec(task_t* task, void(*main)()){
   task->regs.edi = 0;
   task->regs.eip = (uint32_t) main;
   memset((void*)task->regs.esp, 0, 0x4000);
-  yield();
+  //yield();
 }
 
 /**
