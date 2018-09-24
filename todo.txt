@@ -3,3 +3,4 @@ better context switch: half done
 its working: half
 some problem with EIP, TSH is restarting every time a program is started
 remove fork and exec functions they are broken and obsolete
+Implement the Enable and Disable NMI functions in isr.c
