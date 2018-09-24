@@ -1,5 +1,6 @@
 building usermode
 better context switch: half done
 its working: half
-some problem with EIP, TSH is restarting every time a program is started, it jumps to 0
+some problem with EIP, TSH is restarting every time a program is started, it jumps to 0x0
 remove fork and exec functions they are broken and obsolete
+Implement the Enable and Disable NMI functions in isr.c
