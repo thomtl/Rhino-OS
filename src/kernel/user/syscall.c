@@ -83,6 +83,7 @@ static inline void sys_clear_screen(){
 
 static inline void sys_start_task_atomic(){
   start_task_atomic();
+
 }
 
 static inline void sys_end_task_atomic(){

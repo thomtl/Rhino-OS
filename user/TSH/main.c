@@ -33,7 +33,6 @@ void t_loop(void);
 void main(void)
 {
   // Load config files, if any.
-  asm("xchgw %bx, %bx");;
   clear_screen();
   syscall(1, 3, 9, 0);
   printf("Starting TSH v0.0.1, Thomas Woertman 2018\n");
@@ -90,10 +89,12 @@ int t_launch(char** args){
   }
   uint32_t argc = 0; 
   while(args[++argc]);
+  
   syscall(0, 11, pid, argc);
   syscall(0, 9, pid, (uint32_t)args);
   syscall(0,3,0,0);
   syscall(0,8,pid,0);
+  
 
   return 1;
 }

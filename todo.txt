@@ -1,5 +1,5 @@
 building usermode
 better context switch: half done
 its working: half
-some problem with EIP, TSH is restarting every time a program is started
+some problem with EIP, TSH is restarting every time a program is started, it jumps to 0
 remove fork and exec functions they are broken and obsolete
