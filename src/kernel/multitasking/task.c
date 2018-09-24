@@ -107,6 +107,7 @@ task_t* createTask(void(*main)(), uint32_t flags, uintptr_t pagedir){
   task->res.frameIndex = 0;
   task->regs.ss = 0x23; // KERNEL RING 0 VALUE is 0x10
   task->regs.cs = 0x1B; // KERNEL RING 0 VALUE is 0x08
+  task->regs.ds = 0x23; // KERNEL RING 0 VALUE is 0x10
   task->used = true;
   return task;
 }
@@ -149,6 +150,7 @@ void switch_context(task_t *old, task_t *new, registers_t *regs){
   old->regs.esp = regs->esp;
   old->regs.ss = regs->ss;
   old->regs.cs = regs->cs;
+  old->regs.ds = regs->ds;
   asm volatile("movl %%cr3, %%eax; movl %%eax, %0;":"=m"(old->regs.cr3)::"%eax");
 
 
@@ -165,6 +167,7 @@ void switch_context(task_t *old, task_t *new, registers_t *regs){
   regs->esp = new->regs.esp;
   regs->ss = new->regs.ss;
   regs->cs = new->regs.cs;
+  regs->ds = new->regs.ds;
   asm("mov %0, %%cr3":: "r"(new->regs.cr3));
 }
 

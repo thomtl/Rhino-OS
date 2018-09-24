@@ -8,7 +8,7 @@
 #define TASK_MAX_FRAMES 64
 
 typedef struct {
-  uint32_t eax, ebx, ecx, edx, esi, edi, esp, ebp, eip, eflags, ss, cs;
+  uint32_t eax, ebx, ecx, edx, esi, edi, esp, ebp, eip, eflags, ss, cs, ds;
   uintptr_t cr3;
 } task_registers_t;
 typedef uint8_t pid_t;

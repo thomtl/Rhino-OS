@@ -48,7 +48,7 @@ void main(void){
 }
 
 void start(){
-  asm("sti");
+  syscall(0,3,0,0);
   syscall(1, 3, 15, 0);
 }
 

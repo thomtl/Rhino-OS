@@ -78,9 +78,9 @@ int t_launch(char** args){
   char* m = malloc(sizeof(char) * strlen(args[0]));
   strcpy(m, args[0]);
   uint32_t pid;
-  asm("cli");
+  syscall(0,2,0,0);
   if(!syscall(0,13,(uint32_t)m,(uint32_t)(&pid))){
-    asm("sti");
+    syscall(0,3,0,0);
     syscall(1, 3, 4, 0);
     printf("[TSH] Could not run program \"");
     printf(args[0]);
@@ -92,7 +92,7 @@ int t_launch(char** args){
   while(args[++argc]);
   syscall(0, 11, pid, argc);
   syscall(0, 9, pid, (uint32_t)args);
-  asm("sti");
+  syscall(0,3,0,0);
   syscall(0,8,pid,0);
 
   return 1;
@@ -147,7 +147,7 @@ int t_help(char** args)
  */
 int t_exit(char** args)
 {
-  asm ("cli");
+  syscall(0,3,0,0);
   clear_screen();
   syscall(1, 3, 14, 0);
   for(int i = 0; i < 980; i++) printf(" ");
