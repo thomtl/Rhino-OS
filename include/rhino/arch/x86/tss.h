@@ -36,3 +36,4 @@ typedef struct tss_entry_struct
 extern uint32_t stack_top;
 extern void tss_flush();
 void set_tss();
+tss_t* get_tss();

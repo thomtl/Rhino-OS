@@ -10,3 +10,7 @@ void set_tss(){
 	uint32_t size = sizeof(tss_t)+1;
     gdt_set_gate(5,addr,addr+size,0x89,0xCF);
 }
+
+tss_t* get_tss(){
+    return &tss;
+}

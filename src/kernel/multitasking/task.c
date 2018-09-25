@@ -1,5 +1,6 @@
 #include <rhino/multitasking/task.h>
 #include <rhino/arch/x86/drivers/screen.h>
+#include <rhino/arch/x86/tss.h>
 #include <libk/string.h>
 #include <rhino/mm/hmm.h>
 #include <rhino/multitasking/scheduler.h>
@@ -282,6 +283,7 @@ void exec(task_t* task, void(*main)()){
    @param args List of args.  args[0] is the pid of the task to wait for.
  */
 void waitpid(uint32_t pid){
+  asm volatile("movl %%esp, %%eax; movl %%eax, %0;":"=m"(get_tss()->esp0)::"%eax");
   asm("sti");
   task_t* task = task_for_pid(pid);
   while(task->used == true);
