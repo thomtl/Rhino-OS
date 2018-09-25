@@ -1,3 +1,2 @@
 building usermode
-remove fork and exec functions they are broken and obsolete
 Implement the Enable and Disable NMI functions in isr.c

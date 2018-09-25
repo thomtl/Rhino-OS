@@ -1,10 +1,7 @@
 EAX   EBX   ECX   EDX   NAME                FUNCTION                                        DATA                                RET
-0     1     0     0     Yield               Yields away from the current task
 0     2     0     0     Start Task Atomic   Starts atomicity for the current running task
 0     3     0     0     End Task Atomic     Ends atomicity for the current running task
-0     4     A     0     Exec                Calls Exec for the current task                 A = pointer to the main function
-0     5     0     0     Exit                Exits the program
-0     6     0     0     Fork                Fork                                                                                Pointer to task_t
+0     5     0     0     Exit                Exits the program                                         Pointer to task_t
 0     7     0     0     Get current pid     name                                                                                pid_t
 0     8     A     0     waitpid             wait until process with pid A has been Killed   A = pid of process to wait on
 0     9     A     B     set task argv       name                                            A = pid B = argv

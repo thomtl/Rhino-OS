@@ -64,10 +64,6 @@ static inline uint32_t sys_read_fs(fs_node_t* node, uint32_t size, uint8_t* buff
   return read_fs(node, 0, size, buffer);
 }
 
-static inline task_t* sys_fork(uint32_t eip){
-  return fork_sys(eip);
-}
-
 static inline void sys_exit(){
   task_t* t = get_running_task();
   kill(t->pid.pid);
@@ -90,16 +86,6 @@ static inline void sys_end_task_atomic(){
   end_task_atomic();
 }
 
-static inline void sys_yield(){
-  //yield();
-  return;
-}
-
-static inline void sys_exec(void(*main)()){
-  exec(get_running_task(), main);
-  return;
-}
-
 static inline void sys_putchar(uint8_t c){
   putchar(c);
   return;
@@ -109,23 +95,14 @@ void syscall_handler(registers_t *regs){
   switch (regs->eax) {
     case 0:
       switch(regs->ebx){
-        case 1:
-          sys_yield();
-          break;
         case 2:
           sys_start_task_atomic();
           break;
         case 3:
           sys_end_task_atomic();
           break;
-        case 4:
-          sys_exec((void(*)())regs->ecx);
-          break;
         case 5:
           sys_exit();
-          break;
-        case 6:
-          regs->eax = (uint32_t)sys_fork(regs->eip);
           break;
         case 7:
           regs->eax = sys_current_pid();

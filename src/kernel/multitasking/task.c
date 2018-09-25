@@ -7,7 +7,6 @@
 static task_t *runningTask;
 task_t tasks[MAX_TASKS];
 task_t* taskArray = tasks;
-//static task_t emptyTask;
 
 /**
    @brief Compares 2 tasks and returns true if they are thesame and returns false if they aren't.
@@ -217,65 +216,6 @@ uint32_t get_current_pid(){
  */
 task_t* task_for_pid(uint32_t pid){
   return getTaskForPid(pid);
-}
-
-/**
-   @brief Fork the current task.
-   @return returns a pointer to the forked task.
- */
-task_t* fork(void){
-  uint32_t index = getFinalElement();
-  tasks[index].regs.eax = get_running_task()->regs.eax;
-  tasks[index].regs.ebx = get_running_task()->regs.ebx;
-  tasks[index].regs.ecx = get_running_task()->regs.ecx;
-  tasks[index].regs.edx = get_running_task()->regs.edx;
-  tasks[index].regs.esi = get_running_task()->regs.esi;
-  tasks[index].regs.edi = get_running_task()->regs.edi;
-  tasks[index].regs.eflags = get_running_task()->regs.eflags;
-  tasks[index].regs.eip = (uint32_t)__builtin_return_address(0);//(uint32_t) get_running_task()->regs.eip;
-  tasks[index].regs.cr3 = (uint32_t) get_running_task()->regs.cr3;
-  uint32_t stack_bottom = (uint32_t)kmalloc(0x4000);
-  memcpy((uint32_t*)stack_bottom, (uint32_t*)(get_running_task()->regs.esp - 0x4000), 0x4000);
-  tasks[index].regs.esp = (uint32_t) stack_bottom + 0x4000;
-  tasks[index].pid.pid = tasks[getFinalElement() - 1].pid.pid + 1;
-  tasks[index].used = true;
-  return &tasks[index];
-}
-
-task_t* fork_sys(uint32_t eip){
-  get_running_task()->regs.eip = eip;
-  uint32_t index = getFinalElement();
-  tasks[index].regs.eax = get_running_task()->regs.eax;
-  tasks[index].regs.ebx = get_running_task()->regs.ebx;
-  tasks[index].regs.ecx = get_running_task()->regs.ecx;
-  tasks[index].regs.edx = get_running_task()->regs.edx;
-  tasks[index].regs.esi = get_running_task()->regs.esi;
-  tasks[index].regs.edi = get_running_task()->regs.edi;
-  tasks[index].regs.eflags = get_running_task()->regs.eflags;
-  tasks[index].regs.eip = (uint32_t) get_running_task()->regs.eip;
-  tasks[index].regs.cr3 = (uint32_t) get_running_task()->regs.cr3;
-  uint32_t stack_bottom = (uint32_t)kmalloc(0x4000);
-  memcpy((uint32_t*)stack_bottom, (uint32_t*)(get_running_task()->regs.esp - 0x4000), 0x4000);
-  tasks[index].regs.esp = (uint32_t) stack_bottom + 0x4000;
-  tasks[index].pid.pid = tasks[getFinalElement() - 1].pid.pid + 1;
-  tasks[index].used = true;
-  return &tasks[index];
-}
-
-/**
-   @brief Changes the EIP(instruction pointer) of the task.
-   @param args List of args.  args[0] is the task to modify.  args[1] is function to update EIP to.
- */
-void exec(task_t* task, void(*main)()){
-  task->regs.eax = 0;
-  task->regs.ebx = 0;
-  task->regs.ecx = 0;
-  task->regs.edx = 0;
-  task->regs.esi = 0;
-  task->regs.edi = 0;
-  task->regs.eip = (uint32_t) main;
-  memset((void*)task->regs.esp, 0, 0x4000);
-  //yield();
 }
 
 /**

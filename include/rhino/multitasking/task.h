@@ -42,9 +42,6 @@ task_t* get_running_task();
 uint32_t get_current_pid();
 task_t* task_for_pid(uint32_t pid);
 
-task_t* fork(void);
-task_t* fork_sys(uint32_t eip);
-void exec(task_t* task, void(*main)());
 void yield(registers_t* regs);
 void kill(uint32_t pid);
 void kill_kern();

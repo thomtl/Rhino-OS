@@ -409,16 +409,14 @@ void free_int(void *p, heap_t *heap)
 
 
 void init_heap(){
-  for(uint32_t i = 0; i < (KHEAP_INITIAL_SIZE / 4096); i++){
-    void* frame;
-    if(!(frame = pmm_alloc_block())){
-        kprint("[HMM]: Could not allocate physical page\n");
-        return;
+    for(uint32_t i = 0; i < (KHEAP_INITIAL_SIZE / 4096); i++){
+        void* frame;
+        if(!(frame = pmm_alloc_block())){
+            kprint("[HMM]: Could not allocate physical page\n");
+            return;
+        }
+        vmm_map_page(frame, (void*)heapPos, 1);
+        heapPos += 4096;
     }
-    vmm_map_page(frame, (void*)heapPos, 1);
-    //hmm_kheap_bm_add_block(&kheap, (uintptr_t)heapPos, 4096, 16);
-    heapPos += 4096;
-}
-kheap = create_heap(KHEAP_START, KHEAP_START+KHEAP_INITIAL_SIZE, 0xDFFFF000, 0, 0);
-//hmm_kheap_bm_add_block(&kheap, (uintptr_t)HMM_INITIAL_ADDR, (32 * 4096), 16);
+    kheap = create_heap(KHEAP_START, KHEAP_START+KHEAP_INITIAL_SIZE, 0xDFFFF000, 0, 0);
 }
