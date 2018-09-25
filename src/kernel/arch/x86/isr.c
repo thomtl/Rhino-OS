@@ -151,3 +151,11 @@ void irq_install(){
   init_syscall();
   asm("sti");
 }
+
+void enable_nmi(){
+  outb(0x70, inb(0x70) & 0x7F);
+}
+
+void disable_nmi(){
+  outb(0x70, inb(0x70) | 0x80);
+}
