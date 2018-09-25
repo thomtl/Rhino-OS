@@ -88,7 +88,7 @@ static void expand(uint32_t new_size, heap_t *heap)
         //pmm_alloc_block( get_page(heap->start_address+i, 1, kernel_directory),
           //           (heap->supervisor)?1:0, (heap->readonly)?0:1);
         void* frame = pmm_alloc_block();
-        vmm_map_page((void*)((uintptr_t)frame - KERNEL_VBASE), (void*)heap->start_address+1);
+        vmm_map_page((void*)((uintptr_t)frame - KERNEL_VBASE), (void*)heap->start_address+1, 1);
         i += 0x1000 /* page size */;
     }
     heap->end_address = heap->start_address+new_size;
@@ -415,7 +415,7 @@ void init_heap(){
         kprint("[HMM]: Could not allocate physical page\n");
         return;
     }
-    vmm_map_page(frame, (void*)heapPos);
+    vmm_map_page(frame, (void*)heapPos, 1);
     //hmm_kheap_bm_add_block(&kheap, (uintptr_t)heapPos, 4096, 16);
     heapPos += 4096;
 }

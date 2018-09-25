@@ -28,7 +28,7 @@ void init(char *prg){
   //for(uint32_t j = 0; j < m; j++){                               //should be 1024 but page fault investigate
     for (int i=0, virt=(uint32_t)0x0 + (0 * 4096); i<60; i++, virt+=4096){
       void* frame = pmm_alloc_block();
-      vmm_map_page((void*)frame, (void*)virt);
+      vmm_map_page((void*)frame, (void*)virt, 1);
       task_register_frame(task, frame);
     }
   
@@ -58,7 +58,7 @@ uint32_t create_process(char* prg, uint32_t* pid){
   vmm_switch_pdirectory(dir);
   for (int i=0, virt=(uint32_t)0x0 + (0 * 4096); i<60; i++, virt+=4096){
     void* frame = pmm_alloc_block();
-    vmm_map_page((void*)frame, (void*)virt);
+    vmm_map_page((void*)frame, (void*)virt, 1);
     task_register_frame(task, frame);
   }
 

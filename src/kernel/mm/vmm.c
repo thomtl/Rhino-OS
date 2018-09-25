@@ -93,7 +93,7 @@ void vmm_flush_tlb_entry(void* addr){
     asm("invlpg (%0)":: "r"(addr));
 }
 
-void vmm_map_page(void* phys, void* virt){
+void vmm_map_page(void* phys, void* virt, uint32_t user){
     pdirectory* pageDirectory = vmm_get_directory();
 
     pd_entry* e = &pageDirectory->m_entries[PAGE_DIRECTORY_INDEX((uint32_t)virt)];
@@ -111,7 +111,7 @@ void vmm_map_page(void* phys, void* virt){
         pd_entry* entry = &pageDirectory->m_entries[PAGE_DIRECTORY_INDEX((uint32_t)virt)];
         vmm_pd_entry_add_attrib(entry, PHI_PDE_PRESENT);
         vmm_pd_entry_add_attrib(entry, PHI_PDE_WRITABLE);
-        vmm_pd_entry_add_attrib(entry, PHI_PDE_USER);
+        if(user) vmm_pd_entry_add_attrib(entry, PHI_PDE_USER);
         void* fr = (void*)((uint32_t)table - (uint32_t)KERNEL_VBASE);
 
         vmm_pd_entry_set_frame(entry, fr);
@@ -128,7 +128,7 @@ void vmm_map_page(void* phys, void* virt){
     vmm_pt_entry_add_attrib(pagv, PHI_PTE_WRITABLE);
     vmm_pt_entry_set_frame(pagv, (void*)phys);
     vmm_pt_entry_add_attrib(pagv, PHI_PTE_PRESENT);
-    vmm_pt_entry_add_attrib(pagv, PHI_PTE_USER);
+    if(user) vmm_pt_entry_add_attrib(pagv, PHI_PTE_USER);
     tlb_flush();
 }
 
@@ -168,7 +168,7 @@ bool init_vmm(){
 
     for (int i=0, frame=0x000000, virt=0xc0000000; i<(1024 * 16); i++, frame+=4096, virt+=4096) {
 
-		vmm_map_page((void*)frame, (void*)virt);
+		vmm_map_page((void*)frame, (void*)virt, 0);
 
 	}
 
