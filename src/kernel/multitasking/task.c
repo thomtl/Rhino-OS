@@ -7,7 +7,6 @@
 static task_t *runningTask;
 task_t tasks[MAX_TASKS];
 task_t* taskArray = tasks;
-
 /**
    @brief Compares 2 tasks and returns true if they are thesame and returns false if they aren't.
    @param args List of args.  args[0] is the first task.  args[1] is the second task.
@@ -88,7 +87,7 @@ void initTasking(){
 }
 
 /**
-   @brief Create a user task.
+   @brief Create a user task. responsibilty of the caller to set esp
    @param args List of args.  args[0] the pointer to where to locate the task.  args[1] is a pointer to the main function. args[2] is the EFLAGS register. args[3] is the cr3 register.
  */
 task_t* createTask(void(*main)(), uint32_t flags, uintptr_t pagedir){
@@ -102,7 +101,6 @@ task_t* createTask(void(*main)(), uint32_t flags, uintptr_t pagedir){
   task->regs.eflags = flags;
   task->regs.eip = (uint32_t) main;
   task->regs.cr3 = pagedir;
-  task->regs.esp = (uint32_t) kmalloc(0x1000) + 0x1000;
   task->pid.pid = tasks[getFinalElement() - 1].pid.pid + 1;
   task->res.frameIndex = 0;
   task->regs.ss = 0x23; // KERNEL RING 0 VALUE is 0x10
@@ -123,7 +121,7 @@ void kill(uint32_t pid){
   }
   task_t* task = task_for_pid(pid);
   task->regs.esp -= 0x1000;
-  kfree((void*)task->regs.esp);
+  pmm_free_block((void*)task->regs.esp);
   for(uint32_t i = task->res.frameIndex; i > 0; i--) pmm_free_block(task->res.frames[i]);
   task->res.frameIndex = 0;
   task->used = false;
