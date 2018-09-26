@@ -1,2 +1,0 @@
-building usermode
-Implement the Enable and Disable NMI functions in isr.c
