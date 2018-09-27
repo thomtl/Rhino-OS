@@ -45,6 +45,7 @@ void main(void)
   printf(buf);
   printf("\n");
   t_color(0);
+
   //printf("\n");
   // Run command loop.
   t_loop();
