@@ -6,9 +6,9 @@
 #include <rhino/multiboot.h>
 #include <libk/string.h>
 
-#define PHI_PMM_BLOCKS_PER_BYTE 8
-#define PHI_PMM_BLOCK_SIZE 4096
-#define PHI_PMM_BLOCK_ALIGN PHI_PMM_BLOCK_SIZE
+#define RHINO_PMM_BLOCKS_PER_BYTE 8
+#define RHINO_PMM_BLOCK_SIZE 4096
+#define RHINO_PMM_BLOCK_ALIGN RHINO_PMM_BLOCK_SIZE
 
 
 bool init_pmm(multiboot_info_t* mbd);

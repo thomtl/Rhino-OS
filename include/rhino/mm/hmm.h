@@ -52,5 +52,8 @@ void* kmalloc(size_t sz);
 
 void kfree(void *p);
 
+void* umalloc(size_t sz);
+void ufree(void *p);
+
 void init_heap();
 

@@ -10,50 +10,50 @@
 #define PAGE_TABLE_INDEX(x) (((x) >> 12) & 0x3ff)
 #define PAGE_GET_PHYSICAL_ADDRESS(x) (*x & ~0xfff)
 
-#define PHI_VMM_PAGES_PER_TABLE 1024
-#define PHI_VMM_PAGES_PER_DIR 1024
-#define PHI_VMM_PTABLE_ADDR_SPACE_SIZE 0x400000
-#define PHI_VMM_DTABLE_ADDR_SPACE_SIZE 0x100000000
+#define RHINO_VMM_PAGES_PER_TABLE 1024
+#define RHINO_VMM_PAGES_PER_DIR 1024
+#define RHINO_VMM_PTABLE_ADDR_SPACE_SIZE 0x400000
+#define RHINO_VMM_DTABLE_ADDR_SPACE_SIZE 0x100000000
 
-#define PHI_VMM_PAGE_SIZE 4096
-
-typedef enum {
-    PHI_PTE_PRESENT = 1,
-    PHI_PTE_WRITABLE = 2,
-    PHI_PTE_USER = 4,
-    PHI_PTE_WRITETHROUGH = 8,
-    PHI_PTE_NOT_CACHEABLE = 0x10,
-    PHI_PTE_ACCESSED = 0x20,
-    PHI_PTE_DIRTY = 0x40,
-    PHI_PTE_PAT = 0x80,
-    PHI_PTE_CPU_GLOBAL = 0x100,
-    PHI_PTE_LV4_GLOBAL = 0x200,
-    PHI_PTE_FRAME = 0x7FFFF000
-} PHI_PTE_FLAGS_T;
+#define RHINO_VMM_PAGE_SIZE 4096
 
 typedef enum {
-    PHI_PDE_PRESENT = 1,
-    PHI_PDE_WRITABLE = 2,
-    PHI_PDE_USER = 4,
-    PHI_PDE_PWT = 8,
-    PHI_PDE_PCD = 0x10,
-    PHI_PDE_ACCESSED = 0x20,
-    PHI_PDE_DIRTY = 0x40,
-    PHI_PDE_4MB = 0x80,
-    PHI_PDE_CPU_GLOBAL = 0x100,
-    PHI_PDE_LV4_GLOBAL = 0x200,
-    PHI_PDE_FRAME = 0x7FFFF000
-} PHI_PDE_FLAGS_T;
+    RHINO_PTE_PRESENT = 1,
+    RHINO_PTE_WRITABLE = 2,
+    RHINO_PTE_USER = 4,
+    RHINO_PTE_WRITETHROUGH = 8,
+    RHINO_PTE_NOT_CACHEABLE = 0x10,
+    RHINO_PTE_ACCESSED = 0x20,
+    RHINO_PTE_DIRTY = 0x40,
+    RHINO_PTE_PAT = 0x80,
+    RHINO_PTE_CPU_GLOBAL = 0x100,
+    RHINO_PTE_LV4_GLOBAL = 0x200,
+    RHINO_PTE_FRAME = 0x7FFFF000
+} RHINO_PTE_FLAGS_T;
+
+typedef enum {
+    RHINO_PDE_PRESENT = 1,
+    RHINO_PDE_WRITABLE = 2,
+    RHINO_PDE_USER = 4,
+    RHINO_PDE_PWT = 8,
+    RHINO_PDE_PCD = 0x10,
+    RHINO_PDE_ACCESSED = 0x20,
+    RHINO_PDE_DIRTY = 0x40,
+    RHINO_PDE_4MB = 0x80,
+    RHINO_PDE_CPU_GLOBAL = 0x100,
+    RHINO_PDE_LV4_GLOBAL = 0x200,
+    RHINO_PDE_FRAME = 0x7FFFF000
+} RHINO_PDE_FLAGS_T;
 
 typedef uint32_t pt_entry;
 typedef uint32_t pd_entry;
 
 typedef struct {
-    pt_entry m_entries[PHI_VMM_PAGES_PER_TABLE];
+    pt_entry m_entries[RHINO_VMM_PAGES_PER_TABLE];
 } ptable;
 
 typedef struct {
-    pd_entry m_entries[PHI_VMM_PAGES_PER_DIR];
+    pd_entry m_entries[RHINO_VMM_PAGES_PER_DIR];
 } pdirectory;
 
 void vmm_pt_entry_add_attrib(pt_entry* e, uint32_t attrib);

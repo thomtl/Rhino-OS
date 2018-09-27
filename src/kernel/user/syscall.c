@@ -53,11 +53,11 @@ static inline fs_node_t* sys_finddir_fs(char* file){
 }
 
 static inline void* sys_malloc(size_t size){
-  return kmalloc(size);
+  return umalloc(size);
 }
 
 static inline void sys_free(void* addr){
-  kfree(addr);
+  ufree(addr);
 }
 
 static inline uint32_t sys_read_fs(fs_node_t* node, uint32_t size, uint8_t* buffer){

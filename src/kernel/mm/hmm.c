@@ -3,11 +3,13 @@
 #include <rhino/arch/x86/drivers/screen.h>
 #include <rhino/mm/pmm.h>
 #include <rhino/common.h>
-uint32_t heapPos = 0xD0000000;
+uint32_t kheapPos = 0xD0000000;
+uint32_t uheapPos = 0xB0000000;
 extern uint32_t _kernel_end;
 extern uintptr_t page_directory;
 uint32_t placement_address = (uint32_t)&_kernel_end;
 heap_t *kheap=0;
+heap_t *uheap=0;
 
 void* kmalloc_int(size_t sz, int align, uint32_t *phys)
 {
@@ -88,7 +90,7 @@ static void expand(uint32_t new_size, heap_t *heap)
         //pmm_alloc_block( get_page(heap->start_address+i, 1, kernel_directory),
           //           (heap->supervisor)?1:0, (heap->readonly)?0:1);
         void* frame = pmm_alloc_block();
-        vmm_map_page((void*)((uintptr_t)frame - KERNEL_VBASE), (void*)heap->start_address+1, 1);
+        vmm_map_page((void*)((uintptr_t)frame - KERNEL_VBASE), (void*)heap->start_address+1, !heap->supervisor);
         i += 0x1000 /* page size */;
     }
     heap->end_address = heap->start_address+new_size;
@@ -415,8 +417,26 @@ void init_heap(){
             kprint("[HMM]: Could not allocate physical page\n");
             return;
         }
-        vmm_map_page(frame, (void*)heapPos, 1);
-        heapPos += 4096;
+        vmm_map_page(frame, (void*)kheapPos, 0);
+        kheapPos += 4096;
     }
     kheap = create_heap(KHEAP_START, KHEAP_START+KHEAP_INITIAL_SIZE, 0xDFFFF000, 0, 0);
+
+    for(uint32_t i = 0; i < (KHEAP_INITIAL_SIZE / 4096); i++){
+        void* frame;
+        if(!(frame = pmm_alloc_block())){
+            kprint("[HMM]: Could not allocate physical page\n");
+            return;
+        }
+        vmm_map_page(frame, (void*)uheapPos, 1);
+        uheapPos += 4096;
+    }
+    uheap = create_heap(0xB0000000, 0xB0000000+KHEAP_INITIAL_SIZE, 0xBFFFF000, 1, 0);
+}
+
+void* umalloc(size_t sz){
+    return alloc(sz, 0, uheap);
+}
+void ufree(void *p){
+    free_int(p, uheap);
 }

@@ -55,7 +55,7 @@ static fs_node_t *initrd_finddir(fs_node_t *node, char *name)
 fs_node_t *initialise_initrd(uint32_t location){
   initrd_header = (initrd_header_t *)location;
   file_headers = (initrd_file_header_t *) (location+sizeof(initrd_header_t));
-  initrd_root = (fs_node_t*)kmalloc(sizeof(fs_node_t));
+  initrd_root = (fs_node_t*)umalloc(sizeof(fs_node_t));
   strcpy(initrd_root->name, "initrd");
 
   initrd_root->mask = initrd_root->uid = initrd_root->gid = initrd_root->inode = initrd_root->length = 0;
@@ -68,7 +68,7 @@ fs_node_t *initialise_initrd(uint32_t location){
   initrd_root->finddir = &initrd_finddir;
   initrd_root->ptr = 0;
   initrd_root->impl = 0;
-  initrd_dev = (fs_node_t*)kmalloc(sizeof(fs_node_t));
+  initrd_dev = (fs_node_t*)umalloc(sizeof(fs_node_t));
   strcpy(initrd_dev->name, "dev");
   initrd_dev->mask = initrd_dev->uid = initrd_dev->gid = initrd_dev->inode = initrd_dev->length = 0;
   initrd_dev->flags = FS_DIRECTORY;
@@ -81,7 +81,7 @@ fs_node_t *initialise_initrd(uint32_t location){
   initrd_dev->ptr = 0;
   initrd_dev->impl = 0;
 
-  root_nodes = (fs_node_t*)kmalloc(sizeof(fs_node_t) * initrd_header->nfiles);
+  root_nodes = (fs_node_t*)umalloc(sizeof(fs_node_t) * initrd_header->nfiles);
 
   nroot_nodes = initrd_header->nfiles;
 

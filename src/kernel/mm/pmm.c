@@ -63,7 +63,7 @@ bool init_pmm(multiboot_info_t* mstruc){
     pmm_max_blocks = pmm_get_block_count();
     pmm_bitmap = pmm_early_kmalloc((pmm_max_blocks / 32));
 
-    memset(pmm_bitmap, 0xf, pmm_get_block_count() / PHI_PMM_BLOCKS_PER_BYTE);
+    memset(pmm_bitmap, 0xf, pmm_get_block_count() / RHINO_PMM_BLOCKS_PER_BYTE);
 
     multiboot_memory_map_t* mmap = (multiboot_memory_map_t*)((uintptr_t)mbd->mmap_addr + (uintptr_t)KERNEL_VBASE);
     uintptr_t *mmap_end = (uintptr_t*)((uintptr_t)(mbd->mmap_addr + mbd->mmap_length) + (uintptr_t)KERNEL_VBASE);
@@ -78,8 +78,8 @@ bool init_pmm(multiboot_info_t* mstruc){
 }
 
 void pmm_init_region(uint32_t* base, size_t size){
-    int align = (uint32_t)base / PHI_PMM_BLOCK_SIZE;
-    int blocks = size / PHI_PMM_BLOCK_SIZE;
+    int align = (uint32_t)base / RHINO_PMM_BLOCK_SIZE;
+    int blocks = size / RHINO_PMM_BLOCK_SIZE;
     for(; blocks > 0; blocks--){
         pmm_clear(align++);
         pmm_used_blocks--;
@@ -89,8 +89,8 @@ void pmm_init_region(uint32_t* base, size_t size){
 }
 
 void pmm_deinit_region(uint32_t* base, size_t size){
-    int align = ((uint32_t)base) / PHI_PMM_BLOCK_SIZE;
-    int blocks = size /PHI_PMM_BLOCK_SIZE;
+    int align = ((uint32_t)base) / RHINO_PMM_BLOCK_SIZE;
+    int blocks = size /RHINO_PMM_BLOCK_SIZE;
 
     for(; blocks > 0; blocks--){
         pmm_set(align++);
@@ -104,7 +104,7 @@ void* pmm_alloc_block(){
         kprint("[PMM]: No free Blocks left\n");
         return 0;
     }
-    uint32_t addr = frame * PHI_PMM_BLOCK_SIZE;
+    uint32_t addr = frame * RHINO_PMM_BLOCK_SIZE;
     if((addr >= (kern_start - (uint32_t)KERNEL_VBASE) && addr <= (kern_end - (uint32_t)KERNEL_VBASE)) || (addr >= (mbd_start - (uint32_t)KERNEL_VBASE) && addr <= (mbd_end - (uint32_t)KERNEL_VBASE))){
         pmm_set(frame);
         pmm_used_blocks++;
@@ -118,7 +118,7 @@ void* pmm_alloc_block(){
 }
 void pmm_free_block(void* block){
     uint32_t addr = (uint32_t)block;
-    int frame = addr / PHI_PMM_BLOCK_SIZE;
+    int frame = addr / RHINO_PMM_BLOCK_SIZE;
 
     pmm_clear(frame);
 
