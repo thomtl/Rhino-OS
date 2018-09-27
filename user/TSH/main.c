@@ -8,31 +8,19 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-/*
-  Function Declarations for builtin shell commands:
- */
-/*int t_cd(char **args);
-int t_help(char **args);
-int t_exit(char **args);*/
 
-/*
-  List of builtin commands, followed by their corresponding functions.
- */
- char line[256] = "";
+char line[256] = "";
 int t_help();
 int t_exit();
 int t_num_builtins();
 int t_help(char **args);
 int t_clear(char **args);
 int t_exit(char **args);
-int t_color(char **args);
-int t_read(char **f);
 int t_nothing(char **f);
 int t_execute(char **args);
 void t_loop(void);
 void main(void)
 {
-  // Load config files, if any.
   clear_screen();
   syscall(1, 3, 9, 0);
   printf("Starting TSH v0.0.1, Thomas Woertman 2018\n");
@@ -44,13 +32,8 @@ void main(void)
   printf("PID: ");
   printf(buf);
   printf("\n");
-  t_color(0);
 
-  //printf("\n");
-  // Run command loop.
   t_loop();
-
-  // Perform any shutdown/cleanup.
 
   exit();
 }
@@ -59,7 +42,6 @@ char *builtin_str[] = {
   "help",
   "exit",
   "clear",
-  "color",
   ""
 };
 
@@ -67,7 +49,6 @@ int (*builtin_func[]) (char **) = {
   &t_help,
   &t_exit,
   &t_clear,
-  &t_color,
   &t_nothing
 };
 
@@ -100,31 +81,12 @@ int t_launch(char** args){
   return 1;
 }
 
-int t_color(char** args){
-  for(uint8_t i = 0; i < 16; i++){
-    syscall(1, 3, 0 , i);
-    printf(" ");
-  }
-  printf("\n");
-  UNUSED(args);
-
-  return 1;
-}
 
 int t_nothing(char** args){
   UNUSED(args);
   return 1;
 }
 
-/*
-  Builtin function implementations.
-*/
-
-/**
-   @brief Builtin command: print help.
-   @param args List of args.  Not examined.
-   @return Always returns 1, to continue executing.
- */
 int t_help(char** args)
 {
   int i;
@@ -142,11 +104,6 @@ int t_help(char** args)
   return 1;
 }
 
-/**
-   @brief Builtin command: exit.
-   @param args List of args.  Not examined.
-   @return Always returns 0, to terminate execution.
- */
 int t_exit(char** args)
 {
   syscall(0,3,0,0);
@@ -169,11 +126,7 @@ int t_clear(char** args){
 
 #define t_TOK_BUFSIZE 64
 #define t_TOK_DELIM " \t\r\n\a"
-/**
-   @brief Split a line into tokens (very naively).
-   @param line The line.
-   @return Null-terminated array of tokens.
- */
+
 char **t_split_line(char *line)
 {
   int bufsize = t_TOK_BUFSIZE, position = 0;
@@ -204,11 +157,6 @@ char **t_split_line(char *line)
   return tokens;
 }
 
-/**
-   @brief Execute shell built-in or launch program.
-   @param args Null terminated list of arguments.
-   @return 1 if the shell should continue running, 0 if it should terminate
- */
 int t_execute(char** args)
 {
   int i;
@@ -222,15 +170,8 @@ int t_execute(char** args)
   return t_launch(args);
 }
 
-
-/**
-   @brief Loop getting input and executing it.
- */
 void t_loop(void)
 {
-
-  //int status;
-
   while(1) {
     syscall(1, 3, 2, 0);
     printf("admin");
@@ -241,17 +182,7 @@ void t_loop(void)
     syscall(1, 3, 15, 0);
     printf("> ");
     getline(line, 256);
-    
-  //  printf(line);
     t_execute(t_split_line(line));
 
-    //free(line);
   }
 }
-
-/**
-   @brief Main entry point.
-   @param argc Argument count.
-   @param argv Argument vector.
-   @return status code
- */
