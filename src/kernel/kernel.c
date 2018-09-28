@@ -30,7 +30,6 @@
 #include <libk/string.h>
 #include <libk/stdio.h>
 #include <stdint.h>
-extern void switch_to_usermode();
 
 extern uint32_t placement_address;
 extern uint32_t _kernel_start;
@@ -120,15 +119,15 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   init_heap();
   kprint("done\n");
 
+  kprint("Enabling Multitasking..");
+  initTasking();
+  kprint("done\n");
+
   kprint("Initializing other drivers..");
   init_fdc();
   fs_root = initialise_initrd(initrd_location);
   pci_check_all_buses();
   irq_install();
-  kprint("done\n");
-
-  kprint("Enabling Multitasking..");
-  initTasking();
   kprint("done\n");
 
   #ifndef DEBUG
