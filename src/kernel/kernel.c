@@ -34,7 +34,7 @@ extern void switch_to_usermode();
 
 extern uint32_t placement_address;
 extern uint32_t _kernel_start;
-extern pdirectory* vmm_cur_directory;
+
 uint8_t shouldExit = 0; //set this to 1 to exit the kernel
 multiboot_info_t* multibootInfo;
 uint32_t ramAmountMB = 0; // in MegaBytes
@@ -111,8 +111,8 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
 
   ASSERT(mbd->mods_count >= 1);
   multiboot_module_t *initrd = (multiboot_module_t*)(mbd->mods_addr + KERNEL_VBASE);
-  uint32_t initrd_location = (initrd->mod_start + KERNEL_VBASE);//*((uint32_t*)phys_to_virt(mbd->mods_addr));
-  uint32_t initrd_end = (initrd->mod_end + KERNEL_VBASE);//*(uint32_t*)(phys_to_virt(mbd->mods_addr)+ 4);
+  uint32_t initrd_location = (initrd->mod_start + KERNEL_VBASE);
+  uint32_t initrd_end = (initrd->mod_end + KERNEL_VBASE);
   placement_address = initrd_end;
 
   init_pmm(mbd);
@@ -123,6 +123,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   kprint("Initializing other drivers..");
   init_fdc();
   fs_root = initialise_initrd(initrd_location);
+  pci_check_all_buses();
   irq_install();
   kprint("done\n");
 
@@ -148,9 +149,6 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
     getline(c, 256);
     user_input(c);
   }
-  //switch_to_usermode();
-  //switch_to_kernmode();
-  //asm("int $0x80" :: "a"(1), "b"(1), "c"('q'), "d" (0));
   while(1);
 }
 void user_input(char *input){
@@ -220,7 +218,6 @@ void user_input(char *input){
     return;
   }
   if(strcmp(input, "lspci") == 0){
-    //pci_check_bus(0);
     pci_check_all_buses();
     kprint("$");
     return;

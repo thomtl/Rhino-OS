@@ -15,6 +15,11 @@ static inline uint8_t pci_get_secondary_bus(uint8_t bus, uint8_t device, uint8_t
   return t >> 8;
 }
 
+static inline uint16_t pci_get_device_id(uint8_t bus, uint8_t device, uint8_t function){
+  uint16_t t = pci_config_read_word(bus, device, function, 2);
+  return t;
+}
+
 static inline uint16_t pci_get_vendor_id(uint8_t bus, uint8_t device, uint8_t function){
   uint16_t t = pci_config_read_word(bus, device, function, 0);
   return t;
@@ -58,6 +63,12 @@ void pci_print_device_info(uint8_t bus, uint8_t device, uint8_t function){
 
   for(int i = 0; i < 25; i++) buf[i] = '\0';
 
+  kprint(", DeviceID: ");
+  hex_to_ascii(pci_get_device_id(bus, device, function), buf);
+  kprint(buf);
+
+  for(int i = 0; i < 25; i++) buf[i] = '\0';
+
   kprint(", ");
   hex_to_ascii(bus, buf);
   kprint(buf);
@@ -78,9 +89,13 @@ void pci_print_device_info(uint8_t bus, uint8_t device, uint8_t function){
 
 void pci_check_function(uint8_t bus, uint8_t device, uint8_t function){
   uint8_t baseClass, subClass;
-  uint16_t vendorID;
+  uint16_t vendorID, deviceID;
   vendorID = pci_get_vendor_id(bus, device, function);
   if(vendorID == PCI_VENDOR_UNUSED) return;
+
+  deviceID = pci_get_device_id(bus, device, function);
+
+  if(deviceID == BGA_DEVICE_ID && vendorID == BGA_VENDOR_ID) init_bga(bus, device, function);
 
   baseClass = pci_get_class(bus, device, function);
   subClass = pci_get_subclass(bus, device, function);
@@ -88,9 +103,6 @@ void pci_check_function(uint8_t bus, uint8_t device, uint8_t function){
   if( (baseClass == PCI_CLASS_BRIDGE) && (subClass == PCI_SUBCLASS_BRIDGE_PCI_TO_PCI)){
     pci_check_bus(pci_get_secondary_bus(bus, device, function));
   }
-  #ifdef DEBUG
-  pci_print_device_info(bus, device, function);
-  #endif
 }
 
 void pci_check_device(uint8_t bus, uint8_t device){
@@ -125,6 +137,11 @@ void pci_check_all_buses(void){
       pci_check_bus(function);
     }
   }
+}
 
-
+uint32_t pci_read_bar(uint8_t bus, uint8_t device, uint8_t function, uint8_t bar){
+  uint16_t low = pci_config_read_word(bus, device, function, bar);
+  uint16_t high = pci_config_read_word(bus, device, function, bar + 2);
+  uint32_t full = ((high << 16) | low);
+  return full;
 }
