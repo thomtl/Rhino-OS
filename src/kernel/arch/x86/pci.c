@@ -95,7 +95,7 @@ void pci_check_function(uint8_t bus, uint8_t device, uint8_t function){
 
   deviceID = pci_get_device_id(bus, device, function);
 
-  if(deviceID == BGA_DEVICE_ID && vendorID == BGA_VENDOR_ID) init_bga(bus, device, function);
+  if((vendorID == 0x1234 && deviceID == 0x1111) || (vendorID == 0x80EE && deviceID == 0xBEEF) || (vendorID == 0x10de && deviceID == 0x0a20)) init_bga(bus, device, function);
 
   baseClass = pci_get_class(bus, device, function);
   subClass = pci_get_subclass(bus, device, function);
@@ -103,6 +103,8 @@ void pci_check_function(uint8_t bus, uint8_t device, uint8_t function){
   if( (baseClass == PCI_CLASS_BRIDGE) && (subClass == PCI_SUBCLASS_BRIDGE_PCI_TO_PCI)){
     pci_check_bus(pci_get_secondary_bus(bus, device, function));
   }
+
+  //pci_print_device_info(bus, device, function);
 }
 
 void pci_check_device(uint8_t bus, uint8_t device){

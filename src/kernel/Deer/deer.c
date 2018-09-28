@@ -3,19 +3,25 @@
 
 size_t framebuffer;
 
-void deer_clear_screen_col(uint8_t col){
-    for(uint32_t i = 0; i < 720; i++){
-        for(uint32_t j = 0; j < 480; j++) draw_pixel(i, j, col);
+void deer_clear_screen_col(uint8_t r, uint8_t g, uint8_t b){
+    for(uint32_t i = 0; i < SCREEN_WIDTH; i++){
+        for(uint32_t j = 0; j < SCREEN_HEIGHT; j++) draw_pixel(i, j, r, g, b);
     }
 }
 
 void deer_start(){
-    vga_set_320x200();
-    framebuffer = (vga_get_fb_seg() + 0xC0000000);
+    if(bga_is_active()){
+        bga_set_video_mode(SCREEN_WIDTH, SCREEN_HEIGHT, 24, true, true);
+        framebuffer = bga_get_lfb();
+    } else {
+        PANIC_M("[DEER] No BGA device found");
+    }
+
     
-    deer_clear_screen();
+    deer_clear_screen_col(0, 0, 0);
 
-    deer_printf("abcdefghijklmnopqrstuvwxyz1234567890abcdefghijk\nlmnop");
+    deer_printf("abcdefghijklmnopqrstuvwxyz1234567890abcdefghjkmnopabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvw");
 
-    draw_rect(100, 100, 50, 50, 50);
+    //draw_rect(100, 100, 250, 250, 200, 0, 255);
+    draw_circle(100, 100, 250, 255, 0, 0);
 }

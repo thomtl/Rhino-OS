@@ -2,23 +2,27 @@
 
 extern size_t framebuffer;
 
-void draw_pixel(size_t x, size_t y, uint8_t c)
+void draw_pixel(size_t x, size_t y, uint8_t r, uint8_t g, uint8_t b)
 {
-	uint8_t* addr = (uint8_t*)(framebuffer + ((SCREEN_WIDTH * (y)) + (x)));
-    *addr = c;
+	*(uint8_t*)(&((uint8_t *)framebuffer)[(y * (SCREEN_WIDTH) + x) * 3]) = b;
+    *(uint8_t*)(&((uint8_t *)framebuffer)[(y * (SCREEN_WIDTH) + x) * 3 + 1]) = g;
+    *(uint8_t*)(&((uint8_t *)framebuffer)[(y * (SCREEN_WIDTH) + x) * 3 + 2]) = r;
 }
 
-void draw_rect(size_t x, size_t y, size_t w, size_t h, uint8_t c){
+void draw_rect(size_t x, size_t y, size_t w, size_t h, uint8_t r, uint8_t g, uint8_t b){
     for(size_t i = 0; i < w; i++){
         for(size_t j = 0; j < h; j++){
-	        uint8_t* addr = (uint8_t*)(framebuffer + ((SCREEN_WIDTH * (j + y)) + (i + x)));
-            *addr = c;
+	        /*uint8_t* addr = (uint8_t*)(framebuffer + ((SCREEN_WIDTH * (j + y)) + (i + x)));
+            *addr = c;*/
+           	*(uint8_t*)(&((uint8_t *)framebuffer)[((y + j) * (SCREEN_WIDTH) + (x + i)) * 3]) = b;
+            *(uint8_t*)(&((uint8_t *)framebuffer)[((y + j) * (SCREEN_WIDTH) + (x + i)) * 3 + 1]) = g;
+            *(uint8_t*)(&((uint8_t *)framebuffer)[((y + j) * (SCREEN_WIDTH) + (x + i)) * 3 + 2]) = r;
         }
     }
 }
 
 // Midpoint32_t Circle Algorithm
-void draw_circle(int32_t x0, int32_t y0, int32_t radius, uint8_t col)
+void draw_circle(int32_t x0, int32_t y0, int32_t radius, uint8_t r, uint8_t g, uint8_t b)
 {
     int32_t x = radius-1;
     int32_t y = 0;
@@ -28,14 +32,14 @@ void draw_circle(int32_t x0, int32_t y0, int32_t radius, uint8_t col)
 
     while (x >= y)
     {
-        draw_pixel(x0 + x, y0 + y, col);
-        draw_pixel(x0 + y, y0 + x, col);
-        draw_pixel(x0 - y, y0 + x, col);
-        draw_pixel(x0 - x, y0 + y, col);
-        draw_pixel(x0 - x, y0 - y, col);
-        draw_pixel(x0 - y, y0 - x, col);
-        draw_pixel(x0 + y, y0 - x, col);
-        draw_pixel(x0 + x, y0 - y, col);
+        draw_pixel(x0 + x, y0 + y, r, g, b);
+        draw_pixel(x0 + y, y0 + x, r, g, b);
+        draw_pixel(x0 - y, y0 + x, r, g, b);
+        draw_pixel(x0 - x, y0 + y, r, g, b);
+        draw_pixel(x0 - x, y0 - y, r, g, b);
+        draw_pixel(x0 - y, y0 - x, r, g, b);
+        draw_pixel(x0 + y, y0 - x, r, g, b);
+        draw_pixel(x0 + x, y0 - y, r, g, b);
 
         if (err <= 0)
         {

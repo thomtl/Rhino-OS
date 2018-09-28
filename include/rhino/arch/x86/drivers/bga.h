@@ -3,7 +3,7 @@
 #include <rhino/common.h>
 #include <rhino/arch/x86/drivers/screen.h>
 #include <rhino/arch/x86/pci.h>
-#include <rhino/arch/x86/drivers/screen.h>
+#include <rhino/mm/vmm.h>
 
 #define BGA_DEVICE_ID 0x1111
 #define BGA_VENDOR_ID 0x1234
@@ -43,3 +43,6 @@
 
 void init_bga(uint8_t bus, uint8_t device, uint8_t function);
 void bga_set_video_mode(uint32_t width, uint32_t height, uint32_t bpp, bool useLFB, bool clearVideoMemory);
+void bga_switch_banks(uint32_t bank);
+bool bga_is_active();
+uint32_t bga_get_lfb();

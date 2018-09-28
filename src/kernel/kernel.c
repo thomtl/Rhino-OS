@@ -119,15 +119,15 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   init_heap();
   kprint("done\n");
 
-  kprint("Enabling Multitasking..");
-  initTasking();
-  kprint("done\n");
-
   kprint("Initializing other drivers..");
   init_fdc();
   fs_root = initialise_initrd(initrd_location);
   pci_check_all_buses();
   irq_install();
+  kprint("done\n");
+
+  kprint("Enabling Multitasking..");
+  initTasking();
   kprint("done\n");
 
   #ifndef DEBUG
@@ -150,6 +150,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   }
   while(1);
 }
+
 void user_input(char *input){
   if(strcmp(input, "exit") == 0){
     clear_screen();

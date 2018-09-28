@@ -139,9 +139,9 @@ void deer_printchar(char c, char fg, char bg, uint32_t x, uint32_t y) {
 	for (uint8_t i = 0; i < 8; ++i) {
 		for (uint8_t j = 0; j < 8; ++j) {
 			if (cc[i] & (1 << (7-j))) {
-				draw_pixel(x+j,y+i,fg);
+				draw_pixel(x+j,y+i,255, fg, 255);
 			} else {
-				draw_pixel(x+j,y+i,bg);
+				draw_pixel(x+j,y+i,0, bg, 0);
 			}
 		}
 	}
@@ -152,7 +152,7 @@ void deer_putchar(char c, char fg, char bg){
 		case '\n':
 			xpos = 0;
 			ypos += 8;
-			if(ypos >= (25)){
+			if(ypos >= (DEER_TERMINAL_HEIGHT)){
 				xpos = 0;
 				ypos = 0;
 			}
@@ -160,11 +160,11 @@ void deer_putchar(char c, char fg, char bg){
 		default:
 			deer_printchar(c, fg, bg, xpos, ypos);
 			xpos += 8;
-			if(xpos >= (40 * 8)){
+			if(xpos >= (DEER_TERMINAL_WIDTH * 8)){
 				ypos += 8;
 				xpos = 0;
 			}
-			if(ypos >= (25 * 8)){
+			if(ypos >= (DEER_TERMINAL_HEIGHT * 8)){
 				xpos = 0;
 				ypos = 0;
 			}
