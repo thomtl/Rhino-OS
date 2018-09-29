@@ -29,6 +29,7 @@
 #include <rhino/panic.h>
 #include <libk/string.h>
 #include <libk/stdio.h>
+#include <rhino/acpi/acpi.h>
 #include <stdint.h>
 
 extern uint32_t placement_address;
@@ -101,12 +102,11 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   kprint("\n");
 
 
-  kprint("\nEnabling Protected Mode..");
+  kprint("\nEnabling Protected Mode\n");
   gdt_install();
   isr_install();
-  kprint("done\n");
 
-  kprint("Initializing Memory Manager..");
+  kprint("Initializing Memory Manager\n");
 
   ASSERT(mbd->mods_count >= 1);
   multiboot_module_t *initrd = (multiboot_module_t*)(mbd->mods_addr + KERNEL_VBASE);
@@ -117,18 +117,16 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   init_pmm(mbd);
   init_vmm();
   init_heap();
-  kprint("done\n");
 
-  kprint("Initializing other drivers..");
+  kprint("Initializing other drivers\n");
   init_fdc();
   fs_root = initialise_initrd(initrd_location);
   pci_check_all_buses();
+  init_acpi();
   irq_install();
-  kprint("done\n");
 
-  kprint("Enabling Multitasking..");
+  kprint("Enabling Multitasking\n");
   initTasking();
-  kprint("done\n");
 
   #ifndef DEBUG
   clear_screen();

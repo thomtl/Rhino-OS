@@ -166,6 +166,7 @@ void switch_context(task_t *old, task_t *new, registers_t *regs){
   regs->ss = new->regs.ss;
   regs->cs = new->regs.cs;
   regs->ds = new->regs.ds;
+
   asm("mov %0, %%cr3":: "r"(new->regs.cr3));
 }
 
