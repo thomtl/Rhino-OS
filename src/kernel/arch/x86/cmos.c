@@ -1,5 +1,5 @@
 #include <rhino/arch/x86/cmos.h>
-
+bool cmosExists = false;
 uint8_t read_cmos(uint8_t reg){
     CLI();
     outb(CMOS_REG_SELECT, (CMOS_NMI_DISABLE_BIT << 7) | reg);
@@ -19,6 +19,8 @@ int get_update_in_progress_flag() {
       outb(CMOS_REG_SELECT, CMOS_REG_INT_STATUS_A);
       return (inb(CMOS_REG_DATA) & CMOS_NMI_DISABLE_BIT);
 }
+
+
 
 time_t read_rtc() {
       time_t ret;
@@ -56,7 +58,7 @@ time_t read_rtc() {
             ret.month = read_cmos(CMOS_REG_INT_MONTH);
             ret.year = read_cmos(CMOS_REG_INT_YEAR);
       } while( (last_second != ret.second) || (last_minute != ret.minute) || (last_hour != ret.hour) ||
-               (last_day != ret.day) || (last_month != ret.month) || (last_year != ret.year));
+            (last_day != ret.day) || (last_month != ret.month) || (last_year != ret.year));
 
       registerB = read_cmos(CMOS_REG_INT_STATUS_B);
 
@@ -75,7 +77,7 @@ time_t read_rtc() {
       // Convert 12 ret.hour clock to 24 ret.hour clock if necessary
 
       if (!(registerB & 0x02) && (ret.hour & 0x80)) {
-            ret.hour = ((ret.hour & 0x7F) + 12) % 24;
+           ret.hour = ((ret.hour & 0x7F) + 12) % 24;
       }
 
       // Calculate the full (4-digit) ret.year

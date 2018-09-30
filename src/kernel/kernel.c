@@ -82,26 +82,6 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   kprint(buf);
   kprint("MB\n");
 
-  kprint("Date: ");
-  time_t date = read_rtc();
-  int_to_ascii(date.day, buf);
-  kprint(buf);
-  kprint("/");
-  int_to_ascii(date.month, buf);
-  kprint(buf);
-  kprint("/");
-  int_to_ascii(date.year, buf);
-  kprint(buf);
-  kprint(" ");
-  int_to_ascii(date.hour, buf);
-  kprint(buf);
-  kprint(":");
-  if(date.minute < 9) kprint("0");
-  int_to_ascii(date.minute, buf);
-  kprint(buf);
-  kprint("\n");
-
-
   kprint("\nEnabling Protected Mode\n");
   gdt_install();
   isr_install();
@@ -133,6 +113,26 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   init("init.prg");
   #endif
 
+  time_t date = read_rtc();
+  kprint("Date: ");
+  
+  int_to_ascii(date.day, buf);
+  kprint(buf);
+  kprint("/");
+  int_to_ascii(date.month, buf);
+  kprint(buf);
+  kprint("/");
+  int_to_ascii(date.year, buf);
+  kprint(buf);
+  kprint(" ");
+  int_to_ascii(date.hour, buf);
+  kprint(buf);
+  kprint(":");
+  if(date.minute < 9) kprint("0");
+  int_to_ascii(date.minute, buf);
+  kprint(buf);
+  kprint("\n");
+  
   kprint("Rhino Kernel Internal Shell version 0.0.2");
   set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
   kprint("\n$");

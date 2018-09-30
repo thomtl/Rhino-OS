@@ -3,6 +3,7 @@
 #include <rhino/arch/x86/isr.h>
 #include <rhino/arch/x86/timer.h>
 #include <rhino/arch/x86/drivers/screen.h>
+#include <rhino/acpi/acpi.h>
 #include <libk/string.h>
 #include <rhino/common.h>
 
@@ -71,6 +72,17 @@ static void wait_for_res(){
 
 void init_keyboard(){
   uint8_t res, conf;
+
+  // ACPI check if the 8042 exists, on apple machines it doesn't
+  if(acpi_get_fadt_version() > 1){
+    uint32_t boot_arch_flags = acpi_get_fadt_boot_arch_flags();
+    if(!BIT_IS_SET(boot_arch_flags, 1)){
+      kprint_err("[8042] Controller doesn't exist\n");
+      return;
+    }
+  }
+
+
   // Stop interrupts
   CLI();
 

@@ -1,8 +1,8 @@
 #include <rhino/arch/x86/msr.h>
 
 uint32_t msr_check(){
-    uint32_t a, d;
-    cpuid(1, &a, &d);
+    uint32_t a, c, d;
+    cpuid(1, &a, &c, &d);
     return d & CPUID_MSR_FLAG;
 }
 

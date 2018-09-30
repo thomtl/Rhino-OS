@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <rhino/arch/x86/ports.h>
 #include <rhino/common.h>
+
 #define CMOS_NMI_DISABLE_BIT 0x80
 #define CMOS_REG_SELECT 0x70
 #define CMOS_REG_DATA 0x71
