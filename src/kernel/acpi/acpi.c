@@ -15,9 +15,9 @@ static inline uint32_t getCR3(){
     return a;
 }
 
-static inline void setCR3(uint32_t cr3){
+/*static inline void setCR3(uint32_t cr3){
     asm("mov %0, %%cr3":: "r"(cr3 - KERNEL_VBASE));
-}
+}*/
 
 static void acpi_enter_subsystem(){
     cr3 = vmm_get_directory();
@@ -93,7 +93,7 @@ RSDP* find_rsdp(){
     return 0;
 }
 
-static FADT* find_table(char* signature){
+void* find_table_int(char* signature){
     if(!version2){
         int entries = (rsdt->h.Length - sizeof(rsdt->h)) / 4;
         for (int i = 0; i < entries; i++)
@@ -102,7 +102,7 @@ static FADT* find_table(char* signature){
             SDTHeader *h = (SDTHeader *) rsdt->PointerToOtherSDT[i];
             if(h->Signature[0] == signature[0] && h->Signature[1] == signature[1] && h->Signature[2] == signature[2] && h->Signature[3] == signature[3]){
                 if(doChecksum(h)){
-                    return (FADT*)h;
+                    return (void*)h;
                 } else {
                     kprint_err("[ACPI] Found");
                     kprint_err(signature);
@@ -120,7 +120,7 @@ static FADT* find_table(char* signature){
             SDTHeader *h = (SDTHeader *) (uint32_t)xsdt->PointerToOtherSDT[i];
             if(h->Signature[0] == signature[0] && h->Signature[1] == signature[1] && h->Signature[2] == signature[2] && h->Signature[3] == signature[3]){
                 if(doChecksum(h)){
-                    return (FADT*)h;
+                    return (void*)h;
                 } else {
                     kprint_err("[ACPI] Found");
                     kprint_err(signature);
@@ -130,9 +130,6 @@ static FADT* find_table(char* signature){
             }
         }
     }
-    kprint_err("[ACPI] Could not find");
-    kprint_err(signature);
-    kprint_err("\n");
     return 0;
 }
 
@@ -189,7 +186,7 @@ void init_acpi(){
     }
 
 
-    fadt = find_table("FACP");
+    fadt = find_table_int("FACP");
 
     acpi_leave_subsystem();
     return;
@@ -207,6 +204,21 @@ uint32_t acpi_get_fadt_version(){
     uint32_t ret = fadt->h.Revision;
     acpi_leave_subsystem();
     return ret;
+}
+
+bool acpi_table_exists(char* signature){
+    acpi_enter_subsystem();
+    void* tab = (void*)find_table_int(signature);
+    acpi_leave_subsystem();
+    if(tab) return true;
+    return false;
+}
+
+void* find_table(char* signature){
+    acpi_enter_subsystem();
+    void* tab = find_table_int(signature);
+    acpi_leave_subsystem();
+    return tab;
 }
 
 /* Display all tables    

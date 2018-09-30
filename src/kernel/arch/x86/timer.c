@@ -3,50 +3,36 @@
 #include <rhino/arch/x86/ports.h>
 #include <rhino/common.h>
 #include <rhino/multitasking/scheduler.h>
+#include <rhino/arch/x86/drivers/pit.h>
+#include <rhino/arch/x86/drivers/hpet.h>
 
-uint32_t tick = 0;
-
-static void timer_callback(registers_t *regs){
-  tick++;
-  schedule(tick, regs);
+uint32_t irq0s = 0;
+uint32_t irq8s = 0;
+static void irq0_callback(registers_t *regs){
+  irq0s++;
+  schedule(irq0s, regs);
 }
 
-void init_timer(uint32_t freq){
-  register_interrupt_handler(IRQ0, timer_callback);
+static void irq8_callback(registers_t *regs){
+  irq8s++;
+  UNUSED(regs);
+}
 
-  uint32_t divisor = 1193189 / freq;
-  uint8_t low = (uint8_t)(divisor & 0xFF);
-  uint8_t high = (uint8_t)((divisor >> 8));
+void init_timer(){
+  register_interrupt_handler(IRQ0, irq0_callback);
+  register_interrupt_handler(IRQ8, irq8_callback);
 
-  outb(0x43, 0x36);
-  outb(0x40, low);
-  outb(0x40, high);
+  if(detect_hpet()){
+    if(!init_hpet(1000000)){
+      goto pit;
+    }
+  } else {
+    pit:
+    init_pit(100);
+  }
+
 }
 
 uint32_t get_tick(){
-  return tick;
-}
-
-static void play_sound(uint32_t frq){
-  uint32_t div;
-  uint8_t tmp;
-
-  div = 1193180 / frq;
-  outb(0x43, 0xb6);
-  outb(0x42, (uint8_t)(div));
-  outb(0x42, (uint8_t)(div >> 8));
-
-  tmp = inb(0x61);
-  if(tmp != (tmp | 3)) outb(0x61, tmp | 3);
-}
-
-static void total_silence(){
-  uint8_t tmp = inb(0x61) & 0xFC;
-  outb(0x61, tmp);
-}
-
-void beep(){
-  play_sound(1000);
-  for(int i = 0; i < 999999; i++);
-  total_silence();
+  return irq0s;
 }

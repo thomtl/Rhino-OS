@@ -133,3 +133,18 @@ typedef struct
     GenericAddressStructure X_GPE0Block;
     GenericAddressStructure X_GPE1Block;
 } __attribute__((packed)) FADT;
+
+typedef struct
+{
+    SDTHeader h;
+    uint8_t hardware_rev_id;
+    uint8_t comparator_count:5;
+    uint8_t counter_size:1;
+    uint8_t reserved:1;
+    uint8_t legacy_replacement:1;
+    uint16_t pci_vendor_id;
+    GenericAddressStructure address;
+    uint8_t hpet_number;
+    uint16_t minimum_tick;
+    uint8_t page_protection;
+} __attribute__((packed)) HPET;

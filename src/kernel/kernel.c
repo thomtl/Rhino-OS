@@ -175,7 +175,6 @@ void user_input(char *input){
     #endif
     kprint("-------------------------------\n");
     kprint("$");
-    beep();
     return;
   }
   if(strcmp(input, "clear") == 0){

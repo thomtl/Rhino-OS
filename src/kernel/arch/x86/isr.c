@@ -145,7 +145,7 @@ void irq_handler(registers_t *r){
 }
 
 void irq_install(){
-  init_timer(100);
+  init_timer();
   init_keyboard();
   init_syscall();
   asm("sti");
