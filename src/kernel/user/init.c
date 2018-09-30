@@ -3,6 +3,7 @@
 extern pdirectory* kernel_directory;
 
 void init(char *prg){
+  start_task_atomic();
   uint8_t attr = get_color();
   pdirectory* dir;
   set_color(VGA_COLOR_LIGHT_GREEN, VGA_COLOR_BLUE);
