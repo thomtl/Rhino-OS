@@ -1,4 +1,4 @@
-#include <rhino/arch/x86/ports.h>
+#include <rhino/arch/x86/io.h>
 
 uint8_t inb(uint16_t port){
   uint8_t result;

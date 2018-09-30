@@ -292,5 +292,5 @@ void fdc_control_motor(bool b){
   if(b) fdc_write_dor(_CurrentDrive | motor | FDCDSK_DOR_MASK_RESET | FDCDSK_DOR_MASK_DMA);
   else fdc_write_dor(FDCDSK_DOR_MASK_RESET);
 
-  for(int i = 0; i < 999; i++); // Delay because no sleep yet
+  for(volatile int i = 0; i < 999; i++); // Delay because no sleep yet
 }

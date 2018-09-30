@@ -5,7 +5,6 @@ char getchar(){
 }
 
 char* getline(char lineptr[], size_t bufsize){
-  //char str[256] = "";
   for(uint16_t i = 0; i < bufsize; i++){
     lineptr[i] = '\0';
   }
@@ -24,5 +23,4 @@ char* getline(char lineptr[], size_t bufsize){
     }
     pos++;
   }
-
 }

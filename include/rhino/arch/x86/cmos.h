@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#include <rhino/arch/x86/ports.h>
+#include <rhino/arch/x86/io.h>
 #include <rhino/common.h>
 
 #define CMOS_NMI_DISABLE_BIT 0x80

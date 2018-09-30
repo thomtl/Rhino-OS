@@ -101,7 +101,7 @@ void pmm_deinit_region(uint32_t* base, size_t size){
 void* pmm_alloc_block(){
     uint32_t frame;
     if((frame = pmm_first_free()) == (uint32_t)-1){
-        kprint("[PMM]: No free Blocks left\n");
+        kprint_err("[PMM]: No free Blocks left\n");
         return 0;
     }
     uint32_t addr = frame * RHINO_PMM_BLOCK_SIZE;

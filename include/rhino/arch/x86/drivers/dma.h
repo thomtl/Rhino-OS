@@ -1,6 +1,6 @@
 #pragma once
 #include <rhino/common.h>
-#include <rhino/arch/x86/ports.h>
+#include <rhino/arch/x86/io.h>
 
 enum DMA0_IO {
   DMA0_STATUS_REG = 0x08,

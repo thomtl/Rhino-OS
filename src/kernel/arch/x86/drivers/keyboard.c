@@ -1,5 +1,5 @@
 #include <rhino/arch/x86/drivers/keyboard.h>
-#include <rhino/arch/x86/ports.h>
+#include <rhino/arch/x86/io.h>
 #include <rhino/arch/x86/isr.h>
 #include <rhino/arch/x86/timer.h>
 #include <rhino/arch/x86/drivers/screen.h>

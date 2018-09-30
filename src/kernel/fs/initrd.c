@@ -1,6 +1,7 @@
 #include <rhino/fs/initrd.h>
 #include <rhino/mm/pmm.h>
 #include <libk/string.h>
+
 initrd_header_t *initrd_header;
 initrd_file_header_t *file_headers;
 fs_node_t *initrd_root;

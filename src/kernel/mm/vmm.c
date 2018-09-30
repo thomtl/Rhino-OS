@@ -1,7 +1,8 @@
 #include <rhino/mm/vmm.h>
-extern void tlb_flush();
+
 pdirectory* vmm_cur_directory = 0;
 pdirectory* kernel_directory = 0;
+
 void vmm_pt_entry_add_attrib(pt_entry* e, uint32_t attrib){
     *e |= attrib;
 }

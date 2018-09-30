@@ -9,7 +9,7 @@
 #include <rhino/fs/vfs.h>
 #include <rhino/fs/initrd.h>
 #include <rhino/arch/x86/drivers/keyboard.h>
-#include <rhino/user/init.h>
+#include <rhino/user/program.h>
 extern pdirectory* kernel_directory;
 
 static inline void sys_task_set_argv(pid_t pid, uint32_t argv){

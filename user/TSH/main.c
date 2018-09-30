@@ -10,6 +10,7 @@
 #include <string.h>
 
 char line[256] = "";
+
 int t_help();
 int t_exit();
 int t_num_builtins();
@@ -19,6 +20,7 @@ int t_exit(char **args);
 int t_nothing(char **f);
 int t_execute(char **args);
 void t_loop(void);
+
 void main(void)
 {
   clear_screen();

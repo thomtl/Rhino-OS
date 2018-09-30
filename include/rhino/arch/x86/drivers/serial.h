@@ -1,6 +1,6 @@
 #pragma once
 
-#include <rhino/arch/x86/ports.h>
+#include <rhino/arch/x86/io.h>
 
 #define SERIAL_COM1_BASE 0x3F8
 #define SERIAL_DATA_PORT(base) ((base))

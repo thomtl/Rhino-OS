@@ -1,6 +1,8 @@
 [bits 32]
 [section .text]
 
+; Bad 8042 CPU reset / reboot code
+
 [global reboot]
 reboot:
   in al, 0x64

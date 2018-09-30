@@ -17,11 +17,9 @@ void deer_start(){
         PANIC_M("[DEER] No BGA device found");
     }
 
-    
     deer_clear_screen_col(0, 0, 0);
 
     deer_printf("abcdefghijklmnopqrstuvwxyz1234567890abcdefghjkmnopabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvw");
 
-    //draw_rect(100, 100, 250, 250, 200, 0, 255);
     draw_circle(100, 100, 250, 255, 0, 0);
 }

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <rhino/common.h>
-#include <rhino/arch/x86/ports.h>
+#include <rhino/arch/x86/io.h>
 #include <rhino/arch/x86/drivers/bga.h>
 #include <rhino/arch/x86/drivers/screen.h>
 #include <libk/string.h>

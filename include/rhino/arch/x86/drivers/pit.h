@@ -1,6 +1,6 @@
 #pragma once
 #include <rhino/common.h>
-#include <rhino/arch/x86/ports.h>
+#include <rhino/arch/x86/io.h>
 
 #define PIT_DIVISOR 1193189
 

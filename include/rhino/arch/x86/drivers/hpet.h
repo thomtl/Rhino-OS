@@ -1,6 +1,6 @@
 #pragma once
 #include <rhino/common.h>
-#include <rhino/arch/x86/ports.h>
+#include <rhino/arch/x86/io.h>
 #include <rhino/acpi/acpi.h>
 #include <rhino/acpi/acpistructs.h>
 #include <rhino/mm/vmm.h>

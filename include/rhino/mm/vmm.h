@@ -56,6 +56,8 @@ typedef struct {
     pd_entry m_entries[RHINO_VMM_PAGES_PER_DIR];
 } pdirectory;
 
+extern void tlb_flush();
+
 void vmm_pt_entry_add_attrib(pt_entry* e, uint32_t attrib);
 void vmm_pt_entry_del_attrib(pt_entry* e, uint32_t attrib);
 void vmm_pt_entry_set_frame(pt_entry* e, void* frame);

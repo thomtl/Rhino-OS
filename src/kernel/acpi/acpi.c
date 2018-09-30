@@ -135,7 +135,6 @@ void* find_table_int(char* signature){
 
 
 void init_acpi(){
-
     if(!detectACPI()){
         kprint_warn("[ACPI] No ACPI detected\n");
         return;
@@ -220,32 +219,3 @@ void* find_table(char* signature){
     acpi_leave_subsystem();
     return tab;
 }
-
-/* Display all tables    
-if(!version2){
-        int entries = (rsdt->h.Length - sizeof(rsdt->h)) / 4;
- 
-        for (int i = 0; i < entries; i++)
-        {
-            vmm_map_page((void*)rsdt->PointerToOtherSDT[i], (void*)rsdt->PointerToOtherSDT[i], 0);
-            SDTHeader *h = (SDTHeader *) rsdt->PointerToOtherSDT[i];
-            for(uint8_t j = 0; j < 4; j++){
-                char buf[2] = {h->Signature[j], '\0'};
-                kprint(buf);
-            }
-            kprint("\n");
-        }
-    } else if(version2){
-        int entries = (xsdt->h.Length - sizeof(xsdt->h)) / 8;
- 
-        for (int i = 0; i < entries; i++)
-        {
-            vmm_map_page((void*)(uint32_t)xsdt->PointerToOtherSDT[i], (void*)(uint32_t)xsdt->PointerToOtherSDT[i], 0);
-            SDTHeader *h = (SDTHeader *) (uint32_t)xsdt->PointerToOtherSDT[i];
-            for(uint8_t j = 0; j < 4; j++){
-                char buf[2] = {h->Signature[j], '\0'};
-                kprint(buf);
-            }
-            kprint("\n");
-        }
-    }*/

@@ -1,5 +1,4 @@
 #include <libk/stdio.h>
-
 #include <rhino/arch/x86/drivers/screen.h>
 
 int putchar(int ic){

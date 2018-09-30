@@ -1,6 +1,6 @@
 #include <rhino/arch/x86/timer.h>
 #include <rhino/arch/x86/isr.h>
-#include <rhino/arch/x86/ports.h>
+#include <rhino/arch/x86/io.h>
 #include <rhino/common.h>
 #include <rhino/multitasking/scheduler.h>
 #include <rhino/arch/x86/drivers/pit.h>

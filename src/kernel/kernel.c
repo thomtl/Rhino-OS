@@ -3,45 +3,56 @@
 #endif
 
 #include <rhino/common.h>
+
+#include <libk/string.h>
+#include <libk/stdio.h>
+#include <libk/stdlib.h>
+
 #include <rhino/multiboot.h>
+
 #include <rhino/mm/vmm.h>
 #include <rhino/mm/pmm.h>
 #include <rhino/mm/hmm.h>
-#include <rhino/Deer/deer.h>
+
 #include <rhino/fs/vfs.h>
 #include <rhino/fs/initrd.h>
+
 #include <rhino/multitasking/task.h>
 #include <rhino/multitasking/scheduler.h>
-#include <rhino/user/program.h>
-#include <rhino/user/init.h>
-#include <rhino/pwr/power.h>
-#include <rhino/arch/x86/drivers/screen.h>
-#include <rhino/arch/x86/drivers/keyboard.h>
-#include <rhino/arch/x86/drivers/fdc.h>
+
 #include <rhino/arch/x86/isr.h>
 #include <rhino/arch/x86/pci.h>
 #include <rhino/arch/x86/gdt.h>
 #include <rhino/arch/x86/msr.h>
-#include <rhino/arch/x86/ports.h>
+#include <rhino/arch/x86/io.h>
 #include <rhino/arch/x86/cmos.h>
 #include <rhino/arch/x86/timer.h>
+#include <rhino/arch/x86/drivers/screen.h>
+#include <rhino/arch/x86/drivers/keyboard.h>
+#include <rhino/arch/x86/drivers/fdc.h>
+
 #include <rhino/kernel.h>
 #include <rhino/panic.h>
-#include <libk/string.h>
-#include <libk/stdio.h>
 #include <rhino/acpi/acpi.h>
-#include <stdint.h>
+
+#include <rhino/Deer/deer.h>
+
+#include <rhino/user/program.h>
+
+#include <rhino/pwr/power.h>
+
+
 
 extern uint32_t placement_address;
 extern uint32_t _kernel_start;
 
-uint8_t shouldExit = 0; //set this to 1 to exit the kernel
+uint8_t shouldExit = 0;
 multiboot_info_t* multibootInfo;
-uint32_t ramAmountMB = 0; // in MegaBytes
-uint32_t ramAmount = 0;
+uint32_t ramAmountMB = 0;
 
 void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   char buf[25] = "";
+
   #ifndef DEBUG
   clear_screen();
   #endif
@@ -70,13 +81,12 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
 
   if(BIT_IS_SET(mbd->flags, 1) && BIT_IS_SET(mbd->flags, 6)){
     ramAmountMB = ((((mbd->mem_lower * 1024) + (mbd->mem_upper * 1024)) / 1024) / 1024) + 1; // Formula for converting from Kibibyte to Megabyte so: Megabyte = (Kibibyte * 1024) / 1024 / 1024 + 1
-    ramAmount = (((mbd->mem_lower * 1024) + (mbd->mem_upper * 1024)) / 1024 / 1024 + 1) * 0x100000;
   } else {
-    PANIC_M("bootloader did not supply memory info");
+    PANIC_M(": Bootloader did not supply memory info");
   }
 
   set_color(VGA_COLOR_LIGHT_BLUE, VGA_COLOR_BLACK);
-  kprint("Starting Rhino 0.2.5, Copyright 2018 Thomas Woertman, The Netherlands\n");
+  kprint("Starting Rhino 0.3.0, Copyright 2018 Thomas Woertman, The Netherlands\n");
   int_to_ascii(ramAmountMB, buf);
   kprint("Detected Memory: ");
   kprint(buf);
@@ -108,11 +118,6 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   kprint("Enabling Multitasking\n");
   initTasking();
 
-  #ifndef DEBUG
-  clear_screen();
-  init("init.prg");
-  #endif
-
   time_t date = read_rtc();
   kprint("Date: ");
   
@@ -132,11 +137,19 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   int_to_ascii(date.minute, buf);
   kprint(buf);
   kprint("\n");
+
+  #ifndef DEBUG
+  clear_screen();
+  enable_scheduling();
+  init("init.prg");
+  return;
+  #endif
   
-  kprint("Rhino Kernel Internal Shell version 0.0.2");
+  kprint("Rhino Kernel Internal Shell version 0.0.3");
   set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
   kprint("\n$");
   enable_scheduling();
+
   while(1)
   {
     if(shouldExit == 1){
@@ -146,7 +159,6 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
     getline(c, 256);
     user_input(c);
   }
-  while(1);
 }
 
 void user_input(char *input){
@@ -157,7 +169,6 @@ void user_input(char *input){
     return;
   }
   if(strcmp(input, "help") == 0){
-    kprint("Showing Commands:\n");
     kprint("-------------------------------\n");
     kprint("run: run shell.prg to start the os.");
     kprint("exit: Exit the Kernel.\n");
@@ -165,13 +176,12 @@ void user_input(char *input){
     kprint("clear: To clear the screen.\n");
     kprint("reboot: To reboot the machine.\n");
     #ifdef DEBUG
-    kprint("Debug commands:\n");
     kprint("pid: To show the current PID.\n");
     kprint("panic: Panic the kernel.\n");
     kprint("init: To show the files on the initrd.\n");
     kprint("mmap: Print the sections in the BIOS mmap.\n");
     kprint("floppy: Read sector 0 of floppy drive 0.\n");
-    kprint("lspci: list pci devices.\n");
+    kprint("deer: Start the deer display manager.\n");
     #endif
     kprint("-------------------------------\n");
     kprint("$");
@@ -214,11 +224,6 @@ void user_input(char *input){
     kprint("$");
     return;
   }
-  if(strcmp(input, "lspci") == 0){
-    pci_check_all_buses();
-    kprint("$");
-    return;
-  }
   if(strcmp(input, "pid") == 0){
     char c[25] = "";
     int_to_ascii(get_current_pid(), c);
@@ -256,13 +261,13 @@ void user_input(char *input){
           kprint(" Reserved\n");
           break;
         case MULTIBOOT_MEMORY_ACPI_RECLAIMABLE:
-         kprint(" ACPI RECLAIM\n");
+         kprint(" ACPI Reclaim\n");
          break;
         case MULTIBOOT_MEMORY_NVS:
-          kprint(" NVS\n");
+          kprint(" Non Volatile Storage\n");
           break;
         case MULTIBOOT_MEMORY_BADRAM:
-          kprint(" BADRAM\n");
+          kprint(" Badram\n");
           break;
         default:
           break;
@@ -276,7 +281,6 @@ void user_input(char *input){
     return;
   }
   if(strcmp(input, "floppy") == 0){
-    //display_floppy_drive_info();
     uint8_t* s = fdc_read_sector(0);
     s = (uint8_t*)((uint32_t)s + (uint32_t)KERNEL_VBASE);
     if(s != 0){
@@ -289,7 +293,6 @@ void user_input(char *input){
           kprint(" ");
         }
         i+= 128;
-
       }
     }
     else {
@@ -302,6 +305,10 @@ void user_input(char *input){
   if(strcmp(input, "run") == 0){
     init("init.prg");
     kprint("\n$");
+    return;
+  }
+  if(strcmp(input, "") == 0){
+    kprint("$");
     return;
   }
   kprint(input);

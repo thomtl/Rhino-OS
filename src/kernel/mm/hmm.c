@@ -414,7 +414,7 @@ void init_heap(){
     for(uint32_t i = 0; i < (KHEAP_INITIAL_SIZE / 4096); i++){
         void* frame;
         if(!(frame = pmm_alloc_block())){
-            kprint("[HMM]: Could not allocate physical page\n");
+            kprint_err("[HMM]: Could not allocate physical page\n");
             return;
         }
         vmm_map_page(frame, (void*)kheapPos, 0);
@@ -425,7 +425,7 @@ void init_heap(){
     for(uint32_t i = 0; i < (KHEAP_INITIAL_SIZE / 4096); i++){
         void* frame;
         if(!(frame = pmm_alloc_block())){
-            kprint("[HMM]: Could not allocate physical page\n");
+            kprint_err("[HMM]: Could not allocate physical page\n");
             return;
         }
         vmm_map_page(frame, (void*)uheapPos, 1);

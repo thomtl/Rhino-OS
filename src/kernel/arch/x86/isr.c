@@ -4,7 +4,7 @@
 #include <rhino/arch/x86/drivers/keyboard.h>
 #include <libk/string.h>
 #include <rhino/arch/x86/timer.h>
-#include <rhino/arch/x86/ports.h>
+#include <rhino/arch/x86/io.h>
 #include <rhino/user/syscall.h>
 isr_t interrupt_handlers[256];
 
@@ -117,7 +117,7 @@ void isr_handler(registers_t *r){
     isr_t handler = interrupt_handlers[int_no];
     handler(r);
   } else {
-    kprint_err("received interrupt: ");
+    kprint_err("Received interrupt: ");
     char s[3];
     int_to_ascii(int_no, s);
     kprint_err(s);
