@@ -186,6 +186,14 @@ void init_acpi(){
 
 
     fadt = find_table_int("FACP");
+    if(!doChecksum((SDTHeader*)fadt)){
+        kprint_err("[ACPI]: FADT Checksum Failed\n");
+        acpi_leave_subsystem();
+        return;
+    }
+
+    
+
 
     acpi_leave_subsystem();
     return;
