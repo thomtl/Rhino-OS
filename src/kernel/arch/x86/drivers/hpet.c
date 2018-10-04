@@ -1,10 +1,12 @@
 #include <rhino/arch/x86/drivers/hpet.h>
+
 extern pdirectory* kernel_directory;
 pdirectory *subsystemDir, *cr3;
 HPET* hpet;
 
 uint32_t hpetFrequency;
 uint16_t hpetMinimumTick;
+uint8_t hpetNCompartators;
 
 static void hpet_enter_subsystem(){
     cr3 = vmm_get_directory();
@@ -29,6 +31,27 @@ bool detect_hpet(){
     return acpi_table_exists(HPET_ACPI_SIGNATURE);
 }
 
+void hpet_init_timer(uint32_t n, uint64_t frq, bool periodicTimer){
+    if(n > hpetNCompartators){
+        kprint_err("[HPET]: Trying to access non existant Comparator\n");
+    }
+    uint64_t res = hpet_read(HPET_TIMER_CONFIGURATION_AND_CAPABILITY_REG(n));
+    BIT_SET(res, 2);
+    if(!BIT_IS_SET(res, 4) && periodicTimer){
+        kprint_err("[HPET]: Selected timer does not support periodic mode\n");
+        return;
+    }
+    if(periodicTimer){
+        BIT_SET(res, 3);
+        BIT_SET(res, 6);
+    }
+
+    hpet_write(HPET_TIMER_CONFIGURATION_AND_CAPABILITY_REG(n), res);
+
+    hpet_write(HPET_TIMER_COMPARATOR_VALUE_REG(n), hpet_read(HPET_MAIN_COUNTER_VAL) + frq);
+    if(periodicTimer) hpet_write(HPET_TIMER_COMPARATOR_VALUE_REG(n), frq);
+}
+
 bool init_hpet(uint64_t frq){
     void* tab = find_table(HPET_ACPI_SIGNATURE);
 
@@ -41,9 +64,15 @@ bool init_hpet(uint64_t frq){
     uint64_t res;
 
     res = hpet_read(HPET_GENERAL_CAPABILITIES_REG);
+    if((res & 0xFF) == 0){
+        return false; // Non existant HPET revision
+    }
+
     if(!BIT_IS_SET(res, 15)){ // Check if supports legacy routing
         return false;
     }
+
+    hpetNCompartators = ((res >> 8) & 0xF) + 1; // it's one less than it is
 
     res = hpet_read(HPET_GENERAL_CONFIGURATION_REG);
     BIT_SET(res, 1); // Set Legacy Replacement routing
@@ -55,21 +84,14 @@ bool init_hpet(uint64_t frq){
     hpetMinimumTick = hpet->minimum_tick;
 
     // Set main counter to 0
-    //hpet_write(HPET_MAIN_COUNTER_VAL, 0);
+    hpet_write(HPET_MAIN_COUNTER_VAL, 0);
 
     // Initialize Comparators / Timers
-    res = hpet_read(HPET_TIMER_CONFIGURATION_AND_CAPABILITY_REG(0));
-    BIT_SET(res, 2);
-    BIT_SET(res, 3);
-    BIT_SET(res, 6);
-    hpet_write(HPET_TIMER_CONFIGURATION_AND_CAPABILITY_REG(0), res);
-
-    hpet_write(HPET_TIMER_COMPARATOR_VALUE_REG(0), hpet_read(HPET_MAIN_COUNTER_VAL) + frq);
-    hpet_write(HPET_TIMER_COMPARATOR_VALUE_REG(0), frq);
+    hpet_init_timer(0, frq, true);
 
 
     res = hpet_read(HPET_GENERAL_CONFIGURATION_REG);
-    BIT_SET(res, 0);
+    BIT_SET(res, 0); // Enable Interrupts
     hpet_write(HPET_GENERAL_CONFIGURATION_REG, res);
 
     hpet_leave_subsystem();
