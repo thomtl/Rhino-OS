@@ -43,25 +43,30 @@ static void kbd_irq(registers_t *regs){
     shiftPressed = !shiftPressed;
     return;
   }
-  if(scancode > SC_MAX) return;
-  if(scancode == ENTER){
-    kprint("\n");
-    append(stdin, '\n');
-    stdinIndex++;
-  } else if (scancode == BACKSPACE){
-    //backspace(stdin);
-    //stdinIndex--;
-    //readIndex--;
-    kprint_backspace();
-    append(stdin, '\b');
-    stdinIndex++;
+  if(scancode & 0x80){
+    BIT_CLEAR(scancode, 7);
+    if(scancode == LSHIFT){
+      shiftPressed = !shiftPressed;
+    }
   } else {
-    char ascii = sc_ascii[(int)scancode];
-    if(shiftPressed) ascii -= 32;
-    append(stdin, ascii);
-    char str[2] = {stdin[stdinIndex], '\0'};
-    stdinIndex++;
-    kprint(str);
+    if(scancode == LSHIFT){
+      shiftPressed = !shiftPressed;
+    } else if(scancode == ENTER){
+      kprint("\n");
+      append(stdin, '\n');
+      stdinIndex++;
+    } else if (scancode == BACKSPACE){
+      kprint_backspace();
+      append(stdin, '\b');
+      stdinIndex++;
+    } else {
+      char ascii = sc_ascii[(int)scancode];
+      if(shiftPressed) ascii -= 32;
+      append(stdin, ascii);
+      char str[2] = {stdin[stdinIndex], '\0'};
+      stdinIndex++;
+      kprint(str);
+    }
   }
   UNUSED(regs);
 }
