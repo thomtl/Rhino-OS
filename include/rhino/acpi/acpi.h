@@ -5,10 +5,13 @@
 #include <rhino/arch/x86/cpuid.h>
 #include <rhino/arch/x86/drivers/screen.h>
 #include <rhino/arch/x86/bios.h>
+#include <rhino/arch/x86/io.h>
 
 #define ACPI_RSDT_SIG "RSD PTR "
+bool detectACPI();
 void init_acpi();
 uint32_t acpi_get_fadt_boot_arch_flags();
 uint32_t acpi_get_fadt_version();
 bool acpi_table_exists(char* signature);
 void* find_table(char* signature);
+bool acpi_reboot();

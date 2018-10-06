@@ -30,7 +30,7 @@ static void acpi_leave_subsystem(){
     vmm_switch_pdirectory(cr3);
 }
 
-static bool detectACPI(){
+bool detectACPI(){
     uint32_t eax, ecx, edx;
     cpuid(1, &eax, &ecx, &edx);
     if(!BIT_IS_SET(edx, 22)){
@@ -192,9 +192,6 @@ void init_acpi(){
         return;
     }
 
-    
-
-
     acpi_leave_subsystem();
     return;
 }
@@ -226,4 +223,23 @@ void* find_table(char* signature){
     void* tab = find_table_int(signature);
     acpi_leave_subsystem();
     return tab;
+}
+
+bool acpi_reboot(){
+    acpi_enter_subsystem();
+    if(!BIT_IS_SET(fadt->Flags, 10)){
+        acpi_leave_subsystem();
+        return false;
+    }
+    GenericAddressStructure resetReg = fadt->ResetReg;
+    if(resetReg.AddressSpace == PHI_ACPI_ADDRESS_SPACE_SYSTEM_IO){
+        outb(resetReg.Address, fadt->ResetValue);
+    } else if(resetReg.AddressSpace == PHI_ACPI_ADDRESS_SPACE_SYSTEM_MEM){
+        vmm_map_page((void*)(uint32_t)resetReg.Address, (void*)(uint32_t)resetReg.Address, 0);
+        uint32_t f = (uint32_t)resetReg.Address;
+        volatile uint8_t* p = (uint8_t*)((uint32_t*)f);
+        *p = fadt->ResetValue;
+    }
+    acpi_leave_subsystem();
+    PANIC_M("[ACPI]: REBOOT FAILED\n");
 }
