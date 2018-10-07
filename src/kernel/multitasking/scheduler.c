@@ -1,20 +1,26 @@
 #include <rhino/multitasking/scheduler.h>
 #include <rhino/arch/x86/drivers/screen.h>
-uint32_t seconds_passed = 0;
-bool scheduling_enabled = false;
 
+bool scheduling_enabled = false;
 
 /**
    @brief Called from the PIT interrupt it yields away into the next task if about 1 second has passed.
    @param args List of args.  args[0] is the current tick count.
  */
-void schedule(uint32_t tick, registers_t* regs){
-  seconds_passed = TICK_TO_SECONDS(tick);
+void schedule(registers_t* regs){
   if(scheduling_enabled){
-    if(seconds_passed % TASK_TIME_SLICE == 0){
-      yield(regs);
-      seconds_passed = 0;
+    task_t *last = get_running_task();
+    task_t *tasks = get_task_array();
+    // dirty overflow trick
+    uint8_t i = get_current_pid() + 1;
+    while(1){
+      if(tasks[i].used == true && tasks[i].blocked == false){
+        set_running_task(&tasks[i]);
+        break;
+      }
+      i++;
     }
+    switch_context(last, get_running_task(), regs);
   }
 }
 

@@ -7,29 +7,6 @@
 static task_t *runningTask;
 task_t tasks[MAX_TASKS];
 task_t* taskArray = tasks;
-/**
-   @brief Compares 2 tasks and returns true if they are thesame and returns false if they aren't.
-   @param args List of args.  args[0] is the first task.  args[1] is the second task.
-   @return returns a bool if the comparables are the same it will return true, if they aren't it will return false.
- */
-static bool compareTasks(task_t a, task_t b){
-  if(a.pid.pid != b.pid.pid) return false;
-  if(a.pid.user != b.pid.user) return false;
-  if(a.pid.flags != b.pid.flags) return false;
-  if(a.pid.path != b.pid.path) return false;
-  if(a.regs.eax != b.regs.eax) return false;
-  if(a.regs.ebx != b.regs.ebx) return false;
-  if(a.regs.ecx != b.regs.ecx) return false;
-  if(a.regs.edx != b.regs.edx) return false;
-  if(a.regs.esi != b.regs.esi) return false;
-  if(a.regs.edi != b.regs.edi) return false;
-  if(a.regs.esp != b.regs.esp) return false;
-  if(a.regs.ebp != b.regs.ebp) return false;
-  if(a.regs.eip != b.regs.eip) return false;
-  if(a.regs.eflags != b.regs.eflags) return false;
-  if(a.regs.cr3 != b.regs.cr3) return false;
-  return true;
-}
 
 /**
    @brief Searches the tasks array for the last filles element.
@@ -38,20 +15,6 @@ static bool compareTasks(task_t a, task_t b){
 static uint32_t getFinalElement(){
   for(uint32_t i = 0; i < MAX_TASKS; i++){
     if(tasks[i].used == false) return i;
-  }
-  return 0;
-}
-
-/**
-   @brief Takes in a task and returns the index of it.
-   @param args List of args.  args[0] is the task.
-   @return returns the index of the task.
- */
-static uint32_t getIndexForTask(task_t task){
-  for(uint32_t i = 0; i < MAX_TASKS; i++){
-    if(compareTasks(tasks[i], task)){
-      return i;
-    }
   }
   return 0;
 }
@@ -129,10 +92,7 @@ void kill(uint32_t pid){
 
 void kill_kern(){
   task_t* task = task_for_pid(0);
-  /*for(uint32_t i = task->res.frameIndex; i > 0; i--) pmm_free_block(task->res.frames[i]);
-  task->res.frameIndex = 0;*/
   task->blocked = true;
-
 }
 
 void switch_context(task_t *old, task_t *new, registers_t *regs){
@@ -151,7 +111,6 @@ void switch_context(task_t *old, task_t *new, registers_t *regs){
   old->regs.ds = regs->ds;
   asm volatile("movl %%cr3, %%eax; movl %%eax, %0;":"=m"(old->regs.cr3)::"%eax");
 
-
   regs->eax = new->regs.eax;
   regs->ebx = new->regs.ebx;
   regs->ecx = new->regs.ecx;
@@ -166,28 +125,8 @@ void switch_context(task_t *old, task_t *new, registers_t *regs){
   regs->ss = new->regs.ss;
   regs->cs = new->regs.cs;
   regs->ds = new->regs.ds;
-
   asm("mov %0, %%cr3":: "r"(new->regs.cr3));
-}
-
-
-/**
-   @brief yield away from the current task into the next.
- */
-void yield(registers_t* regs){
-  task_t *last = runningTask;
-
-  // dirty overflow trick
-  uint8_t i = getIndexForTask(*runningTask) + 1;
-  while(1){
-    if(tasks[i].used == true && tasks[i].blocked == false){
-      runningTask = &tasks[i];
-      break;
-    }
-    i++;
-  }
-  //switchTask(&(last->regs), &(runningTask->regs));
-  switch_context(last, runningTask, regs);
+  
 }
 
 
@@ -263,4 +202,12 @@ void task_set_argc(pid_t pid, uint32_t argc){
 
 uint32_t task_get_argc(pid_t pid){
   return task_for_pid(pid)->argc;
+}
+
+task_t* get_task_array(){
+  return taskArray;
+}
+
+void set_running_task(task_t* task){
+  runningTask = task;
 }
