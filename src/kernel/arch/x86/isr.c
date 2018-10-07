@@ -8,6 +8,8 @@
 #include <rhino/user/syscall.h>
 isr_t interrupt_handlers[256];
 
+void page_fault_handler(registers_t* regs);
+
 void isr_install() {
     set_idt_gate(0, (uint32_t)isr0, KERNEL_CS, 0);
     set_idt_gate(1, (uint32_t)isr1, KERNEL_CS, 0);
@@ -71,6 +73,8 @@ void isr_install() {
     set_idt_gate(47, (uint32_t)irq15, KERNEL_CS, 0);
     set_idt_gate(128, (uint32_t)isr128, KERNEL_CS, 3);
     set_idt(); // Load with ASM
+
+    register_interrupt_handler(14, page_fault_handler);
 }
 
 char *exception_messages[] = {
@@ -157,4 +161,17 @@ void enable_nmi(){
 
 void disable_nmi(){
   outb(0x70, inb(0x70) | 0x80);
+}
+
+void page_fault_handler(registers_t* regs){
+  uint32_t cr2;
+  asm volatile("movl %%cr2, %%eax; movl %%eax, %0;":"=m"(cr2)::"%eax");
+  set_color(VGA_COLOR_WHITE, VGA_COLOR_LIGHT_RED);
+  kprint("PAGE FAULT ON LINEAR ADDR: ");
+  char buf[12] = "";
+  hex_to_ascii(cr2, buf);
+  kprint(buf);
+  kprint("\n");
+  while(1);
+  UNUSED(regs);
 }

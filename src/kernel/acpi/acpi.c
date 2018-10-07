@@ -9,24 +9,13 @@ pdirectory* cr3;
 pdirectory* subsystemDir;
 extern pdirectory* kernel_directory;
 bool version2;
-static inline uint32_t getCR3(){
-    int a;
-    asm volatile("movl %%cr3, %%eax; movl %%eax, %0;":"=m"(a)::"%eax");
-    return a;
-}
-
-/*static inline void setCR3(uint32_t cr3){
-    asm("mov %0, %%cr3":: "r"(cr3 - KERNEL_VBASE));
-}*/
 
 static void acpi_enter_subsystem(){
     cr3 = vmm_get_directory();
-    ///setCR3((uint32_t)subsystemDir);
     vmm_switch_pdirectory(subsystemDir);
 }
 
 static void acpi_leave_subsystem(){
-    //setCR3(cr3);
     vmm_switch_pdirectory(cr3);
 }
 
@@ -34,7 +23,7 @@ bool detectACPI(){
     uint32_t eax, ecx, edx;
     cpuid(1, &eax, &ecx, &edx);
     if(!BIT_IS_SET(edx, 22)){
-        if(BIT_IS_SET(ecx, 31)){ // For QEMU bit 31 is officialy reserved as 0 but QEMU sets it
+        if(BIT_IS_SET(ecx, 31)){ // 31 is officialy reserved as 0 but QEMU sets it
             return true;
         } else {
             return false;
