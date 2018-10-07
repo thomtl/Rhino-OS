@@ -30,6 +30,7 @@
 #include <rhino/arch/x86/drivers/screen.h>
 #include <rhino/arch/x86/drivers/keyboard.h>
 #include <rhino/arch/x86/drivers/fdc.h>
+#include <rhino/arch/x86/drivers/pcspkr.h>
 
 #include <rhino/kernel.h>
 #include <rhino/panic.h>
@@ -185,6 +186,7 @@ void user_input(char *input){
     #endif
     kprint("-------------------------------\n");
     kprint("$");
+    beep(1);
     return;
   }
   if(strcmp(input, "clear") == 0){
