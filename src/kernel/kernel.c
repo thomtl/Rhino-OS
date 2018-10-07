@@ -142,7 +142,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   #ifndef DEBUG
   clear_screen();
   enable_scheduling();
-  init("init.prg");
+  init("init");
   return;
   #endif
   
@@ -305,7 +305,7 @@ void user_input(char *input){
   }
   if(strcmp(input, "reboot") == 0) reboot();
   if(strcmp(input, "run") == 0){
-    init("init.prg");
+    init("init");
     kprint("\n$");
     return;
   }
