@@ -30,7 +30,6 @@ void init_timer(){
     pit:
     init_pit(100);
   }
-
 }
 
 uint32_t get_tick(){

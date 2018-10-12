@@ -1,6 +1,7 @@
 #include <rhino/multitasking/task.h>
 #include <rhino/arch/x86/drivers/screen.h>
 #include <rhino/arch/x86/drivers/fpu.h>
+#include <rhino/arch/x86/timer.h>
 #include <rhino/arch/x86/tss.h>
 #include <libk/string.h>
 #include <rhino/mm/hmm.h>
@@ -38,7 +39,7 @@ static task_t* getTaskForPid(uint32_t pid){
 void initTasking(){
   for(uint32_t i = 0; i < MAX_TASKS; i++){
     tasks[i].used = false;
-    tasks[i].blocked = false;
+    tasks[i].state = TASK_ACTIVE;
   }
 
 
@@ -92,8 +93,7 @@ void kill(uint32_t pid){
 }
 
 void kill_kern(){
-  task_t* task = task_for_pid(0);
-  task->blocked = true;
+  block_task(TASK_BLOCKED);
 }
 
 void switch_context(task_t *old, task_t *new, registers_t *regs){
@@ -212,4 +212,12 @@ task_t* get_task_array(){
 
 void set_running_task(task_t* task){
   runningTask = task;
+}
+
+void block_task(uint32_t reason){
+  get_running_task()->state = reason;
+}
+
+void unblock_task(){
+  get_running_task()->state = TASK_ACTIVE;
 }

@@ -28,13 +28,9 @@ void main(void)
   syscall(1, 3, 9, 0);
   printf("Starting TSH v0.0.1, Thomas Woertman 2018\n");
   syscall(1, 3, 4, 0);
-  char buf[25] = "";
-  float a = ceil(sin(90));
-  int_to_ascii((int)a, buf);
-  printf(buf);
   printf("            All Rights Reserved\n");
   syscall(1, 3, 15, 0);
-
+  char buf[25] = "";
   int_to_ascii(syscall(0,7,0,0), buf);
   printf("PID: ");
   printf(buf);

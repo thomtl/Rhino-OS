@@ -7,6 +7,9 @@
 #define MAX_TASKS 256
 #define TASK_MAX_FRAMES 64
 
+#define TASK_ACTIVE 0x0
+#define TASK_BLOCKED 0x1
+
 typedef struct {
   uint32_t eax, ebx, ecx, edx, esi, edi, esp, ebp, eip, eflags, ss, cs, ds;
   uintptr_t cr3;
@@ -14,12 +17,15 @@ typedef struct {
   uint8_t fpu_regs[512];
 
 } task_registers_t;
+
 typedef uint8_t pid_t;
+
 typedef struct {
   pid_t pid;
   uint32_t user;
   uint32_t flags;
   char *path;
+  uint32_t time_running;
 } process_data_t;
 
 typedef struct {
@@ -30,7 +36,7 @@ typedef struct {
 typedef struct Task {
   task_registers_t regs;
   bool used;
-  bool blocked;
+  uint32_t state;
   uint32_t argv;
   uint32_t argc;
   process_data_t pid;
@@ -50,7 +56,6 @@ void kill(uint32_t pid);
 void kill_kern();
 void waitpid(uint32_t pid);
 
-
 void start_task_atomic();
 void end_task_atomic();
 void task_register_frame(task_t* task, void* frame);
@@ -64,3 +69,6 @@ uint32_t task_get_argc(pid_t pid);
 task_t* get_task_array();
 
 void switch_context(task_t *old, task_t *new, registers_t* r);
+
+void block_task(uint32_t reason);
+void unblock_task();
