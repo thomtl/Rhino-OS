@@ -10,6 +10,9 @@
 typedef struct {
   uint32_t eax, ebx, ecx, edx, esi, edi, esp, ebp, eip, eflags, ss, cs, ds;
   uintptr_t cr3;
+
+  uint8_t fpu_regs[512];
+
 } task_registers_t;
 typedef uint8_t pid_t;
 typedef struct {

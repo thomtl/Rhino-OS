@@ -1,5 +1,6 @@
 #include <rhino/multitasking/task.h>
 #include <rhino/arch/x86/drivers/screen.h>
+#include <rhino/arch/x86/drivers/fpu.h>
 #include <rhino/arch/x86/tss.h>
 #include <libk/string.h>
 #include <rhino/mm/hmm.h>
@@ -110,6 +111,7 @@ void switch_context(task_t *old, task_t *new, registers_t *regs){
   old->regs.cs = regs->cs;
   old->regs.ds = regs->ds;
   asm volatile("movl %%cr3, %%eax; movl %%eax, %0;":"=m"(old->regs.cr3)::"%eax");
+  save_fpu_context(old);
 
   regs->eax = new->regs.eax;
   regs->ebx = new->regs.ebx;
@@ -126,7 +128,7 @@ void switch_context(task_t *old, task_t *new, registers_t *regs){
   regs->cs = new->regs.cs;
   regs->ds = new->regs.ds;
   asm("mov %0, %%cr3":: "r"(new->regs.cr3));
-  
+  restore_fpu_context(new);
 }
 
 

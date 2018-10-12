@@ -21,4 +21,6 @@ size_t strcspn(const char *s1, const char *s2);
 size_t strspn(const char *s1, const char *s2);
 
 char *strtok(char* str, const char* restrict delim);
+
+void* memcpy(void* restrict dstptr, const void* restrict srcptr, size_t size);
 #endif

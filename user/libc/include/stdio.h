@@ -3,6 +3,7 @@
 #include "cdefs.h"
 #include <stdint.h>
 #include <stddef.h>
+
 uint8_t putchar(uint8_t c);
 void printf(char* msg);
 char getchar();

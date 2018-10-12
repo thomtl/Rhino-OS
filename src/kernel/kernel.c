@@ -23,7 +23,7 @@
 #include <rhino/arch/x86/isr.h>
 #include <rhino/arch/x86/pci.h>
 #include <rhino/arch/x86/gdt.h>
-#include <rhino/arch/x86/msr.h>
+#include <rhino/arch/x86/cpuid.h>
 #include <rhino/arch/x86/io.h>
 #include <rhino/arch/x86/cmos.h>
 #include <rhino/arch/x86/timer.h>
@@ -31,6 +31,7 @@
 #include <rhino/arch/x86/drivers/keyboard.h>
 #include <rhino/arch/x86/drivers/fdc.h>
 #include <rhino/arch/x86/drivers/pcspkr.h>
+#include <rhino/arch/x86/drivers/fpu.h>
 
 #include <rhino/kernel.h>
 #include <rhino/panic.h>
@@ -115,6 +116,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   pci_check_all_buses();
   init_acpi();
   irq_install();
+  init_fpu();
 
   kprint("Enabling Multitasking\n");
   initTasking();
@@ -307,6 +309,11 @@ void user_input(char *input){
   if(strcmp(input, "run") == 0){
     init("init");
     kprint("\n$");
+    return;
+  }
+  if(strcmp(input, "cpuid") == 0){
+    id_cpu();
+    kprint("$");
     return;
   }
   if(strcmp(input, "") == 0){
