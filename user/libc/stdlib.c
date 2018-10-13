@@ -20,7 +20,7 @@ char* dtoa(double x, char* p){
         n = (uint64_t)x;
         i++;
     }
-    *(p+1) = '.';
+    *(p+i) = '.';
     x *= 10;
     n = (uint64_t)x;
     x = x - n;

@@ -3,23 +3,31 @@ extern double sqrt_int(double x);
 double sqrt(double __x){
     return sqrt_int(__x);
 }
-extern float sin_int(float x);
-float sin(float __x){
-    return sin_int(__x);
+extern double sin_int(double x);
+extern double fdiv_int(double x, double y);
+extern double fmul_int(double x, double y);
+double sin(double __x){
+    return sin_int(fmul_int(fdiv_int(__x, 180), pi));//sin_int(fdiv_int(fmul_int(__x, pi), 180.0));
 }
-extern float cos_int(float x);
-float cos(float __x){
-    return cos_int(__x);
+extern double cos_int(double x);
+double cos(double __x){
+    return cos_int(fmul_int(fdiv_int(__x, 180), pi));;
 }
-extern float fabs_int(float x);
-float fabs(float __x){
+extern double fabs_int(double x);
+double fabs(double __x){
     return fabs_int(__x);
 }
-extern float fmul_int(float x, float y);
-float exp(float __x){
-    float result = e;
-    for(uint32_t i = 0; i < __x; i++) result = fmul_int(result, e);
-    return result;
+
+double exp(double __x){
+    return pow(e, __x);
+}
+
+double pow(double __x, double __y){
+    double res = __x;
+    for(uint32_t i = 0; i < (__y - 1); i++){
+        res = fmul_int(res, __x);
+    }
+    return res;
 }
 
 double ceil(double __x){
