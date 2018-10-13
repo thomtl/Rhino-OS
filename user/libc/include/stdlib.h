@@ -9,6 +9,7 @@ void* malloc(size_t sz);
 void free(void* addr);
 
 void exit();
+char* dtoa(double x, char* p);
 
 
 #endif

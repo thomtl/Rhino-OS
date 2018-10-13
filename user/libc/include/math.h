@@ -4,7 +4,12 @@
 #include <stdint.h>
 #include "string.h"
 
-float sqrt(float __x);
+#define e 2.718281828459
+#define pi 3.141592653589793
+double sqrt(double __x);
+float exp(float __x);
 float sin(float __x);
-float ceil(float __x);
+float cos(float __x);
+float fabs(float __x);
+double ceil(double __x);
 #endif
