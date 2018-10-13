@@ -7,8 +7,9 @@ void ___e();
 void init_print(char* str);
 void init_printerr(char* str);
 
-void main(void){
-  ___s();
+void main(int argc, char* argv[]){
+  (void)(argc);
+  (void)(argv);
   syscall(1, 2, 0, 0);
   init_print("Rhino OS init v0\n");;
   if(syscall(0,7,0,0) != 1){
@@ -31,10 +32,7 @@ void main(void){
   }
   syscall(0,3,0,0);
   syscall(0,8,pid,0);
-  
   while(1);
-
-  ___e();
 }
 
 
@@ -57,15 +55,4 @@ void init_printerr(char* str){
   printf("]: ");
   syscall(1, 3, 4, 0);
   printf(str);
-}
-
-void ___s(){
-  syscall(0,3,0,0);
-  syscall(1, 3, 15, 0);
-}
-
-void ___e(){
-  uint32_t j = syscall(0,7,0,0);
-  syscall(0,14,j,0);
-  while(1);
 }

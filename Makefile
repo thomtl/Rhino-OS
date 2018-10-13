@@ -19,6 +19,7 @@ all: run
 
 initrd:
 	rm -f initrd.img
+	./user/makeall.sh
 	./utils/initrdgen/genrd ./utils/initrdgen/test.txt test.txt ./utils/initrdgen/test1.txt test1.txt ./user/example/example example ./user/TSH/tsh tsh ./user/dir/dir dir ./user/read/read read ./user/init/init init
 
 rhino.iso: kernel.bin initrd

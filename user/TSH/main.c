@@ -22,8 +22,10 @@ int t_nothing(char **f);
 int t_execute(char **args);
 void t_loop(void);
 
-void main(void)
+void main(int argc, char* argv[])
 {
+  (void)(argc);
+  (void)(argv);
   clear_screen();
   syscall(1, 3, 9, 0);
   printf("Starting TSH v0.0.1, Thomas Woertman 2018\n");

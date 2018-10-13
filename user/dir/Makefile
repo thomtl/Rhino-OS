@@ -1,9 +1,7 @@
-C_SOURCES = $(wildcard ./*.c ../libc/*.c)
-HEADERS = $(wildcard ./*.h ../libc/*.h)
+C_SOURCES = $(wildcard ./*.c)
+HEADERS = $(wildcard ./*.h)
 
-ASM_SOURCES = $(wildcard ./*.asm ../libc/*.asm)
-
-
+ASM_SOURCES = $(wildcard ./*.asm)
 
 C_OBJ = ${C_SOURCES:.c=.o}
 ASM_OBJ = ${ASM_SOURCES:.asm=.o}
@@ -15,12 +13,12 @@ AS = yasm
 CFLAGS = -g -m32 -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs \
 					-Wall -Wextra -Werror -std=gnu99 -I../libc/include
 
-dir: ${C_OBJ} ${ASM_OBJ}
-	${CC} -T link.ld -o $@ -ffreestanding -nostdlib $^ -lgcc
+dir: ${ASM_OBJ} ${C_OBJ}
+	${CC} -T link.ld -o $@ -ffreestanding -nostdlib ../libc/crt0.o ../libc/libc.o $^ -lgcc
 
 
 clean:
-	rm -f tsh
+	rm -f dir
 	rm -f *.o
 
 %.o: %.c ${HEADERS}
