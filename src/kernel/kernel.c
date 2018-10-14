@@ -32,6 +32,8 @@
 #include <rhino/arch/x86/drivers/fdc.h>
 #include <rhino/arch/x86/drivers/pcspkr.h>
 #include <rhino/arch/x86/drivers/fpu.h>
+#include <rhino/arch/x86/drivers/sse.h>
+#include <rhino/arch/x86/drivers/avx.h>
 
 #include <rhino/kernel.h>
 #include <rhino/panic.h>
@@ -117,6 +119,8 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   init_acpi();
   irq_install();
   init_fpu();
+  init_sse();
+  init_avx();
 
   kprint("Enabling Multitasking\n");
   initTasking();
