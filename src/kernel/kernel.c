@@ -177,11 +177,12 @@ void user_input(char *input){
   }
   if(strcmp(input, "help") == 0){
     kprint("-------------------------------\n");
-    kprint("run: run shell.prg to start the os.");
+    kprint("run: run shell.prg to start the os.\n");
     kprint("exit: Exit the Kernel.\n");
     kprint("help: To show this Page.\n");
     kprint("clear: To clear the screen.\n");
     kprint("reboot: To reboot the machine.\n");
+    kprint("cpuid: Print CPUID info.\n");
     #ifdef DEBUG
     kprint("pid: To show the current PID.\n");
     kprint("panic: Panic the kernel.\n");
