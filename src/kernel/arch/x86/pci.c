@@ -83,6 +83,34 @@ void pci_print_device_info(uint8_t bus, uint8_t device, uint8_t function){
   kprint(":");
   hex_to_ascii(function, buf);
   kprint(buf);
+
+  switch(pci_get_class(bus, device, function)){
+      case PCI_UNCLASSIFIED:
+        kprint(" Unclassified");
+        break;
+      case PCI_STORAGE_CONTROLLER:
+        kprint(" Storage Controller");
+        break;
+      case PCI_NETWORK_CONTROLLER:
+        kprint(" Network Controller");
+        break;
+      case PCI_DISPLAY_CONTROLLER:
+        kprint(" Display Controller");
+        break;
+      case PCI_MULTIMEDIA_CONTROLLER:
+        kprint(" Multimedia Controller");
+        break;
+      case PCI_MEMORY_CONTROLLER:
+        kprint(" Memory Controller");
+        break;
+      case PCI_BRIDGE_CONTROLLER:
+        kprint(" Bridge Device");
+        break;
+      default:
+        kprint("Unkown Device");
+        break;
+  }
+
   kprint("\n");
 }
 

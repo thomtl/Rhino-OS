@@ -28,6 +28,14 @@
 #define PCI_BAR_4 0x20
 #define PCI_BAR_5 0x24
 
+#define PCI_UNCLASSIFIED 0x0
+#define PCI_STORAGE_CONTROLLER 0x1
+#define PCI_NETWORK_CONTROLLER 0x2
+#define PCI_DISPLAY_CONTROLLER 0x3
+#define PCI_MULTIMEDIA_CONTROLLER 0x4
+#define PCI_MEMORY_CONTROLLER 0x5
+#define PCI_BRIDGE_CONTROLLER 0x6
+
 uint16_t pci_config_read_word(uint8_t bus, uint8_t slot, uint8_t function, uint8_t offset);
 void pci_check_function(uint8_t bus, uint8_t device, uint8_t function);
 void pci_check_device(uint8_t bus, uint8_t device);
