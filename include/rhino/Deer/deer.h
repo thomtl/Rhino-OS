@@ -8,7 +8,7 @@
 
 #define deer_clear_screen() (deer_clear_screen_col(0, 0, 0))
 
-#define SCREEN_WIDTH 640
+#define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
 
 void deer_clear_screen_col(uint8_t r, uint8_t g, uint8_t b);

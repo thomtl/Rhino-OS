@@ -209,25 +209,8 @@ void user_input(char *input){
     struct dirent *node = 0;
     while ( (node = readdir_fs(fs_root, i)) != 0)
     {
-      kprint("Found file ");
       kprint(node->name);
-      fs_node_t *fsnode = finddir_fs(fs_root, node->name);
-
-      if ((fsnode->flags&0x7) == FS_DIRECTORY){
-        kprint("\n(directory)\n");
-      } else {
-        kprint("\n    contents: \"");
-        uint8_t buf[256];
-        int sz = read_fs(fsnode, 0, 256, buf);
-        int j;
-        for (j = 0; j < sz; j++){
-          char hgh[2] = {(buf[j]), '\0'};
-          kprint(hgh);
-        }
-
-
-        kprint("\"\n");
-      }
+      kprint("\n");
       i++;
     }
     kprint("$");
@@ -242,6 +225,7 @@ void user_input(char *input){
   }
   if(strcmp(input, "deer") == 0){
     deer_start();
+    kprint("$");
     return;
   }
   if(strcmp(input, "mmap") == 0){

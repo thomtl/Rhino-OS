@@ -42,3 +42,4 @@ void kprint(char *message);
 void kprint_err(char *message);
 void kprint_warn(char *message);
 void kprint_backspace();
+void activate_deer();

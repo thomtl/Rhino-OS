@@ -134,37 +134,44 @@ char font[128][8] = {
 uint32_t xpos = 0;
 uint32_t ypos = 0;
 
-void deer_printchar(char c, char fg, char bg, uint32_t x, uint32_t y) {
+void deer_printchar(char c, char r, char g, char b, uint32_t x, uint32_t y) {
   	char * cc = font[(int)c];
 	for (uint8_t i = 0; i < 8; ++i) {
 		for (uint8_t j = 0; j < 8; ++j) {
 			if (cc[i] & (1 << (7-j))) {
-				draw_pixel(x+j,y+i,255, fg, 255);
+				draw_pixel(x+j,y+i, r, g, b);
 			} else {
-				draw_pixel(x+j,y+i,0, bg, 0);
+				draw_pixel(x+j,y+i, 0, 0, 0);
 			}
 		}
 	}
 }
 
-void deer_putchar(char c, char fg, char bg){
+void deer_putchar(char c, char r, char g, char b){
 	switch(c){
 		case '\n':
 			xpos = 0;
 			ypos += 8;
-			if(ypos >= (DEER_TERMINAL_HEIGHT)){
+			if(ypos >= (DEER_TERMINAL_HEIGHT * 8)){
+        deer_clear_screen();
 				xpos = 0;
 				ypos = 0;
 			}
 			return;
+    case 0x08:
+      xpos -= 8;
+      deer_printchar(' ', r, g, b, xpos, ypos);
+      break;
 		default:
-			deer_printchar(c, fg, bg, xpos, ypos);
+			deer_printchar(c, r, g, b, xpos, ypos);
 			xpos += 8;
 			if(xpos >= (DEER_TERMINAL_WIDTH * 8)){
 				ypos += 8;
 				xpos = 0;
 			}
 			if(ypos >= (DEER_TERMINAL_HEIGHT * 8)){
+        // Scroll
+        deer_clear_screen();
 				xpos = 0;
 				ypos = 0;
 			}
@@ -174,6 +181,9 @@ void deer_putchar(char c, char fg, char bg){
 
 void deer_printf(char* msg){
 	while(*msg){
-		deer_putchar(*msg++, 255, 0);
+		deer_putchar(*msg++, 255, 255, 255);
 	}
+}
+void deer_reset_terminal(){
+  xpos = ypos = 0;
 }
