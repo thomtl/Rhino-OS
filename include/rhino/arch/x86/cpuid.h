@@ -68,6 +68,7 @@ enum {
 
 #define CPUID_GET_VENDOR_ID 0x0
 #define CPUID_GET_FEATURES 0x1
+#define CPUID_GET_MAXIMUM_EXTENDED 0x80000000
 
 void cpuid(uint32_t code, uint32_t *a, uint32_t *c, uint32_t *d);
 void id_cpu();

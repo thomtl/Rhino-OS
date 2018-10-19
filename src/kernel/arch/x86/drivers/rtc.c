@@ -1,16 +1,16 @@
-#include <rhino/arch/x86/cmos.h>
-bool cmosExists = false;
-uint8_t read_cmos(uint8_t reg){
+#include <rhino/arch/x86/drivers/rtc.h>
+
+uint8_t read_rtc(uint8_t reg){
     CLI();
-    outb(CMOS_REG_SELECT, (CMOS_NMI_DISABLE_BIT << 7) | reg);
+    outb(CMOS_REG_SELECT, reg);
     uint8_t ret = inb(CMOS_REG_DATA);
     STI();
     return ret;
 }
 
-void write_cmos(uint8_t reg, uint8_t val){
+void write_rtc(uint8_t reg, uint8_t val){
     CLI();
-    outb(CMOS_REG_SELECT, (CMOS_NMI_DISABLE_BIT << 7) | reg);
+    outb(CMOS_REG_SELECT, reg);
     outb(CMOS_REG_DATA, val);
     STI();
 }
@@ -22,7 +22,7 @@ int get_update_in_progress_flag() {
 
 
 
-time_t read_rtc() {
+time_t read_rtc_time() {
       time_t ret;
       unsigned char last_second;
       unsigned char last_minute;
@@ -36,12 +36,12 @@ time_t read_rtc() {
       //       to avoid getting dodgy/inconsistent values due to RTC updates
 
       while (get_update_in_progress_flag());                // Make sure an update isn't in progress
-      ret.second = read_cmos(CMOS_REG_INT_SECONDS);
-      ret.minute = read_cmos(CMOS_REG_INT_MINUTES);
-      ret.hour = read_cmos(CMOS_REG_INT_HOURS);
-      ret.day = read_cmos(CMOS_REG_INT_DAYOFMONTH);
-      ret.month = read_cmos(CMOS_REG_INT_MONTH);
-      ret.year = read_cmos(CMOS_REG_INT_YEAR);
+      ret.second = read_rtc(CMOS_REG_INT_SECONDS);
+      ret.minute = read_rtc(CMOS_REG_INT_MINUTES);
+      ret.hour = read_rtc(CMOS_REG_INT_HOURS);
+      ret.day = read_rtc(CMOS_REG_INT_DAYOFMONTH);
+      ret.month = read_rtc(CMOS_REG_INT_MONTH);
+      ret.year = read_rtc(CMOS_REG_INT_YEAR);
       do {
             last_second = ret.second;
             last_minute = ret.minute;
@@ -51,16 +51,16 @@ time_t read_rtc() {
             last_year = ret.year;
 
             while (get_update_in_progress_flag());           // Make sure an update isn't in progress
-            ret.second = read_cmos(CMOS_REG_INT_SECONDS);
-            ret.minute = read_cmos(CMOS_REG_INT_MINUTES);
-            ret.hour = read_cmos(CMOS_REG_INT_HOURS);
-            ret.day = read_cmos(CMOS_REG_INT_DAYOFMONTH);
-            ret.month = read_cmos(CMOS_REG_INT_MONTH);
-            ret.year = read_cmos(CMOS_REG_INT_YEAR);
+            ret.second = read_rtc(CMOS_REG_INT_SECONDS);
+            ret.minute = read_rtc(CMOS_REG_INT_MINUTES);
+            ret.hour = read_rtc(CMOS_REG_INT_HOURS);
+            ret.day = read_rtc(CMOS_REG_INT_DAYOFMONTH);
+            ret.month = read_rtc(CMOS_REG_INT_MONTH);
+            ret.year = read_rtc(CMOS_REG_INT_YEAR);
       } while( (last_second != ret.second) || (last_minute != ret.minute) || (last_hour != ret.hour) ||
             (last_day != ret.day) || (last_month != ret.month) || (last_year != ret.year));
 
-      registerB = read_cmos(CMOS_REG_INT_STATUS_B);
+      registerB = read_rtc(CMOS_REG_INT_STATUS_B);
 
       // Convert BCD to binary values if necessary
 

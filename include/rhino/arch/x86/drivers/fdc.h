@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#include <rhino/arch/x86/cmos.h>
+#include <rhino/arch/x86/drivers/rtc.h>
 #include <rhino/arch/x86/drivers/screen.h>
 #include <rhino/common.h>
 #include <rhino/arch/x86/isr.h>

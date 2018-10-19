@@ -1,8 +1,7 @@
 #pragma once
 
-#include <stdint.h>
+#include <rhino/common.h>
 #include <libk/string.h>
-#include <rhino/panic.h>
 
 extern void isr0();
 extern void isr1();

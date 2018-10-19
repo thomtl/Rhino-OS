@@ -51,14 +51,27 @@ void init_bga(uint8_t bus, uint8_t device, uint8_t function){
     }*/
 }
 
-void bga_set_video_mode(uint32_t width, uint32_t height, uint32_t bpp, bool useLFB, bool clearVideoMemory){
+uint32_t bga_get_id(){
+    uint32_t ret = 0;
+    ret = BGA_VENDOR_ID;
+    BIT_SET(ret, 16);
+    BIT_SET(ret, 17);
+    BIT_SET(ret, 18);
+    return ret;
+}
+
+void bga_set_video_mode(udi_video_mode_set_t* mode){
     if(bgaActive){
         bga_write(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_DISABLED);
-        bga_write(VBE_DISPI_INDEX_XRES, width);
-        bga_write(VBE_DISPI_INDEX_YRES, height);
-        bga_write(VBE_DISPI_INDEX_BPP, bpp);
-        bga_write(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_ENABLED | (useLFB ? VBE_DISPI_LFB_ENABLED : 0) | (clearVideoMemory ? 0 : VBE_DISPI_NOCLEARMEM));
+        bga_write(VBE_DISPI_INDEX_XRES, mode->width);
+        bga_write(VBE_DISPI_INDEX_YRES, mode->height);
+        bga_write(VBE_DISPI_INDEX_BPP, mode->bpp);
+        bga_write(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_ENABLED | VBE_DISPI_LFB_ENABLED | (mode->clearFramebuffer ? 0 : VBE_DISPI_NOCLEARMEM));
+        mode->success = true;
+        return;
     }
+    mode->success = false;
+    return;
 }
 
 void bga_switch_banks(uint32_t bank){

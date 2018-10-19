@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdint.h>
+#include <rhino/common.h>
 
 typedef struct {
   uint16_t limit_low;

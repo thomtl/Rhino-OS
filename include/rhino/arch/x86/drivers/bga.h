@@ -1,6 +1,7 @@
 #pragma once
 
 #include <rhino/common.h>
+#include <rhino/udi/udi.h>
 #include <rhino/arch/x86/drivers/screen.h>
 #include <rhino/arch/x86/pci.h>
 #include <rhino/mm/vmm.h>
@@ -42,7 +43,8 @@
 #define VBE_DISPI_LFB_PHYSICAL_ADDRESS  0xE0000000
 
 void init_bga(uint8_t bus, uint8_t device, uint8_t function);
-void bga_set_video_mode(uint32_t width, uint32_t height, uint32_t bpp, bool useLFB, bool clearVideoMemory);
+uint32_t bga_get_id();
+void bga_set_video_mode(udi_video_mode_set_t* mode);
 void bga_switch_banks(uint32_t bank);
 bool bga_is_active();
 uint32_t bga_get_lfb();

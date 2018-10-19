@@ -25,15 +25,15 @@
 #include <rhino/arch/x86/gdt.h>
 #include <rhino/arch/x86/cpuid.h>
 #include <rhino/arch/x86/io.h>
-#include <rhino/arch/x86/cmos.h>
+#include <rhino/arch/x86/drivers/rtc.h>
 #include <rhino/arch/x86/timer.h>
 #include <rhino/arch/x86/drivers/screen.h>
 #include <rhino/arch/x86/drivers/keyboard.h>
-#include <rhino/arch/x86/drivers/fdc.h>
 #include <rhino/arch/x86/drivers/pcspkr.h>
 #include <rhino/arch/x86/drivers/fpu.h>
 #include <rhino/arch/x86/drivers/sse.h>
 #include <rhino/arch/x86/drivers/avx.h>
+#include <rhino/arch/x86/drivers/tsc.h>
 
 #include <rhino/kernel.h>
 #include <rhino/panic.h>
@@ -44,8 +44,6 @@
 #include <rhino/user/program.h>
 
 #include <rhino/pwr/power.h>
-
-
 
 extern uint32_t placement_address;
 extern uint32_t _kernel_start;
@@ -77,7 +75,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   #endif
 
   if(magic != MULTIBOOT_BOOTLOADER_MAGIC){
-    PANIC_M(": Kernel was not booted by a multiboot compliant bootloader!\n");
+    PANIC_M("Kernel was not booted by a multiboot compliant bootloader!\n");
     return;
   }
 
@@ -90,13 +88,13 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   }
 
   set_color(VGA_COLOR_LIGHT_BLUE, VGA_COLOR_BLACK);
-  kprint("Starting Rhino 0.3.0, Copyright 2018 Thomas Woertman, The Netherlands\n");
+  kprint("Starting Rhino 0.3.2, Copyright 2018 Thomas Woertman, The Netherlands\n");
   int_to_ascii(ramAmountMB, buf);
   kprint("Detected Memory: ");
   kprint(buf);
   kprint("MB\n");
 
-  kprint("\nEnabling Protected Mode\n");
+  kprint("\nEnabling 386 Protected Mode\n");
   gdt_install();
   isr_install();
 
@@ -112,8 +110,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   init_vmm();
   init_heap();
 
-  kprint("Initializing other drivers\n");
-  init_fdc();
+  kprint("Initializing drivers\n");
   fs_root = initialise_initrd(initrd_location);
   pci_check_all_buses();
   init_acpi();
@@ -122,10 +119,10 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   init_sse();
   init_avx();
 
-  kprint("Enabling Multitasking\n");
+  kprint("Initializing Multitasking\n");
   initTasking();
 
-  time_t date = read_rtc();
+  time_t date = read_rtc_time();
   kprint("Date: ");
   
   int_to_ascii(date.day, buf);
@@ -148,11 +145,13 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   #ifndef DEBUG
   clear_screen();
   enable_scheduling();
+  deer_start();
+  set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
   init("init");
-  return;
+  while(1);
   #endif
   
-  kprint("Rhino Kernel Internal Shell version 0.0.3");
+  kprint("Rhino Kernel Internal Shell version 0.0.4");
   set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
   kprint("\n$");
   enable_scheduling();
@@ -176,8 +175,8 @@ void user_input(char *input){
     return;
   }
   if(strcmp(input, "help") == 0){
-    kprint("-------------------------------\n");
-    kprint("run: run shell.prg to start the os.\n");
+    kprint("----------------------------------------------\n");
+    kprint("run: Initialize the OS.\n");
     kprint("exit: Exit the Kernel.\n");
     kprint("help: To show this Page.\n");
     kprint("clear: To clear the screen.\n");
@@ -188,12 +187,10 @@ void user_input(char *input){
     kprint("panic: Panic the kernel.\n");
     kprint("init: To show the files on the initrd.\n");
     kprint("mmap: Print the sections in the BIOS mmap.\n");
-    kprint("floppy: Read sector 0 of floppy drive 0.\n");
     kprint("deer: Start the deer display manager.\n");
     #endif
-    kprint("-------------------------------\n");
+    kprint("----------------------------------------------\n");
     kprint("$");
-    beep(1);
     return;
   }
   if(strcmp(input, "clear") == 0){
@@ -217,7 +214,7 @@ void user_input(char *input){
     return;
   }
   if(strcmp(input, "pid") == 0){
-    char c[25] = "";
+    char c[4] = "";
     int_to_ascii(get_current_pid(), c);
     kprint(c);
     kprint("\n$");
@@ -271,27 +268,6 @@ void user_input(char *input){
     }
     set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
     kprint("$");
-    return;
-  }
-  if(strcmp(input, "floppy") == 0){
-    uint8_t* s = fdc_read_sector(0);
-    s = (uint8_t*)((uint32_t)s + (uint32_t)KERNEL_VBASE);
-    if(s != 0){
-      int i = 0;
-      for(int c = 0; c < 2; c++){
-        for(int j = 0; j < 128; j++){
-          char buf[25] = "";
-          hex_to_ascii(s[i + j], buf);
-          kprint(buf);
-          kprint(" ");
-        }
-        i+= 128;
-      }
-    }
-    else {
-      kprint("ERROR");
-    }
-    kprint("\n$");
     return;
   }
   if(strcmp(input, "reboot") == 0) reboot();

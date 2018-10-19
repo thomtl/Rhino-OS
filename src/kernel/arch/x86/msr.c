@@ -2,8 +2,8 @@
 
 uint32_t msr_check(){
     uint32_t a, c, d;
-    cpuid(1, &a, &c, &d);
-    return d & CPUID_MSR_FLAG;
+    cpuid(CPUID_GET_FEATURES, &a, &c, &d);
+    return BIT_IS_SET(d, CPUID_FEAT_EDX_MSR);
 }
 
 void msr_read(uint32_t msr, uint32_t *lo, uint32_t *hi){

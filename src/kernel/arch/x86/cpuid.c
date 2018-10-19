@@ -14,7 +14,7 @@ static inline int cpuid_string(int code, uint32_t where[4]) {
 void id_cpu(){
     uint32_t eax, ecx, edx;
     uint32_t buf[4] = {0};
-    cpuid_string(0, buf);
+    cpuid_string(CPUID_GET_VENDOR_ID, buf);
 
     kprint("VendorID: ");
     putchar((buf[1] & 0xFF));
@@ -33,7 +33,7 @@ void id_cpu(){
     putchar(((buf[2] >> 24) & 0xFF));
     putchar('\n');
 
-    cpuid(0x80000000, &eax, &ecx, &edx);
+    cpuid(CPUID_GET_MAXIMUM_EXTENDED, &eax, &ecx, &edx);
     if(eax >= 0x80000004){
         cpuid_string(0x80000002, buf);
         kprint("CPU Model: ");
@@ -121,7 +121,5 @@ void id_cpu(){
     if(BIT_IS_SET(ecx, CPUID_FEAT_ECX_F16C)) kprint("F16C ");
     if(BIT_IS_SET(ecx, CPUID_FEAT_ECX_RDRAND)) kprint("RDRAND ");
     
-    
-
     putchar('\n');
 }

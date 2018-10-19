@@ -9,7 +9,7 @@ uint32_t* dma_frame;
 uint32_t _CurrentDrive = 0;
 
 void display_floppy_drive_info(){
-  uint8_t flop = read_cmos(CMOS_REG_INT_FLOPPY_DATA);
+  uint8_t flop = read_rtc(CMOS_REG_INT_FLOPPY_DATA);
 
   if(BIT_IS_SET(flop, 4) && !BIT_IS_SET(flop, 5) && !BIT_IS_SET(flop, 6) && !BIT_IS_SET(flop, 7)){
     kprint_warn("Master 360 KB 5.25 Drive\n");
@@ -53,10 +53,11 @@ void fdc_wait_irq(){
 }
 
 void init_fdc(){
+  display_floppy_drive_info();
   register_interrupt_handler(FLOPPY_IRQ, fdc_irq);
 
 
-  uint8_t fdc_fdd_byte = read_cmos(CMOS_REG_INT_FLOPPY_DATA);
+  uint8_t fdc_fdd_byte = read_rtc(CMOS_REG_INT_FLOPPY_DATA);
 
   if(BIT_IS_SET(fdc_fdd_byte, 4) && !BIT_IS_SET(fdc_fdd_byte, 5) && !BIT_IS_SET(fdc_fdd_byte, 6) && !BIT_IS_SET(fdc_fdd_byte, 7)){
     master.present = true;

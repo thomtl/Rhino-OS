@@ -17,7 +17,12 @@ void deer_clear_screen_col(uint8_t r, uint8_t g, uint8_t b){
 
 void deer_start(){
     if(bga_is_active()){
-        bga_set_video_mode(SCREEN_WIDTH, SCREEN_HEIGHT, 24, true, true);
+        udi_video_mode_set_t mode;
+        mode.width = SCREEN_WIDTH;
+        mode.height = SCREEN_HEIGHT;
+        mode.bpp = 24;
+        mode.clearFramebuffer = true;
+        bga_set_video_mode(&mode);
         framebuffer = bga_get_lfb();
     } else {
         PANIC_M("[DEER] No BGA device found");

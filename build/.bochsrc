@@ -1,7 +1,7 @@
 ata0-master: type=cdrom, path=rhino.iso, status=inserted
 floppya: 1_44="flp.flp", status=inserted
 clock: sync=realtime
-cpu: ips=1000000, reset_on_triple_fault=0
+cpu: model=corei7_haswell_4770, ips=1000000, reset_on_triple_fault=0
 megs: 512
 log: build/log/bochs.out
 boot: cdrom

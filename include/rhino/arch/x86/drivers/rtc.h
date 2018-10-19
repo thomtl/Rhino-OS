@@ -30,6 +30,6 @@ typedef struct {
 } time_t;
 
 
-uint8_t read_cmos(uint8_t reg);
-void write_cmos(uint8_t reg, uint8_t val);
-time_t read_rtc();
+uint8_t read_rtc(uint8_t reg);
+void write_rtc(uint8_t reg, uint8_t val);
+time_t read_rtc_time();
