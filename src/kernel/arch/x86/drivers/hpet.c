@@ -89,7 +89,6 @@ bool init_hpet(uint64_t frq){
     // Initialize Comparators / Timers
     hpet_init_timer(0, frq, true);
 
-
     res = hpet_read(HPET_GENERAL_CONFIGURATION_REG);
     BIT_SET(res, 0); // Enable Interrupts
     hpet_write(HPET_GENERAL_CONFIGURATION_REG, res);
