@@ -23,6 +23,7 @@
 #include <rhino/arch/x86/isr.h>
 #include <rhino/arch/x86/pci.h>
 #include <rhino/arch/x86/gdt.h>
+#include <rhino/arch/x86/msr.h>
 #include <rhino/arch/x86/cpuid.h>
 #include <rhino/arch/x86/io.h>
 #include <rhino/arch/x86/drivers/rtc.h>
@@ -150,7 +151,8 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   init("init");
   while(1);
   #endif
-  
+
+
   kprint("Rhino Kernel Internal Shell version 0.0.4");
   set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
   kprint("\n$");

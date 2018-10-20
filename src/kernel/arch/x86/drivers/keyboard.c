@@ -33,12 +33,12 @@ const char sc_ascii[] = { '?', '?', '1', '2', '3', '4', '5', '6',
 
 static void kbd_irq(registers_t *regs){
   uint8_t scancode;
-  if(BIT_IS_SET(inb(KBD_REG_COMMAND), 0)){
+  //if(BIT_IS_SET(inb(KBD_REG_COMMAND), 0)){
     scancode = inb(KBD_REG_DATA);
-  } else {
+  /*} else {
     kprint_err("Keyboard sent IRQ but there was no data\n");
     return;
-  }
+  }*/
   if(scancode == CAPS_LOCK){
     shiftPressed = !shiftPressed;
     return;

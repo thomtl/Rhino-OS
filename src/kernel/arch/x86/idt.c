@@ -1,5 +1,4 @@
 #include <rhino/arch/x86/idt.h>
-#include <rhino/arch/x86/type.h>
 
 idt_gate_t idt[IDT_ENTRIES];
 idt_register_t idt_reg;
@@ -25,11 +24,11 @@ void set_idt_gate(int n, uint32_t handler, uint16_t sel, uint8_t dpl){
     BIT_SET(flags, 6);
   }
   BIT_SET(flags, 7);
-  idt[n].low_offset = low_16(handler);
+  idt[n].low_offset = (handler & 0xFFFF);
   idt[n].sel = sel;
   idt[n].always0 = 0;
   idt[n].flags = flags;
-  idt[n].high_offset = high_16(handler);
+  idt[n].high_offset = (handler >> 16) & 0xFFFF;
 }
 void set_idt(){
   idt_reg.base = (uint32_t) &idt;
