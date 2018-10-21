@@ -13,12 +13,12 @@ AS = yasm
 CFLAGS = -g -m32 -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs \
 					-Wall -Wextra -Werror -std=gnu99 -I../libc/include
 
-dir: ${ASM_OBJ} ${C_OBJ}
+cat: ${ASM_OBJ} ${C_OBJ}
 	${CC} -T link.ld -o $@ -ffreestanding -nostdlib ../libc/crt0.o ../libc/libc.o $^ -lgcc
 
 
 clean:
-	rm -f dir
+	rm -f cat
 	rm -f *.o
 
 %.o: %.c ${HEADERS}

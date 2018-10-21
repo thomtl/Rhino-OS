@@ -5,12 +5,12 @@ make clean
 make
 cd ../..
 
-cd user/dir
+cd user/ls
 make clean
 make
 cd ../..
 
-cd user/read
+cd user/cat
 make clean
 make
 cd ../..
