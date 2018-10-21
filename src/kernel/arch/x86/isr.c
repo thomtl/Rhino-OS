@@ -3,12 +3,13 @@
 #include <rhino/arch/x86/drivers/screen.h>
 #include <rhino/arch/x86/drivers/keyboard.h>
 #include <rhino/arch/x86/drivers/pic.h>
+#include <rhino/arch/x86/drivers/apic.h>
 #include <libk/string.h>
 #include <rhino/arch/x86/timer.h>
 #include <rhino/arch/x86/io.h>
 #include <rhino/user/syscall.h>
 isr_t interrupt_handlers[256];
-
+bool apic = false;
 void page_fault_handler(registers_t* regs);
 
 void isr_install() {
@@ -44,23 +45,7 @@ void isr_install() {
     set_idt_gate(29, (uint32_t)isr29, KERNEL_CS, 0);
     set_idt_gate(30, (uint32_t)isr30, KERNEL_CS, 0);
     set_idt_gate(31, (uint32_t)isr31, KERNEL_CS, 0);
-    pic_remap();
-    set_idt_gate(32, (uint32_t)irq0, KERNEL_CS, 0);
-    set_idt_gate(33, (uint32_t)irq1, KERNEL_CS, 0);
-    set_idt_gate(34, (uint32_t)irq2, KERNEL_CS, 0);
-    set_idt_gate(35, (uint32_t)irq3, KERNEL_CS, 0);
-    set_idt_gate(36, (uint32_t)irq4, KERNEL_CS, 0);
-    set_idt_gate(37, (uint32_t)irq5, KERNEL_CS, 0);
-    set_idt_gate(38, (uint32_t)irq6, KERNEL_CS, 0);
-    set_idt_gate(39, (uint32_t)irq7, KERNEL_CS, 0);
-    set_idt_gate(40, (uint32_t)irq8, KERNEL_CS, 0);
-    set_idt_gate(41, (uint32_t)irq9, KERNEL_CS, 0);
-    set_idt_gate(42, (uint32_t)irq10, KERNEL_CS, 0);
-    set_idt_gate(43, (uint32_t)irq11, KERNEL_CS, 0);
-    set_idt_gate(44, (uint32_t)irq12, KERNEL_CS, 0);
-    set_idt_gate(45, (uint32_t)irq13, KERNEL_CS, 0);
-    set_idt_gate(46, (uint32_t)irq14, KERNEL_CS, 0);
-    set_idt_gate(47, (uint32_t)irq15, KERNEL_CS, 0);
+
     set_idt_gate(128, (uint32_t)isr128, KERNEL_CS, 3);
     set_idt(); // Load with ASM
 
@@ -127,16 +112,45 @@ void register_interrupt_handler(uint8_t n, isr_t handler){
 }
 
 void irq_handler(registers_t *r){
+    kprint_err("IRQ: ");
+    char s[3];
+    int_to_ascii(r->int_no, s);
+    kprint_err(s);
+    kprint_err("\n");
 
   if(interrupt_handlers[r->int_no] != 0){
     isr_t handler = interrupt_handlers[r->int_no];
     handler(r);
   }
 
-  pic_send_eoi();
+  if(apic) apic_send_eoi();
+  else pic_send_eoi();
 }
 
 void irq_install(){
+    if(init_apic()){
+      apic = true;
+      goto no_pic;
+    } 
+    pic_remap();
+    no_pic:
+    set_idt_gate(32, (uint32_t)irq0, KERNEL_CS, 0);
+    set_idt_gate(33, (uint32_t)irq1, KERNEL_CS, 0);
+    set_idt_gate(34, (uint32_t)irq2, KERNEL_CS, 0);
+    set_idt_gate(35, (uint32_t)irq3, KERNEL_CS, 0);
+    set_idt_gate(36, (uint32_t)irq4, KERNEL_CS, 0);
+    set_idt_gate(37, (uint32_t)irq5, KERNEL_CS, 0);
+    set_idt_gate(38, (uint32_t)irq6, KERNEL_CS, 0);
+    set_idt_gate(39, (uint32_t)irq7, KERNEL_CS, 0);
+    set_idt_gate(40, (uint32_t)irq8, KERNEL_CS, 0);
+    set_idt_gate(41, (uint32_t)irq9, KERNEL_CS, 0);
+    set_idt_gate(42, (uint32_t)irq10, KERNEL_CS, 0);
+    set_idt_gate(43, (uint32_t)irq11, KERNEL_CS, 0);
+    set_idt_gate(44, (uint32_t)irq12, KERNEL_CS, 0);
+    set_idt_gate(45, (uint32_t)irq13, KERNEL_CS, 0);
+    set_idt_gate(46, (uint32_t)irq14, KERNEL_CS, 0);
+    set_idt_gate(47, (uint32_t)irq15, KERNEL_CS, 0);
+
   init_timer();
   init_keyboard();
   init_syscall();

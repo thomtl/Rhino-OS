@@ -5,6 +5,7 @@ RSDT* rsdt;
 XSDP* xsdp;
 XSDT* xsdt;
 FADT* fadt;
+MADT* madt;
 pdirectory* cr3;
 pdirectory* subsystemDir;
 extern pdirectory* kernel_directory;
@@ -119,6 +120,10 @@ void* find_table_int(char* signature){
             }
         }
     }
+    #ifdef DEBUG
+    kprint_err("[ACPI] Could not find ");
+    kprint_err(signature);
+    #endif
     return 0;
 }
 
@@ -180,6 +185,94 @@ void init_acpi(){
         acpi_leave_subsystem();
         return;
     }
+
+    /*madt = find_table_int("APIC");
+    if(madt != 0){
+        uint32_t s = 0;
+        for(uint32_t ptr = (uint32_t)madt + sizeof(MADT); ptr < (uint32_t)madt + madt->h.Length; ptr += s){
+            uint8_t* typ = (uint8_t*)ptr;
+            if(*typ == 0){
+                s = 8;
+                kprint("LAPIC: ");
+                uint8_t apic_id = *(typ + 3);
+                uint8_t cpu_id = *(typ + 2);
+                char buf[5] ="";
+                int_to_ascii(cpu_id, buf);
+                kprint("cpuID=");
+                kprint(buf);
+                kprint(", ");
+                int_to_ascii(apic_id, buf);
+                kprint("lapicID=");
+                kprint(buf);
+                
+                if(BIT_IS_SET(*(typ + 4), 0)){
+                    kprint(", ");
+                    kprint("Enabled");
+                }
+                kprint("\n");
+            } else if(*typ == 1){
+                s = 12;
+                kprint("I/OAPIC");
+                uint8_t apic_id = *(typ + 2);
+                char buf[10] ="";
+                int_to_ascii(apic_id, buf);
+                kprint("ioapicID=");
+                kprint(buf);
+                kprint(", ");
+                uint32_t* t = (uint32_t*)typ;
+                uint32_t addr = *(t + 1);
+                for(int i = 0; i < 10; i++) buf[i] = '\0';
+                hex_to_ascii(addr, buf);
+                kprint("addr=");
+                kprint(buf);
+                kprint(", ");
+
+                addr = *(t + 2);
+                int_to_ascii(addr, buf);
+                kprint("GSIbase=");
+                kprint(buf);
+                kprint(", ");
+                kprint("\n");
+            } else if(*typ == 2) {
+                s = 10;
+                kprint("Interruptible Source Override");
+                uint8_t source_id = *(typ + 3);
+                char buf[10] ="";
+                int_to_ascii(source_id, buf);
+                kprint(" PICIRQ=");
+                kprint(buf);
+                kprint(", ");
+                uint32_t* t = (uint32_t*)typ;
+                uint32_t gsi = *(t + 1);
+                int_to_ascii(gsi, buf);
+                kprint(" GSI=");
+                kprint(buf);
+                kprint("\n");
+            } else if(*typ == 4) {
+                s = 10;
+                kprint("LAPIC NMI");
+                uint8_t lintn = *(typ + 2);
+                uint8_t cpu_id = *(typ + 5);
+                char buf[5] ="";
+                int_to_ascii(cpu_id, buf);
+                kprint("cpuID=");
+                kprint(buf);
+                kprint(", ");
+                int_to_ascii(lintn, buf);
+                kprint("lintnid=");
+                kprint(buf);
+                kprint("\n");
+            } else {
+                kprint("Unkown MADT id");
+                char buf[25] = "";
+                hex_to_ascii((uint32_t)*typ, buf);
+                kprint(buf);
+
+                acpi_leave_subsystem();
+                return;
+            }
+        }
+    }*/
 
     acpi_leave_subsystem();
     return;
