@@ -81,7 +81,6 @@ bool vmm_switch_pdirectory(pdirectory* dir){
     if(!dir) return false;
 
     vmm_cur_directory = dir;
-    //TODO load dir into cr3
     uint32_t phys = (uint32_t)((uint32_t)dir - (uint32_t)KERNEL_VBASE);
     asm("mov %0, %%cr3":: "r"(phys));
     return true;
@@ -103,7 +102,6 @@ void vmm_map_page(void* phys, void* virt, uint32_t user){
     if((*e & RHINO_PTE_PRESENT) != RHINO_PTE_PRESENT){
         ptable* table = (ptable*)((uint32_t)pmm_alloc_block() + KERNEL_VBASE);
         if(!table) return;
-        //if((uint32_t)table > 0xC03FFFFF) vmm_map_page((void*)((uint32_t)table - (uint32_t)KERNEL_VBASE), (void*)(table));
         vmm_ptable_clear(table);
 
 
@@ -124,7 +122,7 @@ void vmm_map_page(void* phys, void* virt, uint32_t user){
 
     pt_entry* page = &table->m_entries[PAGE_TABLE_INDEX((uint32_t)virt)];
 
-    pt_entry* pagv = (pt_entry*)((uint32_t)page + (uint32_t)KERNEL_VBASE);// convert page into virtual from physical
+    pt_entry* pagv = (pt_entry*)((uint32_t)page + (uint32_t)KERNEL_VBASE);
 
     vmm_pt_entry_add_attrib(pagv, RHINO_PTE_WRITABLE);
     vmm_pt_entry_set_frame(pagv, (void*)phys);
@@ -157,17 +155,6 @@ void vmm_pdirectory_clear(pdirectory* dir){
 }
 
 bool init_vmm(){
-    /*ptable* table = (ptable*)((uint32_t)pmm_alloc_block() + KERNEL_VBASE);
-    if(!table) return;
-    vmm_ptable_clear(table);
-	for (int i=0, frame=0x000000, virt=0xc0000000; i<1024; i++, frame+=4096, virt+=4096) {
-		pt_entry page=0;
-		vmm_pt_entry_add_attrib (&page, RHINO_PTE_PRESENT);
-        vmm_pt_entry_add_attrib(&page, RHINO_PTE_WRITABLE);
-		vmm_pt_entry_set_frame (&page, (void*)frame);
-		table->m_entries [PAGE_TABLE_INDEX (virt) ] = page;
-	}*/
-
     pdirectory* dir = (pdirectory*)((uint32_t)pmm_alloc_block() + KERNEL_VBASE);
 		kernel_directory = dir;
     if(!dir) return false;
@@ -176,29 +163,20 @@ bool init_vmm(){
 
     vmm_cur_directory = dir;
 
-    /*pd_entry* entry = &dir->m_entries [PAGE_DIRECTORY_INDEX (0xc0000000) ];
-    vmm_pd_entry_add_attrib(entry, RHINO_PDE_PRESENT);
-    vmm_pd_entry_add_attrib(entry, RHINO_PDE_WRITABLE);
-    uint32_t p = (uint32_t)((uint32_t)table - (uint32_t)KERNEL_VBASE);
-    vmm_pd_entry_set_frame(entry, (void*)p);*/
-
     for (int i=0, frame=0x000000, virt=0xc0000000; i<(1024 * 16); i++, frame+=4096, virt+=4096) {
 
 		vmm_map_page((void*)frame, (void*)virt, 0);
 
 	}
-    vmm_map_page((void*)0xABCDEF, (void*)0xABCDEF, 0);
-    vmm_unmap_page((void*)0xABCDEF);
+
     vmm_switch_pdirectory(dir);
     return true;
 }
 
 pdirectory* vmm_clone_dir(pdirectory* dir){
 	uint32_t ret = (uint32_t)((uint32_t)pmm_alloc_block() + KERNEL_VBASE);
-  //vmm_map_page((void*)((uint32_t)ret - (uint32_t)KERNEL_VBASE), (void*)(ret));
 	for(uint32_t i = 0; i < 1024; i++){
 		memcpy(&(((uintptr_t*)ret)[i]), &(((uintptr_t*)dir)[i]), sizeof(uintptr_t));
 	}
-
 	return (pdirectory*)ret;
 }
