@@ -54,6 +54,7 @@ extern void irq14();
 extern void irq15();
 
 extern void isr128();
+extern void isr255(); // IOAPIC Spurious
 #define IRQ0 32
 #define IRQ1 33
 #define IRQ2 34

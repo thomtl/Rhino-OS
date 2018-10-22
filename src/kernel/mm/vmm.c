@@ -128,7 +128,7 @@ void vmm_map_page(void* phys, void* virt, uint32_t user){
     vmm_pt_entry_set_frame(pagv, (void*)phys);
     vmm_pt_entry_add_attrib(pagv, RHINO_PTE_PRESENT);
     if(user) vmm_pt_entry_add_attrib(pagv, RHINO_PTE_USER);
-    tlb_flush();
+    vmm_flush_tlb_entry(virt);
 }
 
 void vmm_unmap_page(void* virt){
@@ -144,6 +144,20 @@ void vmm_unmap_page(void* virt){
 
     vmm_pt_entry_del_attrib(pagv, RHINO_PTE_PRESENT);
     vmm_flush_tlb_entry(virt);
+}
+
+bool vmm_page_is_mapped(void* virt){
+    pdirectory* pageDirectory = vmm_get_directory();
+
+    pd_entry* e = &pageDirectory->m_entries[PAGE_DIRECTORY_INDEX((uint32_t)virt)];
+
+    ptable* table = (ptable*)PAGE_GET_PHYSICAL_ADDRESS(e);
+
+    pt_entry* page = &table->m_entries[PAGE_TABLE_INDEX((uint32_t)virt)];
+
+    pt_entry* pagv = (pt_entry*)((uint32_t)page + (uint32_t)KERNEL_VBASE);// convert page into virtual from physical
+
+    return vmm_pt_entry_is_present(*pagv);
 }
 
 void vmm_ptable_clear(ptable* tab){

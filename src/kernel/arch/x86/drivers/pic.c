@@ -47,6 +47,6 @@ void pic_send_eoi(){
 
 void pic_disable(){
     // First disable PIC2 so PIC1 can't receive an interrupt while it is disabled
-    outb(PIC2_CMD, PIC_DISABLE); // Disable PIC2
+    outb(PIC2_DAT, PIC_DISABLE); // Disable PIC2
     outb(PIC1_DAT, PIC_DISABLE); // Disable PIC1
 }

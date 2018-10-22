@@ -7,6 +7,8 @@
 #include <rhino/arch/x86/cpuid.h>
 #include <rhino/arch/x86/msr.h>
 #include <rhino/arch/x86/drivers/pic.h>
+#include <rhino/arch/x86/drivers/lapic.h>
+#include <rhino/arch/x86/drivers/ioapic.h>
 #define MADT_SIGNATURE "APIC"
 
 #define LAPIC_ID_REG 0x20
@@ -51,3 +53,4 @@
 bool detect_apic();
 bool init_apic();
 void apic_send_eoi();
+uint32_t apic_redirect(uint8_t IRQ);

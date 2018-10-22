@@ -112,26 +112,27 @@ void register_interrupt_handler(uint8_t n, isr_t handler){
 }
 
 void irq_handler(registers_t *r){
-    kprint_err("IRQ: ");
+    /*kprint_err("IRQ: ");
     char s[3];
     int_to_ascii(r->int_no, s);
     kprint_err(s);
-    kprint_err("\n");
+    kprint_err("\n");*/
 
   if(interrupt_handlers[r->int_no] != 0){
     isr_t handler = interrupt_handlers[r->int_no];
     handler(r);
   }
 
-  if(apic) apic_send_eoi();
+  if(apic) lapic_send_eoi();
   else pic_send_eoi();
 }
 
 void irq_install(){
     if(init_apic()){
+      set_idt_gate(255, (uint32_t)isr255, KERNEL_CS, 0);
       apic = true;
       goto no_pic;
-    } 
+    }
     pic_remap();
     no_pic:
     set_idt_gate(32, (uint32_t)irq0, KERNEL_CS, 0);

@@ -5,26 +5,6 @@ pdirectory *subsystemDir, *cr3;
 uint64_t* lapic, ioapic;
 MADT* madt;
 
-static void apic_enter_subsystem(){
-    cr3 = vmm_get_directory();
-    vmm_switch_pdirectory(subsystemDir);
-}
-
-static void apic_leave_subsystem(){
-    vmm_switch_pdirectory(cr3);
-}
-
-
-static void apic_write(uint64_t reg, uint64_t val){
-    volatile uint64_t* ptr = (uint64_t*)(uint32_t)(lapic + reg);
-    *ptr = val;
-}
-
-static uint64_t apic_read(uint64_t reg){
-    volatile uint64_t* ptr = (uint64_t*)(uint32_t)(lapic + reg);
-    return *ptr;
-}
-
 bool detect_apic(){
     uint32_t a, c, d;
     cpuid(CPUID_GET_FEATURES, &a, &c, &d);
@@ -39,46 +19,55 @@ bool init_apic(){
     
     uint32_t hi, lo;
     msr_read(APIC_BASE, &lo, &hi);
-    madt = find_table(MADT_SIGNATURE);
-    if(madt == 0) return false; // There is no MADT(APIC) table, Abort
-    subsystemDir = vmm_clone_dir(kernel_directory);
-    apic_enter_subsystem();
-
-    vmm_map_page(madt, madt, 0);
-    lapic = (uint64_t*)(lo & 0xFFFFF000);//(msr >> 12) & 0xFFFFFFFFFF;
-    vmm_map_page(lapic, lapic, 0);
-
+    lapic = (uint64_t*)(lo & 0xfffff000);
     pic_disable();
+    init_lapic((uint32_t)lapic);
 
-    apic_write(LAPIC_SPURIOUS_VECTOR_REG, apic_read(LAPIC_SPURIOUS_VECTOR_REG) | 0x100 | 0xFF);
-    uint32_t s = 0;
-    for(uint32_t ptr = (uint32_t)madt + sizeof(MADT); ptr < (uint32_t)madt + madt->h.Length; ptr += s){
-        uint8_t* typ = (uint8_t*)ptr;
-        if(*typ == 0){
-            s = 8;
-            uint8_t apic_id = *(typ + 3);
-            uint8_t cpu_id = *(typ + 2);
-        } else if(*typ == 1){
+    madt = find_table(MADT_SIGNATURE);
+
+    for(uint32_t ptr = (uint32_t)madt + sizeof(MADT), s = 0; ptr < (uint32_t)madt + mmio_read32(&(madt->h.Length)); ptr += s){
+        uint8_t typ = mmio_read8((uint32_t*)ptr);
+        if(typ == 0){
+            s = 8; // LAPIC
+        } else if(typ == 1){
             s = 12;
-            uint8_t apic_id = *(typ + 2);
-            uint32_t addr = *((uint32_t*)typ + 1);
-        } else if(*typ == 2) {
+            ioapic = mmio_read32(((uint32_t*)ptr + 1)); // IOAPIC
+            continue;
+        } else if(typ == 2) {
             s = 10;
-            uint8_t source_id = *(typ + 3);
-            uint32_t* t = (uint32_t*)typ;
-            uint32_t gsi = *(t + 1);
-        } else if(*typ == 4) {
+            // interrupt redirect
+        } else if(typ == 4) {
             s = 10;
-            uint8_t lintn = *(typ + 2);
-            uint8_t cpu_id = *(typ + 5);
+            // IOAPIC NMI
+            
         }
     }
+    init_ioapic((uint32_t)ioapic);
 
-
-    apic_leave_subsystem();
+    for(uint8_t i = 0; i < 16; i++){
+        if(i == 2) break; // Skip PIC2 Cascade IRQ, it seems to break things
+        ioapic_set_entry(apic_redirect(i), IRQ_BASE + i);
+    }
     return true;
 }
 
-void apic_send_eoi(){
-    apic_write(LAPIC_EOI_REG, 0);
+
+
+uint32_t apic_redirect(uint8_t IRQ){
+    for(uint32_t ptr = (uint32_t)madt + sizeof(MADT), s = 0; ptr < (uint32_t)madt + mmio_read32(&(madt->h.Length)); ptr += s){
+        uint8_t typ = mmio_read8((uint32_t*)ptr);
+        if(typ == 0){
+            s = 8; // LAPIC
+        } else if(typ == 1){
+            s = 12; // IOAPIC
+        } else if(typ == 2) {
+            s = 10;
+            if(mmio_read8((uint32_t*)(((uint8_t*)ptr) + 3)) == IRQ) return mmio_read32(((uint32_t*)ptr + 1));
+            // interrupt redirect
+        } else if(typ == 4) {
+            s = 10;
+            // IOAPIC NMI
+        }
+    }
+    return IRQ;
 }

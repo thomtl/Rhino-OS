@@ -1,30 +1,19 @@
 #include <rhino/arch/x86/drivers/hpet.h>
+#include <rhino/mm/mmio.h>
 
-extern pdirectory* kernel_directory;
-pdirectory *subsystemDir, *cr3;
 HPET* hpet;
 
 uint32_t hpetFrequency;
 uint16_t hpetMinimumTick;
 uint8_t hpetNCompartators;
-
-static void hpet_enter_subsystem(){
-    cr3 = vmm_get_directory();
-    vmm_switch_pdirectory(subsystemDir);
-}
-
-static void hpet_leave_subsystem(){
-    vmm_switch_pdirectory(cr3);
-}
+uint64_t hpet_base;
 
 static void hpet_write(uint64_t reg, uint64_t val){
-    volatile uint64_t* ptr = (uint64_t*)(uint32_t)(hpet->address.Address + reg);
-    *ptr = val;
+   mmio_write64((uint32_t*)(uint32_t)(hpet_base + reg), val);
 }
 
 static uint64_t hpet_read(uint64_t reg){
-    volatile uint64_t* ptr = (uint64_t*)(uint32_t)(hpet->address.Address + reg);
-    return *ptr;
+    return mmio_read64((uint32_t*)(uint32_t)(hpet_base + reg));
 }
 
 bool detect_hpet(){
@@ -54,13 +43,9 @@ void hpet_init_timer(uint32_t n, uint64_t frq, bool periodicTimer){
 
 bool init_hpet(uint64_t frq){
     void* tab = find_table(HPET_ACPI_SIGNATURE);
-
-    subsystemDir = vmm_clone_dir(kernel_directory);
-    hpet_enter_subsystem();
     vmm_map_page(tab, tab, 0);
     hpet = (HPET*)tab;
-
-    vmm_map_page((void*)(uint32_t)hpet->address.Address, (void*)(uint32_t)hpet->address.Address, 0);
+    hpet_base = mmio_read64((uint32_t*)&(hpet->address.Address));
     uint64_t res;
 
     res = hpet_read(HPET_GENERAL_CAPABILITIES_REG);
@@ -81,7 +66,7 @@ bool init_hpet(uint64_t frq){
 
 
     hpetFrequency = (hpet_read(HPET_GENERAL_CAPABILITIES_REG) >> 32) & 0xFFFFFFFF;
-    hpetMinimumTick = hpet->minimum_tick;
+    hpetMinimumTick = mmio_read16((uint32_t*)&(hpet->minimum_tick));
 
     // Set main counter to 0
     hpet_write(HPET_MAIN_COUNTER_VAL, 0);
@@ -93,6 +78,5 @@ bool init_hpet(uint64_t frq){
     BIT_SET(res, 0); // Enable Interrupts
     hpet_write(HPET_GENERAL_CONFIGURATION_REG, res);
 
-    hpet_leave_subsystem();
     return true;
 }

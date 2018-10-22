@@ -137,6 +137,7 @@ global irq14
 global irq15
 
 global isr128
+global isr255
 
 ISR_NOERRCODE 0
 ISR_NOERRCODE 1
@@ -189,3 +190,5 @@ IRQ 14, 46
 IRQ 15, 47
 
 ISR_NOERRCODE 128
+isr255: ; APIC Spurious just iret
+    iret
