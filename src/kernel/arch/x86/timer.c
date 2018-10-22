@@ -8,6 +8,7 @@
 
 uint32_t irq0s = 0;
 uint32_t irq8s = 0;
+
 static void irq0_callback(registers_t *regs){
   irq0s++;
   schedule(regs);
