@@ -148,3 +148,12 @@ typedef struct
     uint16_t minimum_tick;
     uint8_t page_protection;
 } __attribute__((packed)) HPET;
+
+// After the madt_flags there is the interrupt controller structure it should be parsed seperatly
+typedef struct {
+  SDTHeader h;
+  uint32_t lapic_addr;
+  uint32_t madt_flags;
+} __attribute__ ((packed)) MADT;
+
+#define APCI_MADT_FLAGS_PCAT_COMPAT 0
