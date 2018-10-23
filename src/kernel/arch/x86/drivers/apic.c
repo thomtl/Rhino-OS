@@ -82,6 +82,7 @@ bool init_apic(){
     uint32_t hi, lo;
     msr_read(APIC_BASE, &lo, &hi);
     lapic = (uint64_t*)(lo & 0xfffff000);
+    pic_remap(0, 8); // Reinterpret PIC Spurious Interrupts as exceptions
     pic_disable();
     init_lapic((uint32_t)lapic);
 

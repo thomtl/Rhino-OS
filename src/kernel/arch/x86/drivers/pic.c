@@ -18,11 +18,11 @@ uint16_t pic_get_isr(){
     return __pic_read_irq_reg(PIC_READ_ISR);
 }
 
-void pic_remap(){
+void pic_remap(uint8_t pic1_vector_offset, uint8_t pic2_vector_offset){
     outb(PIC1_CMD, PIC_INIT); // Send Init To PIC1 and PIC2
     outb(PIC2_CMD, PIC_INIT);
-    outb(PIC1_DAT, 32); // Send vector offset 32 to PIC1 and 40 to PIC2
-    outb(PIC2_DAT, 40);
+    outb(PIC1_DAT, pic1_vector_offset); // Send vector offset 32 to PIC1 and 40 to PIC2
+    outb(PIC2_DAT, pic2_vector_offset);
     outb(PIC1_DAT, 0x04); // Setup Cascade mode for PIC2 through PIC1
     outb(PIC2_DAT, 0x02);
     outb(PIC1_DAT, PIC_8086); // Tell PIC1 and PIC2 that its is operating in 8086 mode

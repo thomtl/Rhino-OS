@@ -133,7 +133,7 @@ void irq_install(){
       apic = true;
       goto no_pic;
     }
-    pic_remap();
+    pic_remap(32, 40);
     no_pic:
     set_idt_gate(32, (uint32_t)irq0, KERNEL_CS, 0);
     set_idt_gate(33, (uint32_t)irq1, KERNEL_CS, 0);

@@ -14,6 +14,6 @@
 #define PIC_INIT 0x11
 #define PIC_8086 0x01
 
-void pic_remap();
+void pic_remap(uint8_t pic1_vector_offset, uint8_t pic2_vector_offset);
 void pic_send_eoi();
 void pic_disable();
