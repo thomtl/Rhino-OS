@@ -1,7 +1,5 @@
 #include <rhino/arch/x86/drivers/apic.h>
 
-extern pdirectory* kernel_directory;
-pdirectory *subsystemDir, *cr3;
 uint64_t* lapic, ioapic;
 MADT* madt;
 
@@ -82,8 +80,12 @@ bool init_apic(){
     uint32_t hi, lo;
     msr_read(APIC_BASE, &lo, &hi);
     lapic = (uint64_t*)(lo & 0xfffff000);
+    BIT_SET(lo, 11); // Set APIC enable bit if it wasn't already set
+    msr_write(APIC_BASE, lo, hi);
+
     pic_remap(0, 8); // Reinterpret PIC Spurious Interrupts as exceptions
     pic_disable();
+
     init_lapic((uint32_t)lapic);
 
     madt = find_table(MADT_SIGNATURE);
@@ -107,16 +109,16 @@ bool init_apic(){
     }
     init_ioapic((uint32_t)ioapic);
 
-    for(uint8_t i = 0; i < 16; i++){
+    for(uint8_t i = 0; i < 16; i++){ // Enable Legacy PIC Interrupts
         if(i == 2) break; // Skip PIC2 Cascade IRQ, it seems to break things
-        ioapic_set_entry(apic_redirect(i), (IRQ_BASE + i) | (apic_isa_pin_polarity(i) << 13) | (apic_isa_trigger_mode(i) << 15));
+        ioapic_set_entry(apic_irq_redirect(i), (IRQ_BASE + i) | (apic_isa_pin_polarity(i) << 13) | (apic_isa_trigger_mode(i) << 15));
     }
     return true;
 }
 
 
 
-uint32_t apic_redirect(uint8_t IRQ){
+uint32_t apic_irq_redirect(uint8_t IRQ){
     for(uint32_t ptr = (uint32_t)madt + sizeof(MADT), s = 0; ptr < (uint32_t)madt + mmio_read32(&(madt->h.Length)); ptr += s){
         uint8_t typ = mmio_read8((uint32_t*)ptr);
         if(typ == 0){
