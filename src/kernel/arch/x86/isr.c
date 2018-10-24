@@ -4,6 +4,7 @@
 #include <rhino/arch/x86/drivers/keyboard.h>
 #include <rhino/arch/x86/drivers/pic.h>
 #include <rhino/arch/x86/drivers/apic.h>
+#include <rhino/arch/x86/drivers/serial.h>
 #include <libk/string.h>
 #include <rhino/arch/x86/timer.h>
 #include <rhino/arch/x86/io.h>
@@ -155,6 +156,7 @@ void irq_install(){
   init_timer();
   init_keyboard();
   init_syscall();
+  init_serial();
   asm("sti");
 }
 

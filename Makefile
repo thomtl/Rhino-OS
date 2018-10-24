@@ -33,10 +33,12 @@ kernel.bin: ${ASM_OBJ} ${C_OBJ}
 	${CC} -T build/linker.ld -o $@ -ffreestanding -O2 -nostdlib $^ -lgcc
 
 run: rhino.iso
+	rm -rf build/log/*
 	DISPLAY=:0 QEMU_AUDIO_DRV=pa ${QEMU} ${QEMUFLAGS}
 	rm -rf build/sys
 
 bochs: rhino.iso
+	rm -rf build/log/*
 	DISPLAY=:0 bochs -f build/.bochsrc -q
 	rm -rf build/sys
 

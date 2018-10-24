@@ -31,6 +31,7 @@
 #include <rhino/arch/x86/drivers/screen.h>
 #include <rhino/arch/x86/drivers/keyboard.h>
 #include <rhino/arch/x86/drivers/pcspkr.h>
+#include <rhino/arch/x86/drivers/serial.h>
 #include <rhino/arch/x86/drivers/fpu.h>
 #include <rhino/arch/x86/drivers/sse.h>
 #include <rhino/arch/x86/drivers/avx.h>
@@ -165,6 +166,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
     }
     char c[256] = "";
     getline(c, 256);
+
     user_input(c);
   }
 }
