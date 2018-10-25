@@ -8,7 +8,11 @@ boot: cdrom
 display_library: x, options="gui_debug"
 romimage: file=$BXSHARE/BIOS-bochs-latest
 vgaromimage: file=$BXSHARE/VGABIOS-lgpl-latest
-com1: enabled=1, mode=file, dev=build/log/com1.txt
+com1: enabled=1, mode=file, dev=build/log/com1.out
+com2: enabled=1, mode=file, dev=build/log/com2.out
+com3: enabled=1, mode=file, dev=build/log/com3.out
+com4: enabled=1, mode=file, dev=build/log/com4.out
 magic_break: enabled=1
 speaker: enabled=1, mode=system
 pci: enabled=1, chipset=i440fx, slot1=pcivga
+vga: update_freq=30

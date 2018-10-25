@@ -64,6 +64,14 @@ void serial_write(uint32_t com, char a){
   while ((inb(SERIAL_LINE_STATUS_PORT(com)) & 0x20) == 0);
   outb(com, '\0');
 }
+void serial_write_string(uint32_t com, char* msg){
+  for(uint32_t i = 0; i < strlen(msg); i++){
+    while ((inb(SERIAL_LINE_STATUS_PORT(com)) & 0x20) == 0);
+    outb(com, msg[i]);
+  }
+  while ((inb(SERIAL_LINE_STATUS_PORT(com)) & 0x20) == 0);
+  outb(com, '\0');
+}
 
 uint32_t serial_received(uint32_t com){
   return inb(SERIAL_LINE_STATUS_PORT(com)) & 1;

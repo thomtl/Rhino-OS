@@ -158,7 +158,6 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
   kprint("\n$");
   enable_scheduling();
-
   while(1)
   {
     if(shouldExit == 1){
