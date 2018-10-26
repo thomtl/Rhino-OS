@@ -76,7 +76,7 @@ static uint8_t apic_isa_trigger_mode(uint8_t IRQ){
 
 bool init_apic(){
     if(!detect_apic()) return false;
-    
+    debug_log("[APIC]: Initializing APIC\n");
     uint32_t hi, lo;
     msr_read(APIC_BASE, &lo, &hi);
     lapic = (uint64_t*)(lo & 0xfffff000);
@@ -85,10 +85,18 @@ bool init_apic(){
 
     pic_remap(0, 8); // Reinterpret PIC Spurious Interrupts as exceptions
     pic_disable();
-
+    debug_log("[APIC]: Initializing LAPIC\n");
     init_lapic((uint32_t)lapic);
+    debug_log("[APIC]: LAPIC Initialized\n");
 
+
+    debug_log("[APIC]: Searching for MADT\n");
     madt = find_table(MADT_SIGNATURE);
+    if(madt == 0){
+        debug_log("[APIC]: MADT Not found\n");
+        debug_log("[APIC]: APIC Initializiation failed\n");
+        return false;
+    }
 
     for(uint32_t ptr = (uint32_t)madt + sizeof(MADT), s = 0; ptr < (uint32_t)madt + mmio_read32(&(madt->h.Length)); ptr += s){
         uint8_t typ = mmio_read8((uint32_t*)ptr);
@@ -107,12 +115,15 @@ bool init_apic(){
             
         }
     }
+    debug_log("[APIC]: Initializing IOAPIC\n");
     init_ioapic((uint32_t)ioapic);
-
+    debug_log("[APIC]: IOAPIC Initialized\n");
+    debug_log("[APIC]: Setting IOAPIC Redirection Entries\n");
     for(uint8_t i = 0; i < 16; i++){ // Enable Legacy PIC Interrupts
         if(i == 2) break; // Skip PIC2 Cascade IRQ, it seems to break things
         ioapic_set_entry(apic_irq_redirect(i), (IRQ_BASE + i) | (apic_isa_pin_polarity(i) << 13) | (apic_isa_trigger_mode(i) << 15));
     }
+    debug_log("[APIC]: APIC Initialized\n");
     return true;
 }
 

@@ -61,16 +61,16 @@ void com2_4_irq(registers_t* regs){
 void serial_write(uint32_t com, char a){
   while ((inb(SERIAL_LINE_STATUS_PORT(com)) & 0x20) == 0);
   outb(com, a);
-  while ((inb(SERIAL_LINE_STATUS_PORT(com)) & 0x20) == 0);
-  outb(com, '\0');
+  //while ((inb(SERIAL_LINE_STATUS_PORT(com)) & 0x20) == 0);
+  //outb(com, '\0');
 }
 void serial_write_string(uint32_t com, char* msg){
   for(uint32_t i = 0; i < strlen(msg); i++){
     while ((inb(SERIAL_LINE_STATUS_PORT(com)) & 0x20) == 0);
     outb(com, msg[i]);
   }
-  while ((inb(SERIAL_LINE_STATUS_PORT(com)) & 0x20) == 0);
-  outb(com, '\0');
+  //while ((inb(SERIAL_LINE_STATUS_PORT(com)) & 0x20) == 0);
+  //outb(com, '\0');
 }
 
 uint32_t serial_received(uint32_t com){
@@ -112,6 +112,7 @@ void serial_configure_baud_rate(uint16_t com, uint16_t divisor){
 }
 
 void init_serial(){
+  debug_log("[SERIAL]: Initializing Serial\n");
   register_interrupt_handler(IRQ4, com1_3_irq); // Install IRQ Handlers
   register_interrupt_handler(IRQ3, com2_4_irq);
 
@@ -130,6 +131,18 @@ void init_serial(){
   outb(SERIAL_INTERRUPT_ENABLE_PORT(COM3), 1);
   outb(SERIAL_INTERRUPT_ENABLE_PORT(COM4), 1);
 
+  serial_configure_baud_rate(COM1, 3); // Set divisor
+  serial_configure_baud_rate(COM2, 3);
+  serial_configure_baud_rate(COM3, 3);
+  serial_configure_baud_rate(COM4, 3);
+  debug_log("[SERIAL]: Initialized Serial\n");
+}
+
+void init_serial_early(){
+  outb(SERIAL_LINE_COMMAND_PORT(COM1), 0x03); // Configure COM1-4
+  outb(SERIAL_LINE_COMMAND_PORT(COM2), 0x03);
+  outb(SERIAL_LINE_COMMAND_PORT(COM3), 0x03);
+  outb(SERIAL_LINE_COMMAND_PORT(COM4), 0x03);
   serial_configure_baud_rate(COM1, 3); // Set divisor
   serial_configure_baud_rate(COM2, 3);
   serial_configure_baud_rate(COM3, 3);

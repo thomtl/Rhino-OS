@@ -88,12 +88,16 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   } else {
     PANIC_M(": Bootloader did not supply memory info");
   }
-
+  init_serial_early();
   set_color(VGA_COLOR_LIGHT_BLUE, VGA_COLOR_BLACK);
   kprint("Starting Rhino 0.3.2, Copyright 2018 Thomas Woertman, The Netherlands\n");
+  debug_log("[KERNEL]: Starting Rhino\n");
   int_to_ascii(ramAmountMB, buf);
   kprint("Detected Memory: ");
   kprint(buf);
+  debug_log("[KERNEL]: Detected Memory: ");
+  debug_log(buf);
+  debug_log("MB\n");
   kprint("MB\n");
 
   kprint("\nEnabling 386 Protected Mode\n");

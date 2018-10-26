@@ -23,11 +23,14 @@ bool detect_hpet(){
 void hpet_init_timer(uint32_t n, uint64_t frq, bool periodicTimer){
     if(n > hpetNCompartators){
         kprint_err("[HPET]: Trying to access non existant Comparator\n");
+        debug_log("[HPET]: Trying to access non existant Comparator\n");
+        return;
     }
     uint64_t res = hpet_read(HPET_TIMER_CONFIGURATION_AND_CAPABILITY_REG(n));
     BIT_SET(res, 2);
     if(!BIT_IS_SET(res, 4) && periodicTimer){
         kprint_err("[HPET]: Selected timer does not support periodic mode\n");
+        debug_log("[HPET]: Selected timer does not support periodic mode\n");
         return;
     }
     if(periodicTimer){
@@ -42,6 +45,7 @@ void hpet_init_timer(uint32_t n, uint64_t frq, bool periodicTimer){
 }
 
 bool init_hpet(uint64_t frq){
+    debug_log("[HPET]: Initializing HPET\n");
     void* tab = find_table(HPET_ACPI_SIGNATURE);
     vmm_map_page(tab, tab, 0);
     hpet = (HPET*)tab;
@@ -50,10 +54,12 @@ bool init_hpet(uint64_t frq){
 
     res = hpet_read(HPET_GENERAL_CAPABILITIES_REG);
     if((res & 0xFF) == 0){
+        debug_log("[HPET]: HPET Version doesn't exist\n");
         return false; // Non existant HPET revision
     }
 
     if(!BIT_IS_SET(res, 15)){ // Check if supports legacy routing
+        debug_log("[HPET]: HPET Doesn't Support Legacy Routing\n");
         return false;
     }
 
@@ -77,6 +83,6 @@ bool init_hpet(uint64_t frq){
     res = hpet_read(HPET_GENERAL_CONFIGURATION_REG);
     BIT_SET(res, 0); // Enable Interrupts
     hpet_write(HPET_GENERAL_CONFIGURATION_REG, res);
-
+    debug_log("[HPET]: HPET Initialized\n");
     return true;
 }

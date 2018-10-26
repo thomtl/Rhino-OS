@@ -411,10 +411,12 @@ void free_int(void *p, heap_t *heap)
 
 
 void init_heap(){
+    debug_log("[HMM]: Initializing HMM\n");
     for(uint32_t i = 0; i < (KHEAP_INITIAL_SIZE / 4096); i++){
         void* frame;
         if(!(frame = pmm_alloc_block())){
             kprint_err("[HMM]: Could not allocate physical page\n");
+            debug_log("[HMM]: Could not allocate physical page\n");
             return;
         }
         vmm_map_page(frame, (void*)kheapPos, 0);
@@ -426,12 +428,14 @@ void init_heap(){
         void* frame;
         if(!(frame = pmm_alloc_block())){
             kprint_err("[HMM]: Could not allocate physical page\n");
+            debug_log("[HMM]: Could not allocate physical page\n");
             return;
         }
         vmm_map_page(frame, (void*)uheapPos, 1);
         uheapPos += 4096;
     }
     uheap = create_heap(0xB0000000, 0xB0000000+KHEAP_INITIAL_SIZE, 0xBFFFF000, 1, 0);
+    debug_log("[HMM]: HMM Initialized\n");
 }
 
 void* umalloc(size_t sz){

@@ -76,6 +76,7 @@ static void wait_for_res(){
 }
 
 void init_keyboard(){
+  debug_log("[8042]: Initializing Keyboard Controller\n");
   uint8_t res, conf;
 
   // ACPI check if the 8042 exists, on apple machines it doesn't
@@ -83,6 +84,7 @@ void init_keyboard(){
     uint32_t boot_arch_flags = acpi_get_fadt_boot_arch_flags();
     if(!BIT_IS_SET(boot_arch_flags, 1)){
       kprint_err("[8042] Controller doesn't exist\n");
+      debug_log("[8042] Controller doesn't exist\n");
       return;
     }
   }
@@ -108,7 +110,10 @@ void init_keyboard(){
   outb(KBD_REG_COMMAND,  KBD_REG_INT_CONT_SELF_TEST);
   wait_for_res();
   res = inb(KBD_REG_DATA);
-  if(res != 0x55) PANIC_M("8042 Controller did not successfully self-test");
+  if(res != 0x55){
+    debug_log("[8042]: Controller did not successfully self-test\n");
+    PANIC_M("8042 Controller did not successfully self-test");
+  }
 
   // Determine if there are 2 channels
   if(hasSecondChannel == true){
@@ -131,19 +136,43 @@ void init_keyboard(){
   outb(KBD_REG_COMMAND, KBD_REG_INT_DEV_1_SELF_TEST);
   wait_for_res();
   res = inb(KBD_REG_DATA);
-  if(res == 0x01) PANIC_M("PS/2 Channel 1 Clock line stuck low");
-  if(res == 0x02) PANIC_M("PS/2 Channel 1 Clock line stuck high");
-  if(res == 0x03) PANIC_M("PS/2 Channel 1 Data line stuck low");
-  if(res == 0x04) PANIC_M("PS/2 Channel 1 Data line stuck high");
+  if(res == 0x01){
+    debug_log("[8042]: PS/2 Channel 1 Clock line stuck low\n");
+    PANIC_M("PS/2 Channel 1 Clock line stuck low");
+  }
+  if(res == 0x02){
+    debug_log("[8042]: PS/2 Channel 1 Clock line stuck high\n");
+    PANIC_M("PS/2 Channel 1 Clock line stuck high");
+  }
+  if(res == 0x03){
+    debug_log("[8042]: PS/2 Channel 1 Data line stuck low\n");
+    PANIC_M("PS/2 Channel 1 Data line stuck low");
+  }
+  if(res == 0x04){
+    debug_log("[8042]: PS/2 Channel 1 Data line stuck high\n");
+    PANIC_M("PS/2 Channel 1 Data line stuck high");
+  } 
 
   if(hasSecondChannel == true){
     outb(KBD_REG_COMMAND, KBD_REG_INT_DEV_2_SELF_TEST);
     wait_for_res();
     res = inb(KBD_REG_DATA);
-    if(res == 0x01) PANIC_M("PS/2 Channel 2 Clock line stuck low");
-    if(res == 0x02) PANIC_M("PS/2 Channel 2 Clock line stuck high");
-    if(res == 0x03) PANIC_M("PS/2 Channel 2 Data line stuck low");
-    if(res == 0x04) PANIC_M("PS/2 Channel 2 Data line stuck high");
+    if(res == 0x01){
+      debug_log("[8042]: PS/2 Channel 2 Clock line stuck low\n");
+      PANIC_M("PS/2 Channel 2 Clock line stuck low");
+    }
+    if(res == 0x02){
+      debug_log("[8042]: PS/2 Channel 2 Clock line stuck high\n");
+      PANIC_M("PS/2 Channel 2 Clock line stuck high");
+    }
+    if(res == 0x03){
+      debug_log("[8042]: PS/2 Channel 2 Data line stuck low\n");
+      PANIC_M("PS/2 Channel 2 Data line stuck low");
+    }
+    if(res == 0x04){
+      debug_log("[8042]: PS/2 Channel 2 Data line stuck high\n");
+      PANIC_M("PS/2 Channel 2 Data line stuck high");
+    }  
   }
 
   // Enable the devices
@@ -169,6 +198,7 @@ void init_keyboard(){
 
   // Restart interrupts
   STI();
+  debug_log("[8042]: Initialized Keyboard Controller\n");
 }
 
 char kbd_getchar(){

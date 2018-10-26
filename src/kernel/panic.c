@@ -1,4 +1,5 @@
 #include <rhino/panic.h>
+
 __attribute__((noreturn))
 void panic_int(char* file, char* func, uint32_t line){
   asm("cli");

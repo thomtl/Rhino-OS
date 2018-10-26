@@ -13,10 +13,12 @@ bool version2;
 static void acpi_enter_subsystem(){
     cr3 = vmm_get_directory();
     vmm_switch_pdirectory(subsystemDir);
+    debug_log("[ACPI]: Entered ACPI Subsystem\n");
 }
 
 static void acpi_leave_subsystem(){
     vmm_switch_pdirectory(cr3);
+    debug_log("[ACPI]: Left ACPI Subsystem\n");
 }
 
 bool detectACPI(){
@@ -119,29 +121,35 @@ void* find_table_int(char* signature){
             }
         }
     }
-
+    debug_log("[ACPI] Could not find ");
+    debug_log(signature);
+    debug_log("\n");
     return 0;
 }
 
 
 void init_acpi(){
+    debug_log("[ACPI]: Starting ACPI\n");
     if(!detectACPI()){
         kprint_warn("[ACPI] No ACPI detected\n");
+        debug_log("[ACPI]: No ACPI Detected\n");
         return;
     }
 
     subsystemDir = vmm_clone_dir(kernel_directory);
     acpi_enter_subsystem();
-
+    
     rsdp = find_rsdp();
     if(rsdp == 0){
         kprint_err("[ACPI] Couldn't find RSDP\n");
+        debug_log("[ACPI]: Couldn't find RSDP\n");
         acpi_leave_subsystem();
         return;
     }
 
 
     if(rsdp->Revision > 0){
+        debug_log("[ACPI]: Detected ACPI Version 2\n");
         version2 = true;
         uint8_t *bptr = (uint8_t*)rsdp;
 
@@ -156,11 +164,13 @@ void init_acpi(){
             vmm_map_page((void*)((uint32_t)xsdt), (void*)((uint32_t)xsdt), 1);
             if(!doChecksum(&xsdt->h)){
                 kprint_err("[ACPI]: XSDT Checksum Failed\n");
+                debug_log("[ACPI]: XSDT Checksum Failed\n");
                 acpi_leave_subsystem();
                 return;
             }
         } else {
-            kprint_err("[ACPI]: XSDP Checksum failed");
+            kprint_err("[ACPI]: XSDP Checksum failed\n");
+            debug_log("[ACPI]: XSDP Checksum failed\n");
             acpi_leave_subsystem();
             return;
         }
@@ -169,6 +179,7 @@ void init_acpi(){
         vmm_map_page((void*)((uint32_t)rsdp->RsdtAddress), (void*)((uint32_t)rsdp->RsdtAddress), 1);
         if(!doChecksum((SDTHeader*)rsdt)){
             kprint_err("[ACPI]: RSDT Checksum Failed\n");
+            debug_log("[ACPI]: RSDT Checksum Failed\n");
             acpi_leave_subsystem();
             return;
         }
@@ -178,12 +189,14 @@ void init_acpi(){
     fadt = find_table_int("FACP");
     if(!doChecksum((SDTHeader*)fadt)){
         kprint_err("[ACPI]: FADT Checksum Failed\n");
+        debug_log("[ACPI]: FADT Checksum Failed\n");
         acpi_leave_subsystem();
         return;
     }
 
 
     acpi_leave_subsystem();
+    debug_log("[ACPI]: Initialized ACPI\n");
     return;
 }
 
@@ -218,6 +231,7 @@ void* find_table(char* signature){
 
 bool acpi_reboot(){
     acpi_enter_subsystem();
+    debug_log("[ACPI]: Doing ACPI Reset\n");
     if(!BIT_IS_SET(fadt->Flags, 10)){
         acpi_leave_subsystem();
         return false;

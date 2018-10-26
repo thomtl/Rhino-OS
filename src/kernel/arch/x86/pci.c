@@ -155,6 +155,7 @@ void pci_check_bus(uint8_t bus){
 }
 
 void pci_check_all_buses(void){
+  debug_log("[PCI]: Enumerating PCI\n");
   uint8_t function = 0;
   uint8_t headerType;
 
@@ -167,6 +168,7 @@ void pci_check_all_buses(void){
       pci_check_bus(function);
     }
   }
+  debug_log("[PCI]: PCI Enumerated\n");
 }
 
 uint32_t pci_read_bar(uint8_t bus, uint8_t device, uint8_t function, uint8_t bar){

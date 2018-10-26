@@ -19,6 +19,7 @@ void gdt_set_gate(uint32_t n, uint32_t base, uint32_t limit, uint8_t access, uin
 }
 
 void gdt_install(){
+  debug_log("[GDT]: Initializing GDT\n");
   gdtptr.limit = (sizeof(gdt_entry) * 6) - 1;
   gdtptr.base = (uint32_t)&gdt;
 
@@ -32,5 +33,6 @@ void gdt_install(){
 
   gdt_flush();
   tss_flush();
+  debug_log("[GDT]: GDT Initialized\n");
   return;
 }

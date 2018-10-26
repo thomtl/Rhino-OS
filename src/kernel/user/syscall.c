@@ -189,4 +189,5 @@ void syscall_handler(registers_t *regs){
 
 void init_syscall(){
   register_interrupt_handler(128, syscall_handler);
+  debug_log("[SYSCALL]: Syscalls initialized\n");
 }

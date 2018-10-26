@@ -52,6 +52,7 @@ static uint32_t pmm_first_free(){
 //TODO: pmm_first_free_s(uint32_t blocks);
 
 bool init_pmm(multiboot_info_t* mstruc){
+    debug_log("[PMM]: Initializing PMM\n");
     kern_start = (uint32_t)&_kernel_start;
     kern_end = (uint32_t)&_kernel_end;
     mbd = mstruc;
@@ -74,6 +75,7 @@ bool init_pmm(multiboot_info_t* mstruc){
       }
       mmap = (multiboot_memory_map_t*) ( (uintptr_t)mmap + mmap->size + sizeof(uintptr_t) );
     }
+    debug_log("[PMM]: PMM Initialized\n");
     return true;
 }
 

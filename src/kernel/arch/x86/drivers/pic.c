@@ -19,6 +19,14 @@ uint16_t pic_get_isr(){
 }
 
 void pic_remap(uint8_t pic1_vector_offset, uint8_t pic2_vector_offset){
+    char buf[5] = "";
+    debug_log("[PIC]: Remapping PIC to master: ");
+    int_to_ascii(pic1_vector_offset, buf);
+    debug_log(buf);
+    debug_log(", slave: ");
+    int_to_ascii(pic2_vector_offset, buf);
+    debug_log(buf);
+    debug_log("\n");
     outb(PIC1_CMD, PIC_INIT); // Send Init To PIC1 and PIC2
     outb(PIC2_CMD, PIC_INIT);
     outb(PIC1_DAT, pic1_vector_offset); // Send vector offset 32 to PIC1 and 40 to PIC2
@@ -46,6 +54,7 @@ void pic_send_eoi(){
 }
 
 void pic_disable(){
+    debug_log("[PIC]: Disabling PIC\n");
     // First disable PIC2 so PIC1 can't receive an interrupt while it is disabled
     outb(PIC2_DAT, PIC_DISABLE); // Disable PIC2
     outb(PIC1_DAT, PIC_DISABLE); // Disable PIC1

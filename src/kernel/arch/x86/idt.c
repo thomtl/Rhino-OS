@@ -35,4 +35,5 @@ void set_idt(){
   idt_reg.limit = IDT_ENTRIES * sizeof(idt_gate_t) - 1;
 
   asm("lidtl (%0)" : : "r" (&idt_reg));
+  debug_log("[IDT]: IDT set in IDTR\n");
 }

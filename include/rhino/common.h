@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <rhino/panic.h>
+#include <rhino/debug.h>
 
 #define KERNEL_VBASE 0xC0000000
 

@@ -8,4 +8,5 @@ void init_pit(uint32_t frq){
     outb(PIT_CMD, 0x36); // Channel 0, Low / High byte, Square wave
     outb(PIT_DAT_CH_0, low);
     outb(PIT_DAT_CH_0, high);
+    debug_log("[PIT]: PIT Started\n");
 }

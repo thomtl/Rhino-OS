@@ -24,3 +24,4 @@ char read_serial(uint32_t com);
 void serial_write(uint32_t com, char a);
 void serial_write_string(uint32_t com, char* msg);
 void init_serial();
+void init_serial_early();

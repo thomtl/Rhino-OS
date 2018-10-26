@@ -78,11 +78,14 @@ pd_entry* vmm_pdirectory_lookup_entry(pdirectory* p, void* addr){
 }
 
 bool vmm_switch_pdirectory(pdirectory* dir){
-    if(!dir) return false;
+    if(!dir){
+        return false;
+    }
 
     vmm_cur_directory = dir;
     uint32_t phys = (uint32_t)((uint32_t)dir - (uint32_t)KERNEL_VBASE);
     asm("mov %0, %%cr3":: "r"(phys));
+    debug_log("[VMM]: CR3 Set\n");
     return true;
 }
 pdirectory* vmm_get_directory(){
@@ -169,6 +172,7 @@ void vmm_pdirectory_clear(pdirectory* dir){
 }
 
 bool init_vmm(){
+    debug_log("[VMM]: Initializing VMM\n");
     pdirectory* dir = (pdirectory*)((uint32_t)pmm_alloc_block() + KERNEL_VBASE);
 		kernel_directory = dir;
     if(!dir) return false;
@@ -184,6 +188,7 @@ bool init_vmm(){
 	}
 
     vmm_switch_pdirectory(dir);
+    debug_log("[VMM]: VMM Initialized\n");
     return true;
 }
 

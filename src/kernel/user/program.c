@@ -39,9 +39,6 @@ loaded_program_t* load_program(char* filename, uint8_t type){
    @return returns nothing.
  */
 void run_program(void *address){
-  //call_module_t prog = (call_module_t) address;
-  //prog();
-
   createTask(address, taskArray[0].regs.eflags, taskArray[0].regs.cr3);
   return;
 }

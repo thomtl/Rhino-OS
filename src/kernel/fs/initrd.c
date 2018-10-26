@@ -54,6 +54,7 @@ static fs_node_t *initrd_finddir(fs_node_t *node, char *name)
 }
 
 fs_node_t *initialise_initrd(uint32_t location){
+  debug_log("[INITRD]: Initializing INITRD\n");
   initrd_header = (initrd_header_t *)location;
   file_headers = (initrd_file_header_t *) (location+sizeof(initrd_header_t));
   initrd_root = (fs_node_t*)umalloc(sizeof(fs_node_t));
@@ -108,5 +109,6 @@ fs_node_t *initialise_initrd(uint32_t location){
     root_nodes[i].close = 0;
     root_nodes[i].impl = 0;
   }
+  debug_log("[INITRD]: INITRD Initialized\n");
   return initrd_root;
 }

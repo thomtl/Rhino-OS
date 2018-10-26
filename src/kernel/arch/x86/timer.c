@@ -23,14 +23,20 @@ void init_timer(){
   register_interrupt_handler(IRQ0, irq0_callback);
   register_interrupt_handler(IRQ8, irq8_callback);
 
+  debug_log("[TIMER]: Initializing Timer\n");
   if(detect_hpet()){
-    if(!init_hpet(1000000)){
+    bool hpet = init_hpet(1000000);
+    if(hpet){
+      debug_log("[TIMER]: Using HPET as main Timer\n");
+    } else {
       goto pit;
     }
   } else {
     pit:
     init_pit(100);
+    debug_log("[TIMER]: Using PIT as main Timer\n");
   }
+  debug_log("[TIMER]: Initialized Timer\n");
 }
 
 uint32_t get_tick(){

@@ -14,6 +14,7 @@ bool apic = false;
 void page_fault_handler(registers_t* regs);
 
 void isr_install() {
+    debug_log("[ISR]: Setting ISR's in IDT\n");
     set_idt_gate(0, (uint32_t)isr0, KERNEL_CS, 0);
     set_idt_gate(1, (uint32_t)isr1, KERNEL_CS, 0);
     set_idt_gate(2, (uint32_t)isr2, KERNEL_CS, 0);
@@ -48,6 +49,7 @@ void isr_install() {
     set_idt_gate(31, (uint32_t)isr31, KERNEL_CS, 0);
 
     set_idt_gate(128, (uint32_t)isr128, KERNEL_CS, 3);
+    debug_log("[ISR]: ISR's set\n");
     set_idt(); // Load with ASM
 
     register_interrupt_handler(14, page_fault_handler);
@@ -129,35 +131,39 @@ void irq_handler(registers_t *r){
 }
 
 void irq_install(){
-    if(init_apic()){
-      set_idt_gate(255, (uint32_t)isr255, KERNEL_CS, 0);
-      apic = true;
-      goto no_pic;
-    }
-    pic_remap(32, 40);
-    no_pic:
-    set_idt_gate(32, (uint32_t)irq0, KERNEL_CS, 0);
-    set_idt_gate(33, (uint32_t)irq1, KERNEL_CS, 0);
-    set_idt_gate(34, (uint32_t)irq2, KERNEL_CS, 0);
-    set_idt_gate(35, (uint32_t)irq3, KERNEL_CS, 0);
-    set_idt_gate(36, (uint32_t)irq4, KERNEL_CS, 0);
-    set_idt_gate(37, (uint32_t)irq5, KERNEL_CS, 0);
-    set_idt_gate(38, (uint32_t)irq6, KERNEL_CS, 0);
-    set_idt_gate(39, (uint32_t)irq7, KERNEL_CS, 0);
-    set_idt_gate(40, (uint32_t)irq8, KERNEL_CS, 0);
-    set_idt_gate(41, (uint32_t)irq9, KERNEL_CS, 0);
-    set_idt_gate(42, (uint32_t)irq10, KERNEL_CS, 0);
-    set_idt_gate(43, (uint32_t)irq11, KERNEL_CS, 0);
-    set_idt_gate(44, (uint32_t)irq12, KERNEL_CS, 0);
-    set_idt_gate(45, (uint32_t)irq13, KERNEL_CS, 0);
-    set_idt_gate(46, (uint32_t)irq14, KERNEL_CS, 0);
-    set_idt_gate(47, (uint32_t)irq15, KERNEL_CS, 0);
+  debug_log("[ISR]: Initializing IRQ's\n");
+  if(init_apic()){
+    set_idt_gate(255, (uint32_t)isr255, KERNEL_CS, 0);
+    apic = true;
+    debug_log("[ISR]: Using APIC as External Interrupt Controller\n");
+    goto no_pic;
+  }
+  pic_remap(32, 40);
+  debug_log("[ISR]: Using PIC as External Interrupt Controller\n");
+  no_pic:
+  set_idt_gate(32, (uint32_t)irq0, KERNEL_CS, 0);
+  set_idt_gate(33, (uint32_t)irq1, KERNEL_CS, 0);
+  set_idt_gate(34, (uint32_t)irq2, KERNEL_CS, 0);
+  set_idt_gate(35, (uint32_t)irq3, KERNEL_CS, 0);
+  set_idt_gate(36, (uint32_t)irq4, KERNEL_CS, 0);
+  set_idt_gate(37, (uint32_t)irq5, KERNEL_CS, 0);
+  set_idt_gate(38, (uint32_t)irq6, KERNEL_CS, 0);
+  set_idt_gate(39, (uint32_t)irq7, KERNEL_CS, 0);
+  set_idt_gate(40, (uint32_t)irq8, KERNEL_CS, 0);
+  set_idt_gate(41, (uint32_t)irq9, KERNEL_CS, 0);
+  set_idt_gate(42, (uint32_t)irq10, KERNEL_CS, 0);
+  set_idt_gate(43, (uint32_t)irq11, KERNEL_CS, 0);
+  set_idt_gate(44, (uint32_t)irq12, KERNEL_CS, 0);
+  set_idt_gate(45, (uint32_t)irq13, KERNEL_CS, 0);
+  set_idt_gate(46, (uint32_t)irq14, KERNEL_CS, 0);
+  set_idt_gate(47, (uint32_t)irq15, KERNEL_CS, 0);
 
   init_timer();
   init_keyboard();
   init_syscall();
   init_serial();
   asm("sti");
+  debug_log("[ISR]: IRQ's Started\n");
 }
 
 void enable_nmi(){
