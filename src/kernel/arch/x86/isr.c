@@ -12,7 +12,7 @@
 isr_t interrupt_handlers[256];
 bool apic = false;
 void page_fault_handler(registers_t* regs);
-
+void nmi_handler(registers_t *regs);
 void isr_install() {
     debug_log("[ISR]: Setting ISR's in IDT\n");
     set_idt_gate(0, (uint32_t)isr0, KERNEL_CS, 0);
@@ -53,6 +53,7 @@ void isr_install() {
     set_idt(); // Load with ASM
 
     register_interrupt_handler(14, page_fault_handler);
+    register_interrupt_handler(2, nmi_handler);
 }
 
 char *exception_messages[] = {
@@ -184,5 +185,15 @@ void page_fault_handler(registers_t* regs){
   kprint(buf);
   kprint("\n");
   while(1);
+  UNUSED(regs);
+}
+
+void nmi_handler(registers_t *regs){
+  uint8_t statusa = inb(0x92);
+  uint8_t statusb = inb(0x61);
+  if(BIT_IS_SET(statusa, 4)) PANIC_M("[NMI]: Watchdog timer\n");
+  if(BIT_IS_SET(statusb, 6)) PANIC_M("[NMI]: Bus Failure\n");
+  if(BIT_IS_SET(statusb, 7)) PANIC_M("[NMI]: Memory Failure\n");
+  PANIC_M("[NMI]: Unkown Cause\n");
   UNUSED(regs);
 }
