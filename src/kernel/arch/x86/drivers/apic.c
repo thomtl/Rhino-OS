@@ -87,6 +87,7 @@ bool init_apic(){
     pic_disable();
     debug_log("[APIC]: Initializing LAPIC\n");
     init_lapic((uint32_t)lapic);
+    uint8_t lapic_id = lapic_get_id();
     debug_log("[APIC]: LAPIC Initialized\n");
 
 
@@ -121,7 +122,7 @@ bool init_apic(){
     debug_log("[APIC]: Setting IOAPIC Redirection Entries\n");
     for(uint8_t i = 0; i < 16; i++){ // Enable Legacy PIC Interrupts
         if(i == 2) break; // Skip PIC2 Cascade IRQ, it seems to break things
-        ioapic_set_entry(apic_irq_redirect(i), (IRQ_BASE + i) | (apic_isa_pin_polarity(i) << 13) | (apic_isa_trigger_mode(i) << 15));
+        ioapic_set_entry(apic_irq_redirect(i), (IRQ_BASE + i) | (apic_isa_pin_polarity(i) << 13) | (apic_isa_trigger_mode(i) << 15) | ((uint64_t)lapic_id << 56));
     }
     debug_log("[APIC]: APIC Initialized\n");
     return true;

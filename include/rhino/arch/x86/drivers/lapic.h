@@ -58,5 +58,5 @@
 #define ICR_DESTINATION_SHIFT           24
 
 void init_lapic(uint32_t base);
-uint32_t lapic_get_id();
+uint8_t lapic_get_id();
 void lapic_send_eoi();

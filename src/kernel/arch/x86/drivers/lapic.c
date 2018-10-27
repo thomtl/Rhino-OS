@@ -19,7 +19,7 @@ void init_lapic(uint32_t base){
     lapic_write(LAPIC_SPURIOUS_VECTOR_REG, 0x100 | 0xff);
 }
 
-uint32_t lapic_get_id(){
+uint8_t lapic_get_id(){
     return lapic_read(LAPIC_VERSION_REG) >> 24;
 }
 
