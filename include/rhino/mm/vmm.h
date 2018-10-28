@@ -85,6 +85,7 @@ bool vmm_switch_pdirectory(pdirectory* dir);
 pdirectory* vmm_get_directory();
 
 pdirectory* vmm_clone_dir(pdirectory* dir);
+void vmm_free_dir(pdirectory* dir);
 
 void vmm_flush_tlb_entry(void* addr);
 void vmm_map_page(void* phys, void* virt, uint32_t user);

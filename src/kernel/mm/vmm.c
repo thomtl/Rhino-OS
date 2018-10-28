@@ -220,3 +220,13 @@ pdirectory* vmm_clone_dir(pdirectory* dir){
 	}
 	return (pdirectory*)ret;
 }
+
+void vmm_free_dir(pdirectory* dir){
+    for(uint32_t i = 0; i < 1024; i++){
+        if(vmm_pd_entry_is_present(dir->m_entries[i])){
+            void* tab = vmm_pd_entry_pfn(dir->m_entries[i]);
+            pmm_free_block(tab);
+        }
+    }
+    pmm_free_block((void*)((uint32_t)dir - (uint32_t)KERNEL_VBASE));
+}

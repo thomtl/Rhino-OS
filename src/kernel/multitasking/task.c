@@ -88,6 +88,7 @@ void kill(uint32_t pid){
   task->regs.esp -= 0x1000;
   pmm_free_block((void*)task->regs.esp);
   for(uint32_t i = task->res.frameIndex; i > 0; i--) pmm_free_block(task->res.frames[i]);
+  vmm_free_dir((pdirectory*)((uint32_t)task->regs.cr3 + KERNEL_VBASE));
   task->res.frameIndex = 0;
   task->used = false;
 }
