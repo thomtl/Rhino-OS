@@ -1,7 +1,7 @@
-C_SOURCES = $(wildcard ./*.c)
-HEADERS = $(wildcard ./*.h)
+C_SOURCES = $(wildcard ./*.c ./string/*.c)
+HEADERS = $(wildcard ./*.h ./string/*.c)
 
-ASM_SOURCES = $(wildcard ./*.asm)
+ASM_SOURCES = $(wildcard ./*.asm ./string/*.asm)
 
 C_OBJ = ${C_SOURCES:.c=.o}
 ASM_OBJ = ${ASM_SOURCES:.asm=.o}
@@ -25,7 +25,7 @@ libc.o: ${ASM_OBJ} ${C_OBJ}
 
 clean:
 	rm -f libc.o crt0.o
-	rm -f *.o crt/*.o
+	rm -f *.o crt/*.o ./string/*.o
 
 %.o: %.c ${HEADERS}
 	${CC} ${CFLAGS} -ffreestanding -c $< -o $@

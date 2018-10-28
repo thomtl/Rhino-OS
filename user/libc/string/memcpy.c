@@ -1,5 +1,5 @@
-#include <libk/string.h>
-#include <rhino/arch/x86/drivers/sse.h>
+#include "../include/string.h"
+#include "../include/feat.h"
 
 static inline void* memcpy_movsb(void* restrict dstptr, const void* restrict srcptr, size_t size){
 	asm("rep movsb" : : "S"(srcptr), "D"(dstptr), "c"(size) : "memory");
