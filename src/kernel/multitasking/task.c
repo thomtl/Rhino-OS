@@ -127,7 +127,8 @@ void switch_context(task_t *old, task_t *new, registers_t *regs){
   regs->ss = new->regs.ss;
   regs->cs = new->regs.cs;
   regs->ds = new->regs.ds;
-  asm("mov %0, %%cr3":: "r"(new->regs.cr3));
+  //asm("mov %0, %%cr3":: "r"(new->regs.cr3));
+  vmm_switch_pdirectory((pdirectory*)((uint32_t)new->regs.cr3 + KERNEL_VBASE));
   restore_fpu_context(new);
 }
 

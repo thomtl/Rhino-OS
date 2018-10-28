@@ -164,11 +164,11 @@ bool vmm_page_is_mapped(void* virt){
 }
 
 void vmm_ptable_clear(ptable* tab){
-    memset(tab, 0, sizeof(ptable));
+    memset(tab, 0, sizeof(uint32_t) * 1024);
 }
 
 void vmm_pdirectory_clear(pdirectory* dir){
-    memset(dir, 0, sizeof(pdirectory));
+    memset(dir, 0, sizeof(uint32_t) * 1024);
 }
 
 bool init_vmm(){
@@ -192,10 +192,31 @@ bool init_vmm(){
     return true;
 }
 
+uint32_t vmm_clone_tab(pd_entry* pde){
+    ptable* org = (ptable*)PAGE_GET_PHYSICAL_ADDRESS(pde);
+    uint32_t ret = (uint32_t)((uint32_t)pmm_alloc_block() + KERNEL_VBASE);
+    vmm_ptable_clear((ptable*)ret);
+    for(uint32_t i = 0; i < 1024; i++){
+        pt_entry* page = &((org->m_entries)[i]);
+        pt_entry* pagv = (pt_entry*)((uint32_t)page + (uint32_t)KERNEL_VBASE);
+        uint32_t* pte = (uint32_t*)ret + i;
+        *pte = *pagv;
+    }
+    return (uint32_t)ret;
+}
+
 pdirectory* vmm_clone_dir(pdirectory* dir){
 	uint32_t ret = (uint32_t)((uint32_t)pmm_alloc_block() + KERNEL_VBASE);
+    vmm_pdirectory_clear((pdirectory*)ret);
 	for(uint32_t i = 0; i < 1024; i++){
-		memcpy(&(((uintptr_t*)ret)[i]), &(((uintptr_t*)dir)[i]), sizeof(uintptr_t));
+		//memcpy(&(((uintptr_t*)ret)[i]), &(((uintptr_t*)dir)[i]), sizeof(uintptr_t));
+        if(vmm_pd_entry_is_present(dir->m_entries[i])){
+            uint32_t* pde = (uint32_t*)ret + i;
+            vmm_pd_entry_add_attrib(pde, RHINO_PDE_PRESENT);
+            vmm_pd_entry_add_attrib(pde, RHINO_PDE_WRITABLE);
+            if(vmm_pd_entry_is_user(dir->m_entries[i])) vmm_pd_entry_add_attrib(pde, RHINO_PDE_USER);
+            vmm_pd_entry_set_frame(pde, (void*)(vmm_clone_tab(&(dir->m_entries[i])) - KERNEL_VBASE));
+        }
 	}
 	return (pdirectory*)ret;
 }
