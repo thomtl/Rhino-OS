@@ -7,9 +7,8 @@ size_t framebuffer;
 void deer_clear_screen_col(uint8_t r, uint8_t g, uint8_t b){
     for(uint32_t i = 0; i < SCREEN_WIDTH; i++){
         for(uint32_t j = 0; j < SCREEN_HEIGHT; j++){
-            *(uint8_t*)(&((uint8_t *)framebuffer)[(j * (SCREEN_WIDTH) + i) * 3]) = b;
-            *(uint8_t*)(&((uint8_t *)framebuffer)[(j * (SCREEN_WIDTH) + i) * 3 + 1]) = g;
-            *(uint8_t*)(&((uint8_t *)framebuffer)[(j * (SCREEN_WIDTH) + i) * 3 + 2]) = r;
+            char buf[3] = {r, g, b};
+            asm("rep movsb" : : "S"(&buf), "D"((void*)(&((uint8_t*)framebuffer)[(j * (SCREEN_WIDTH) + i) * 3])), "c"(3) : "memory");
         }
     }
     deer_reset_terminal();
@@ -28,11 +27,6 @@ void deer_start(){
         PANIC_M("[DEER] No BGA device found");
     }
 
-    /*deer_clear_screen_col(0, 0, 0);
-
-    deer_printf("abcdefghijklmnopqrstuvwxyz1234567890abcdefghjkmnopabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvw");
-
-    draw_circle(100, 100, 250, 255, 0, 0);*/
     deer_clear_screen();
     activate_deer();
 }
