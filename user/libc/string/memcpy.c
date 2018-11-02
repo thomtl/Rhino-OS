@@ -37,6 +37,13 @@ static inline void* memcpy_movdqu(void* restrict dstptr, const void* restrict sr
 	return dstptr;
 }
 
+static inline void* memcpy_movdqa(void* restrict dstptr, const void* restrict srcptr, size_t size){
+    for(uint32_t i = 0; i < size; i += SSE_XMM_SIZE){
+        asm("movdqa (%0), %%xmm0; movdqa %%xmm0, (%1)" : : "r"((uint32_t)srcptr + i), "r"((uint32_t)dstptr + i) : "memory");
+    }
+	return dstptr;
+}
+
 static inline void* memcpy_movups(void* restrict dstptr, const void* restrict srcptr, size_t size){
     for(uint32_t i = 0; i < size; i += SSE_XMM_SIZE){
         asm("movups (%0), %%xmm0; movups %%xmm0, (%1)" : : "r"((uint32_t)srcptr + i), "r"((uint32_t)dstptr + i) : "memory");
@@ -65,7 +72,29 @@ static inline void* memcpy_vmovups(void* restrict dstptr, const void* restrict s
 	return dstptr;
 }
 
+static inline void* memcpy_vmovaps_512(void* restrict dstptr, const void* restrict srcptr, size_t size){
+	for(uint32_t i = 0; i < size; i += AVX512_ZMM_SIZE){
+        asm("vmovaps (%0), %%zmm0; vmovaps %%zmm0, (%1)" : : "r"((uint32_t)srcptr + i), "r"((uint32_t)dstptr + i) : "memory");
+    }
+	return dstptr;
+}
+
+static inline void* memcpy_vmovups_512(void* restrict dstptr, const void* restrict srcptr, size_t size){
+	for(uint32_t i = 0; i < size; i += AVX512_ZMM_SIZE){
+        asm("vmovups (%0), %%zmm0; vmovups %%zmm0, (%1)" : : "r"((uint32_t)srcptr + i), "r"((uint32_t)dstptr + i) : "memory");
+    }
+	return dstptr;
+}
+
 void* memcpy(void* restrict dstptr, const void* restrict srcptr, size_t size) {
+	if(detect_avx_512()){
+		if(((size % AVX512_ZMM_SIZE) == 0) && !((size_t)dstptr & (AVX512_ZMM_SIZE - 1)) && !((size_t)srcptr & (AVX512_ZMM_SIZE - 1))){
+			return memcpy_vmovaps_512(dstptr, srcptr, size);
+		}
+		if((size % AVX512_ZMM_SIZE) == 0){
+			return memcpy_vmovups_512(dstptr, srcptr, size);
+		}
+	}
 	if(detect_avx()){
 		if(((size % AVX_YMM_SIZE) == 0) && !((size_t)dstptr & (AVX_YMM_SIZE - 1)) && !((size_t)srcptr & (AVX_YMM_SIZE - 1))){
 			return memcpy_vmovaps(dstptr, srcptr, size);
@@ -75,6 +104,9 @@ void* memcpy(void* restrict dstptr, const void* restrict srcptr, size_t size) {
 		}
 	}
 	if(detect_sse2()){
+		if(((size % SSE_XMM_SIZE) == 0) && !((size_t)dstptr & (SSE_XMM_SIZE - 1)) && !((size_t)srcptr & (SSE_XMM_SIZE - 1))){
+			return memcpy_movdqa(dstptr, srcptr, size);
+		}
 		if((size % SSE_XMM_SIZE) == 0){
 			return memcpy_movdqu(dstptr, srcptr, size);
 		}

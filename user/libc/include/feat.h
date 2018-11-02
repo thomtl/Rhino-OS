@@ -5,7 +5,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "sys.h"
-
+#define AVX512_ZMM_SIZE 32
 #define AVX_YMM_SIZE 32
 #define SSE_XMM_SIZE 16
 
