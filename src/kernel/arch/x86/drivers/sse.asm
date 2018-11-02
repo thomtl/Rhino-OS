@@ -29,6 +29,15 @@ detect_sse:
     mov eax, 1
     ret
 
+global detect_sse2
+detect_sse2:
+    mov eax, 1
+    cpuid
+    bt edx, 26
+    jnc no_sse
+    mov eax, 1
+    ret
+
 no_sse:
     mov eax, 0
     ret

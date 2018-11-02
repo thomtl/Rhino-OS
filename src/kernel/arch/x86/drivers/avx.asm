@@ -47,7 +47,7 @@ no_avx:
     mov eax, 0
     ret
 
-global detect_avx
+global detect_avx_512
 detect_avx_512:
     mov eax, 0
     cpuid
