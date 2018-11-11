@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdint.h>
+#include <rhino/common.h>
 
 enum {
     CPUID_FEAT_ECX_SSE3         = 0, 
@@ -33,6 +33,7 @@ enum {
     CPUID_FEAT_ECX_AVX          = 28,
     CPUID_FEAT_ECX_F16C         = 29,
     CPUID_FEAT_ECX_RDRAND       = 30,
+    CPUID_FEAT_ECX_HYPERVISOR   = 31,
  
     CPUID_FEAT_EDX_FPU          = 0,  
     CPUID_FEAT_EDX_VME          = 1,  
@@ -72,3 +73,4 @@ enum {
 
 void cpuid(uint32_t code, uint32_t *a, uint32_t *c, uint32_t *d);
 void id_cpu();
+bool is_hypervisor();

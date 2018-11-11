@@ -5,6 +5,10 @@ RSDT* rsdt;
 XSDP* xsdp;
 XSDT* xsdt;
 FADT* fadt;
+
+uint32_t slp_typa;
+uint32_t slp_typb;
+
 pdirectory* cr3;
 pdirectory* subsystemDir;
 extern pdirectory* kernel_directory;
@@ -194,6 +198,54 @@ void init_acpi(){
         return;
     }
 
+    vmm_map_page((void*)fadt->Dsdt, (void*)fadt->Dsdt, 0);
+    SDTHeader* dsdt_header = (SDTHeader*)fadt->Dsdt;
+    if(!doChecksum(dsdt_header)){
+        kprint_err("[ACPI]: DSDT Checksum Failed\n");
+        debug_log("[ACPI]: DSDT Checksum Failed\n");
+        acpi_leave_subsystem();
+        return;
+    }
+
+    uint8_t *dsdt_ptr = 0;
+    uint32_t dsdt_len = 0;
+    dsdt_ptr = (uint8_t*)((uint32_t)dsdt_header + sizeof(SDTHeader));
+    dsdt_len = dsdt_header->Length - sizeof(SDTHeader);
+
+    while(0 < dsdt_len--){
+        if ( memcmp(dsdt_ptr, "_S5_", 4) == 0)
+            break;
+        dsdt_ptr++;
+    }
+
+
+    if(dsdt_len > 0){
+        if ( ( *(dsdt_ptr-1) == 0x08 || ( *(dsdt_ptr-2) == 0x08 && *(dsdt_ptr-1) == '\\') ) && *(dsdt_ptr+4) == 0x12 )
+        {
+            dsdt_ptr += 5;
+            dsdt_ptr += ((*dsdt_ptr &0xC0)>>6) +2;   // calculate PkgLength size
+
+            if (*dsdt_ptr == 0x0A) dsdt_ptr++;   // skip byteprefix
+            slp_typa = *(dsdt_ptr)<<10;
+            dsdt_ptr++;
+
+            if (*dsdt_ptr == 0x0A) dsdt_ptr++;   // skip byteprefix
+            slp_typb = *(dsdt_ptr)<<10;
+        } else {
+            kprint_err("[ACPI]: Error Parsing \\_S5 Object\n");
+            debug_log("[ACPI]: Error Parsing \\_S5 Object\n");
+            acpi_leave_subsystem();
+            return;
+        }
+        
+    } else {
+        kprint_err("[ACPI]: Could not find \\_S5 Object\n");
+        debug_log("[ACPI]: Could not find \\_S5 Object\n");
+        acpi_leave_subsystem();
+        return;
+    }
+
+
 
     acpi_leave_subsystem();
     debug_log("[ACPI]: Initialized ACPI\n");
@@ -247,4 +299,42 @@ bool acpi_reboot(){
     }
     acpi_leave_subsystem();
     PANIC_M("[ACPI]: REBOOT FAILED\n");
+}
+
+void acpi_shutdown(){
+    acpi_enter_subsystem();
+    uint32_t pm1a_cnt = fadt->PM1aControlBlock;
+    uint32_t pm1b_cnt = fadt->PM1bControlBlock;
+
+    if((inw(pm1a_cnt) & 1) == 0){
+        if(fadt->SMI_CommandPort != 0 || fadt->AcpiEnable != 0){
+            outb(fadt->SMI_CommandPort, fadt->AcpiEnable);
+            uint32_t i;
+            for(i = 0; i < 300; i++){
+                if ( (inw(pm1a_cnt) &1) == 1 )
+                  break;
+               for(volatile int j = 0; j < 1000; j++);
+            }
+            if (pm1b_cnt != 0){
+                for (; i<300; i++ )
+                {
+                    if ( (inw((unsigned int) pm1b_cnt) &1) == 1 )
+                        break;
+                    for(volatile int j = 0; j < 1000; j++);
+                }
+            }
+            if(!(i < 300)){
+                kprint_err("[ACPI]: Shutdown Failed\n");
+                debug_log("[ACPI]: Shutdown Failed\n");
+                acpi_leave_subsystem();
+
+            }
+        }
+    }
+
+    outw(pm1a_cnt, slp_typa | (1 << 13));
+    if(pm1b_cnt != 0) outw(pm1b_cnt, slp_typb | (1 << 13));
+    acpi_leave_subsystem();
+    PANIC_M("[ACPI]: Shutdown Failed\n");
+    return;
 }

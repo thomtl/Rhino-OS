@@ -123,3 +123,12 @@ void id_cpu(){
     
     putchar('\n');
 }
+
+bool is_hypervisor(){
+    uint32_t a, c ,d;
+    cpuid(CPUID_GET_FEATURES, &a, &c, &d);
+    if(BIT_IS_SET(c, CPUID_FEAT_ECX_HYPERVISOR)){
+        return true;
+    }
+    return false;
+}

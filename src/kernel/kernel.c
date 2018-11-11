@@ -50,7 +50,6 @@
 extern uint32_t placement_address;
 extern uint32_t _kernel_start;
 
-uint8_t shouldExit = 0;
 multiboot_info_t* multibootInfo;
 uint32_t ramAmountMB = 0;
 
@@ -164,9 +163,6 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   enable_scheduling();
   while(1)
   {
-    if(shouldExit == 1){
-        return;
-    }
     char c[256] = "";
     getline(c, 256);
 
@@ -178,7 +174,7 @@ void user_input(char *input){
   if(strcmp(input, "exit") == 0){
     clear_screen();
     kprint("Shutting down Rhino");
-    shouldExit = 1;
+    shutdown();
     return;
   }
   if(strcmp(input, "help") == 0){

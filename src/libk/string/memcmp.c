@@ -1,11 +1,11 @@
 #include <libk/string.h>
 
 int memcmp(const void* aptr, const void* bptr, size_t size){
-  const unsigned char* a = (unsigned char*) aptr;
-  const unsigned char* b = (unsigned char*) bptr;
-  for(size_t i = 0; i < size; i++){
-    if(a[i] < b[i]) return -1;
-    else if (b[1] < a[i]) return 1;
-  }
-  return 0;
+    const unsigned char *p1 = aptr, *p2 = bptr;
+    while(size--)
+        if( *p1 != *p2 )
+            return *p1 - *p2;
+        else
+            p1++,p2++;
+    return 0;
 }

@@ -15,3 +15,4 @@ uint32_t acpi_get_fadt_version();
 bool acpi_table_exists(char* signature);
 void* find_table(char* signature);
 bool acpi_reboot();
+void acpi_shutdown();
