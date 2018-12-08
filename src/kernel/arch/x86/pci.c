@@ -1,48 +1,41 @@
 #include <rhino/arch/x86/pci.h>
 
 static inline uint8_t pci_get_class(uint8_t bus, uint8_t device, uint8_t function){
-  uint16_t t = pci_config_read_word(bus, device, function, 10);
-  return t >> 8;
+  uint16_t t = pci_config_read(bus, device, function, 11, PCI_SIZE_BYTE);
+  return t;
 }
 
 static inline uint8_t pci_get_subclass(uint8_t bus, uint8_t device, uint8_t function){
-  uint16_t t = pci_config_read_word(bus, device, function, 10);
-  return t & 0xFF;
+  uint16_t t = pci_config_read(bus, device, function, 10, PCI_SIZE_BYTE);
+  return t;
 }
 
 static inline uint8_t pci_get_secondary_bus(uint8_t bus, uint8_t device, uint8_t function){
-  uint16_t t = pci_config_read_word(bus, device, function, 18);
-  return t >> 8;
+  uint16_t t = pci_config_read(bus, device, function, 19, PCI_SIZE_BYTE);
+  return t;
 }
 
 static inline uint16_t pci_get_device_id(uint8_t bus, uint8_t device, uint8_t function){
-  uint16_t t = pci_config_read_word(bus, device, function, 2);
+  uint16_t t = pci_config_read(bus, device, function, 2, PCI_SIZE_WORD);
   return t;
 }
 
 static inline uint16_t pci_get_vendor_id(uint8_t bus, uint8_t device, uint8_t function){
-  uint16_t t = pci_config_read_word(bus, device, function, 0);
+  uint16_t t = pci_config_read(bus, device, function, 0, PCI_SIZE_WORD);
   return t;
 }
 
 static inline uint8_t pci_get_header_type(uint8_t bus, uint8_t device, uint8_t function){
-  uint16_t t = pci_config_read_word(bus, device, function, 0x0F);
-  return t & 0xFF;
+  uint16_t t = pci_config_read(bus, device, function, 0x0F, PCI_SIZE_BYTE);
+  return t;
 }
 
-uint16_t pci_config_read_word(uint8_t bus, uint8_t slot, uint8_t function, uint8_t offset){
-  uint32_t address;
-  uint32_t lbus = (uint32_t)bus;
-  uint32_t lslot = (uint32_t)slot;
-  uint32_t lfunc = (uint32_t)function;
-  uint16_t tmp = 0;
-
-  address = (uint32_t)((lbus << 16) | (lslot << 11) |
-            (lfunc << 8) | (offset & 0xfc) | ((uint32_t)0x80000000));
-
-  outd(PCI_IO_CMD, address);
-  tmp = (uint16_t)((ind(PCI_IO_DAT) >> ((offset & 2) * 8)) & 0xFFFF);
-  return tmp;
+uint16_t pci_config_read(uint8_t bus, uint8_t slot, uint8_t function, uint8_t offset, uint8_t len){
+  uint32_t ret;
+  uint32_t addr = 0x80000000 | (bus << 16) | (slot << 11) | (function << 8) | (offset & 0xFC);
+  outd(PCI_IO_CMD, addr);
+  ret = (ind(PCI_IO_DAT) >> ((offset & 3) * 8)) & (0xFFFFFFFF >> ((4 - len) * 8));
+  return ret;
 }
 
 void pci_print_device_info(uint8_t bus, uint8_t device, uint8_t function){
@@ -172,8 +165,8 @@ void pci_check_all_buses(void){
 }
 
 uint32_t pci_read_bar(uint8_t bus, uint8_t device, uint8_t function, uint8_t bar){
-  uint16_t low = pci_config_read_word(bus, device, function, bar);
-  uint16_t high = pci_config_read_word(bus, device, function, bar + 2);
+  uint16_t low = pci_config_read(bus, device, function, bar, PCI_SIZE_DWORD);
+  uint16_t high = pci_config_read(bus, device, function, bar + 2, PCI_SIZE_WORD);
   uint32_t full = ((high << 16) | low);
   return full;
 }

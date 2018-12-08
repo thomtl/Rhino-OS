@@ -36,7 +36,12 @@
 #define PCI_MEMORY_CONTROLLER 0x5
 #define PCI_BRIDGE_CONTROLLER 0x6
 
-uint16_t pci_config_read_word(uint8_t bus, uint8_t slot, uint8_t function, uint8_t offset);
+#define PCI_SIZE_BYTE 1
+#define PCI_SIZE_WORD 2
+#define PCI_SIZE_DWORD 4
+#define PCI_SIZE_QWORD 9
+
+uint16_t pci_config_read(uint8_t bus, uint8_t slot, uint8_t function, uint8_t offset, uint8_t len);
 void pci_check_function(uint8_t bus, uint8_t device, uint8_t function);
 void pci_check_device(uint8_t bus, uint8_t device);
 void pci_check_bus(uint8_t bus);
