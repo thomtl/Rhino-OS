@@ -3,6 +3,7 @@
 #include <rhino/common.h>
 #include <rhino/arch/x86/io.h>
 #include <rhino/arch/x86/drivers/bga.h>
+#include <rhino/arch/x86/drivers/ata.h>
 #include <rhino/arch/x86/drivers/screen.h>
 #include <libk/string.h>
 
@@ -41,9 +42,18 @@
 #define PCI_SIZE_DWORD 4
 #define PCI_SIZE_QWORD 9
 
-uint16_t pci_config_read(uint8_t bus, uint8_t slot, uint8_t function, uint8_t offset, uint8_t len);
+uint32_t pci_config_read(uint8_t bus, uint8_t slot, uint8_t function, uint8_t offset, uint8_t len);
+uint32_t pci_config_write(uint8_t bus, uint8_t slot, uint8_t function, uint8_t offset, uint8_t len, uint32_t val);
 void pci_check_function(uint8_t bus, uint8_t device, uint8_t function);
 void pci_check_device(uint8_t bus, uint8_t device);
 void pci_check_bus(uint8_t bus);
 void pci_check_all_buses(void);
 uint32_t pci_read_bar(uint8_t bus, uint8_t device, uint8_t function, uint8_t bar);
+
+uint8_t pci_get_class(uint8_t bus, uint8_t device, uint8_t function);
+uint8_t pci_get_subclass(uint8_t bus, uint8_t device, uint8_t function);
+uint8_t pci_get_subclass(uint8_t bus, uint8_t device, uint8_t function);
+uint8_t pci_get_secondary_bus(uint8_t bus, uint8_t device, uint8_t function);
+uint16_t pci_get_device_id(uint8_t bus, uint8_t device, uint8_t function);
+uint16_t pci_get_vendor_id(uint8_t bus, uint8_t device, uint8_t function);
+uint8_t pci_get_header_type(uint8_t bus, uint8_t device, uint8_t function);

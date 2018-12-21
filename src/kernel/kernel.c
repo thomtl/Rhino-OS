@@ -117,9 +117,12 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
 
   kprint("Initializing drivers\n");
   fs_root = initialise_initrd(initrd_location);
-  pci_check_all_buses();
   init_acpi();
   irq_install();
+  
+  pci_check_all_buses();
+  
+  
   init_fpu();
   init_sse();
   init_avx();

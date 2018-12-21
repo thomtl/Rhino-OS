@@ -6,11 +6,14 @@
 #include <rhino/arch/x86/drivers/pit.h>
 #include <rhino/arch/x86/drivers/hpet.h>
 
-uint32_t irq0s = 0;
-uint32_t irq8s = 0;
-
+volatile uint32_t irq0s = 0;
+volatile uint32_t irq8s = 0;
+volatile uint32_t seconds = 0;
+bool hpet;
 static void irq0_callback(registers_t *regs){
   irq0s++;
+  if(irq0s % 1000 == 0) seconds++;
+  
   schedule(regs);
 }
 
@@ -25,15 +28,15 @@ void init_timer(){
 
   debug_log("[TIMER]: Initializing Timer\n");
   if(detect_hpet()){
-    bool hpet = init_hpet(1000000);
+    hpet = init_hpet(100000);
     if(hpet){
-      debug_log("[TIMER]: Using HPET as main Timer\n");
+     debug_log("[TIMER]: Using HPET as main Timer\n");
     } else {
       goto pit;
     }
   } else {
     pit:
-    init_pit(100);
+    init_pit(1000);
     debug_log("[TIMER]: Using PIT as main Timer\n");
   }
   debug_log("[TIMER]: Initialized Timer\n");
@@ -41,4 +44,20 @@ void init_timer(){
 
 uint32_t get_tick(){
   return irq0s;
+}
+
+void sleep(uint32_t nSeconds){
+  volatile uint32_t eticks = nSeconds + seconds;
+  uint32_t eflags = save_eflags();
+  STI();
+  while(seconds < eticks) asm("hlt");
+  load_eflags(eflags);
+}
+
+void msleep(uint32_t nMseconds){
+  volatile uint32_t eticks = nMseconds + irq0s;
+  uint32_t eflags = save_eflags();
+  STI();
+  while(irq0s < eticks) asm("hlt");
+  load_eflags(eflags);
 }

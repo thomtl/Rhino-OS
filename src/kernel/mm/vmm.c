@@ -85,7 +85,7 @@ bool vmm_switch_pdirectory(pdirectory* dir){
     vmm_cur_directory = dir;
     uint32_t phys = (uint32_t)((uint32_t)dir - (uint32_t)KERNEL_VBASE);
     asm("mov %0, %%cr3":: "r"(phys));
-    debug_log("[VMM]: CR3 Set\n");
+    //debug_log("[VMM]: CR3 Set\n");
     return true;
 }
 pdirectory* vmm_get_directory(){

@@ -115,6 +115,10 @@ void register_interrupt_handler(uint8_t n, isr_t handler){
   interrupt_handlers[n] = handler;
 }
 
+void deregister_interrupt_handler(uint8_t n){
+  interrupt_handlers[n] = NULL;
+}
+
 void irq_handler(registers_t *r){
     /*kprint_err("IRQ: ");
     char s[3];
@@ -133,15 +137,15 @@ void irq_handler(registers_t *r){
 
 void irq_install(){
   debug_log("[ISR]: Initializing IRQ's\n");
-  if(init_apic()){
+  /*if(init_apic()){
     set_idt_gate(255, (uint32_t)isr255, KERNEL_CS, 0);
     apic = true;
     debug_log("[ISR]: Using APIC as External Interrupt Controller\n");
     goto no_pic;
-  }
+  }*/
   pic_remap(32, 40);
   debug_log("[ISR]: Using PIC as External Interrupt Controller\n");
-  no_pic:
+  //no_pic:
   set_idt_gate(32, (uint32_t)irq0, KERNEL_CS, 0);
   set_idt_gate(33, (uint32_t)irq1, KERNEL_CS, 0);
   set_idt_gate(34, (uint32_t)irq2, KERNEL_CS, 0);

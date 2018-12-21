@@ -1,40 +1,54 @@
 #include <rhino/arch/x86/pci.h>
 
-static inline uint8_t pci_get_class(uint8_t bus, uint8_t device, uint8_t function){
+uint8_t pci_get_class(uint8_t bus, uint8_t device, uint8_t function){
   uint16_t t = pci_config_read(bus, device, function, 11, PCI_SIZE_BYTE);
   return t;
 }
 
-static inline uint8_t pci_get_subclass(uint8_t bus, uint8_t device, uint8_t function){
+uint8_t pci_get_subclass(uint8_t bus, uint8_t device, uint8_t function){
   uint16_t t = pci_config_read(bus, device, function, 10, PCI_SIZE_BYTE);
   return t;
 }
 
-static inline uint8_t pci_get_secondary_bus(uint8_t bus, uint8_t device, uint8_t function){
+uint8_t pci_get_secondary_bus(uint8_t bus, uint8_t device, uint8_t function){
   uint16_t t = pci_config_read(bus, device, function, 19, PCI_SIZE_BYTE);
   return t;
 }
 
-static inline uint16_t pci_get_device_id(uint8_t bus, uint8_t device, uint8_t function){
+uint16_t pci_get_device_id(uint8_t bus, uint8_t device, uint8_t function){
   uint16_t t = pci_config_read(bus, device, function, 2, PCI_SIZE_WORD);
   return t;
 }
 
-static inline uint16_t pci_get_vendor_id(uint8_t bus, uint8_t device, uint8_t function){
+uint16_t pci_get_vendor_id(uint8_t bus, uint8_t device, uint8_t function){
   uint16_t t = pci_config_read(bus, device, function, 0, PCI_SIZE_WORD);
   return t;
 }
 
-static inline uint8_t pci_get_header_type(uint8_t bus, uint8_t device, uint8_t function){
-  uint16_t t = pci_config_read(bus, device, function, 0x0F, PCI_SIZE_BYTE);
+uint8_t pci_get_header_type(uint8_t bus, uint8_t device, uint8_t function){
+  uint16_t t = pci_config_read(bus, device, function, 0x0E, PCI_SIZE_BYTE);
   return t;
 }
 
-uint16_t pci_config_read(uint8_t bus, uint8_t slot, uint8_t function, uint8_t offset, uint8_t len){
+uint32_t pci_config_read(uint8_t bus, uint8_t slot, uint8_t function, uint8_t offset, uint8_t len){
   uint32_t ret;
   uint32_t addr = 0x80000000 | (bus << 16) | (slot << 11) | (function << 8) | (offset & 0xFC);
   outd(PCI_IO_CMD, addr);
   ret = (ind(PCI_IO_DAT) >> ((offset & 3) * 8)) & (0xFFFFFFFF >> ((4 - len) * 8));
+  return ret;
+}
+
+uint32_t pci_config_write(uint8_t bus, uint8_t slot, uint8_t function, uint8_t offset, uint8_t len, uint32_t val){
+  uint32_t ret;
+  uint32_t addr = 0x80000000 | (bus << 16) | (slot << 11) | (function << 8) | (offset & 0xFC);
+  outd(PCI_IO_CMD, addr);
+  ret = (ind(PCI_IO_DAT) >> ((offset & 3) * 8)) & (0xFFFFFFFF >> ((4 - len) * 8));
+
+  outd(PCI_IO_CMD, addr);
+  if(len == PCI_SIZE_BYTE) outb(PCI_IO_DAT, val);
+  else if(len == PCI_SIZE_WORD) outw(PCI_IO_DAT, val);
+  else if(len == PCI_SIZE_DWORD) outd(PCI_IO_DAT, val);
+  else debug_log("[PCI]: Unknown len\n");
   return ret;
 }
 
@@ -113,10 +127,12 @@ void pci_check_function(uint8_t bus, uint8_t device, uint8_t function){
   uint16_t vendorID, deviceID;
   vendorID = pci_get_vendor_id(bus, device, function);
   if(vendorID == PCI_VENDOR_UNUSED) return;
-
+  baseClass = pci_get_class(bus, device, function);
+  subClass = pci_get_subclass(bus, device, function);
   deviceID = pci_get_device_id(bus, device, function);
 
   if((vendorID == 0x1234 && deviceID == 0x1111) || (vendorID == 0x80EE && deviceID == 0xBEEF) || (vendorID == 0x10de && deviceID == 0x0a20)) init_bga(bus, device, function);
+  if(baseClass == 0x1 && (subClass == 0x1 || subClass == 0x5)) ata_init(bus,  device, function);
 
   baseClass = pci_get_class(bus, device, function);
   subClass = pci_get_subclass(bus, device, function);
@@ -134,7 +150,7 @@ void pci_check_device(uint8_t bus, uint8_t device){
   if(vendorID == PCI_VENDOR_UNUSED) return;
   pci_check_function(bus, device, function);
   uint8_t headerType = pci_get_header_type(bus, device, function);
-  if((headerType & PCI_MULTIFUNCTION_MASK) != 0){
+  if(BIT_IS_SET(headerType, 7)){
     for(function = 1; function < PCI_FUNCTION_N; function++){
       pci_check_function(bus, device, function);
     }
@@ -153,7 +169,7 @@ void pci_check_all_buses(void){
   uint8_t headerType;
 
   headerType = pci_get_header_type(0, 0, function);
-  if( (headerType & PCI_MULTIFUNCTION_MASK) != 0){
+  if(!BIT_IS_SET(headerType, 7)){
     pci_check_bus(0);
   } else {
     for(function = 0; function < PCI_FUNCTION_N; function++){
@@ -165,8 +181,5 @@ void pci_check_all_buses(void){
 }
 
 uint32_t pci_read_bar(uint8_t bus, uint8_t device, uint8_t function, uint8_t bar){
-  uint16_t low = pci_config_read(bus, device, function, bar, PCI_SIZE_DWORD);
-  uint16_t high = pci_config_read(bus, device, function, bar + 2, PCI_SIZE_WORD);
-  uint32_t full = ((high << 16) | low);
-  return full;
+  return pci_config_read(bus, device, function, bar, PCI_SIZE_DWORD);
 }
