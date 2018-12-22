@@ -43,6 +43,7 @@ void ata_init(uint16_t bus, uint8_t device, uint8_t function){
     ata_init_device(&primary_slave);
     ata_init_device(&secondary_master);
     ata_init_device(&secondary_slave);
+    
     debug_log("[ATA]: ATA Driver Initialized\n");
 }
 
@@ -116,6 +117,15 @@ bool ata_init_device(ata_device* dev){
     dev->dma = BIT_IS_SET(dev->identity[49], 8);
     dev->iordy = BIT_IS_SET(dev->identity[49], 11);
     dev->ext_func = BIT_IS_SET(dev->identity[83], 10);
+
+    uint64_t total_sectors = ((uint64_t*)(dev->identity))[100];
+    if(total_sectors == 0){
+        total_sectors = ((uint32_t*)(dev->identity))[60];
+        if(total_sectors == 0){
+            total_sectors = dev->identity[1] * dev->identity[3] * dev->identity[6];
+        }
+    }
+    dev->lba_max_sectors = total_sectors;
 
     if(dev->atapi){
         if(BIT_IS_SET(dev->identity[0], 0) && BIT_IS_CLEAR(dev->identity[0], 1)) dev->packet_bytes = 16;
@@ -248,6 +258,7 @@ bool ata_identify(ata_device dev, uint16_t* buf, bool atapi){
 
 bool ata_read(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf){
     if(!dev.exists) return false;
+    if(dev.lba_max_sectors < (start_sector + sectors)) return false;
     if(dev.ext_func){
         if(sectors > (UINT16_MAX + 1) || sectors == 0){
             kprint("[ATA]: To many sectors selected\n");
