@@ -47,14 +47,15 @@
 
 typedef struct{
     uint16_t cmd_addr, cntrl_addr;
-    bool native;
+    bool exists;
     bool atapi;
     bool slave;
     uint8_t id_high;
     uint8_t id_mid;
-    uint16_t identitiy[256];
+    uint16_t identity[256];
     bool lba, dma, iordy, ext_func;
     uint64_t lba_max_sectors;
+    uint8_t packet_bytes;
 } ata_device;
 
 typedef struct {
@@ -71,3 +72,4 @@ bool ata_identify(ata_device dev, uint16_t* buf, bool atapi);
 bool ata_read(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf);
 bool ata_write(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf);
 bool ata_check_identity(ata_device dev);
+bool ata_init_device(ata_device* dev);

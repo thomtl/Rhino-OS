@@ -1,14 +1,14 @@
 #include <rhino/arch/x86/drivers/ata.h>
 
-ata_device primary_master, primary_slave;
+ata_device primary_master, primary_slave, secondary_master, secondary_slave;
 
 uint8_t cur_selected = 0xFF;
 
 static ata_chs_t lba_to_chs(ata_device dev, uint64_t lba){
     ata_chs_t chs;
     uint32_t hpc, spt;
-    hpc = dev.identitiy[3];
-    spt = dev.identitiy[6];
+    hpc = dev.identity[3];
+    spt = dev.identity[6];
 
     chs.cylinder = lba / (hpc * spt);
     chs.head = (lba / spt) % hpc;
@@ -17,6 +17,7 @@ static ata_chs_t lba_to_chs(ata_device dev, uint64_t lba){
 }
 
 void ata_init(uint16_t bus, uint8_t device, uint8_t function){
+    debug_log("[ATA]: Initializing ATA Driver\n");
     if(bus > PCI_BUS_N || device > PCI_DEVICE_N || function > PCI_FUNCTION_N){
         kprint("[ATA]: PCI Parameters invalid\n");
         return;
@@ -30,53 +31,107 @@ void ata_init(uint16_t bus, uint8_t device, uint8_t function){
     primary_slave.cntrl_addr = 0x3f4;
     primary_slave.slave = true;
 
-    outb(primary_master.cmd_addr + ATA_SECT_CNT, 0x2A);
-    outb(primary_master.cmd_addr + ATA_SECT_NUM, 0x55);
+    secondary_master.cmd_addr = 0x170;
+    secondary_master.cntrl_addr = 0x374;
+    secondary_master.slave = false;
 
+    secondary_slave.cmd_addr = 0x170;
+    secondary_slave.cntrl_addr = 0x374;
+    secondary_slave.slave = true;
+
+    ata_init_device(&primary_master);
+    ata_init_device(&primary_slave);
+    ata_init_device(&secondary_master);
+    ata_init_device(&secondary_slave);
+    debug_log("[ATA]: ATA Driver Initialized\n");
+}
+
+bool ata_init_device(ata_device* dev){
+    
+    if(inb(dev->cmd_addr + ATA_STATUS) == 0xFF){
+        debug_log("[ATA] No Device");
+        dev->exists = false;
+        return false;
+    }
+    
+    outb(dev->cmd_addr + ATA_SECT_CNT, 0x2A);
+    outb(dev->cmd_addr + ATA_SECT_NUM, 0x55);
+    
     msleep(15);
-
-    uint8_t a = inb(primary_master.cmd_addr + ATA_SECT_CNT);
-    uint8_t b = inb(primary_master.cmd_addr + ATA_SECT_NUM);
+    
+    uint8_t a = inb(dev->cmd_addr + ATA_SECT_CNT);
+    uint8_t b = inb(dev->cmd_addr + ATA_SECT_NUM);
 
     if((a != 0x2A) && (b == 0x55)){
-        kprint("[ATA]: No ATA controller?\n");
-        return;
+        debug_log("[ATA]: No ATA controller?\n");
+        dev->exists = false;
+        return false;
     }
+    
 
-    outb(primary_master.cmd_addr + ATA_DRV_HEAD, 0);
+    outb(dev->cmd_addr + ATA_DRV_HEAD, (dev->slave) ? (1 << 4) : (0));
     ata_io_wait();
-    outb(primary_master.cntrl_addr + ATA_DEV_CNTR, (1<<2));
+    outb(dev->cntrl_addr + ATA_DEV_CNTR, (1<<2));
     msleep(1);
-    outb(primary_master.cntrl_addr + ATA_DEV_CNTR, (1<<1));
+    outb(dev->cntrl_addr + ATA_DEV_CNTR, (1<<1));
     msleep(2);
-    ata_wait_busy(primary_master, 100);
+    if(!ata_wait_busy(*dev, 100)){
+        debug_log("[ATA] No Device\n");
+        dev->exists = false;
+        return false;
+    }
     msleep(5);
+
+    inb(dev->cmd_addr + ATA_ERROR);
     /*if(inb(primary_master.cmd_addr + ATA_ERROR) != 0){
         kprint("[ATA]: Error not 0 after reset");
         return;
     }*/
+    
 
-    primary_master.id_high = inb(primary_master.cmd_addr + ATA_LBA_HIGH);
-    primary_master.id_mid = inb(primary_master.cmd_addr + ATA_LBA_MID);
-
-    if((primary_master.id_high == 0x00) && (primary_master.id_mid == 0x00)) primary_master.atapi = false;
-    else if((primary_master.id_high == 0xEB) && (primary_master.id_mid == 0x14)) primary_master.atapi = true;
-
-    ata_identify(primary_master, primary_master.identitiy, primary_master.atapi);
-
-    if(!ata_check_identity(primary_master)){
-        kprint("[ATA]: Info block invalid");
-        return;
+    dev->id_high = inb(dev->cmd_addr + ATA_LBA_HIGH);
+    dev->id_mid = inb(dev->cmd_addr + ATA_LBA_MID);
+    if(((dev->id_high == 0xFF) && (dev->id_mid == 0xFF))){
+        debug_log("[ATA]: Unkown ATA type\n");
+        dev->exists = false;
+        return false;
+    }
+    else if(((dev->id_high == 0x00) && (dev->id_mid == 0x00)) || ((dev->id_high == 0xc3) && (dev->id_mid == 0x3c))) dev->atapi = false;
+    else if(((dev->id_high == 0xEB) && (dev->id_mid == 0x14)) || ((dev->id_high == 0x96) && (dev->id_mid == 0x69))) dev->atapi = true;
+    
+    if(!ata_identify(*dev, dev->identity, dev->atapi)){
+        debug_log("[ATA]: No info block");
+        dev->exists = false;
+        return false;
     }
 
-    primary_master.lba = BIT_IS_SET(primary_master.identitiy[49], 9);
-    primary_master.dma = BIT_IS_SET(primary_master.identitiy[49], 8);
-    primary_master.iordy = BIT_IS_SET(primary_master.identitiy[49], 11);
-    primary_master.ext_func = BIT_IS_SET(primary_master.identitiy[83], 10);
+
+    if(!ata_check_identity(*dev)){
+        kprint("[ATA]: Info block invalid");
+        dev->exists = false;
+        return false;
+    }
+
+    dev->lba = BIT_IS_SET(dev->identity[49], 9);
+    dev->dma = BIT_IS_SET(dev->identity[49], 8);
+    dev->iordy = BIT_IS_SET(dev->identity[49], 11);
+    dev->ext_func = BIT_IS_SET(dev->identity[83], 10);
+
+    if(dev->atapi){
+        if(BIT_IS_SET(dev->identity[0], 0) && BIT_IS_CLEAR(dev->identity[0], 1)) dev->packet_bytes = 16;
+        else if(BIT_IS_CLEAR(dev->identity[0], 0) && BIT_IS_CLEAR(dev->identity[0], 1)) dev->packet_bytes = 12;
+        else {
+            kprint("[ATA]: ATAPI device has unkown packet size\n");
+            dev->exists = false;
+            return false;
+        }
+    }
+    dev->exists = true;
+    return true;
 }
 
 bool ata_check_identity(ata_device dev){
-    uint8_t *p = (uint8_t*)dev.identitiy;
+    uint8_t *p = (uint8_t*)dev.identity;
     uint8_t crc = 0;
     if(p[510] == 0xA5){
         for(uint32_t i = 0; i < 511; i++) crc += p[i];
@@ -97,7 +152,7 @@ bool ata_wait_busy(ata_device dev, uint32_t time){
         msleep(1);
         --timeout;
     }
-    kprint("[ATA]: ata_wait_busy timed out\n");
+    debug_log("[ATA]: ata_wait_busy timed out\n");
     return false;
 }
 
@@ -135,7 +190,7 @@ bool ata_wait(ata_device dev, uint8_t bit, uint32_t timeout){
         --timeout;
     }
 
-    kprint("[ATA]: ata_wait timed out\n");
+    debug_log("[ATA]: ata_wait timed out\n");
     return false;
 }
 
@@ -192,6 +247,7 @@ bool ata_identify(ata_device dev, uint16_t* buf, bool atapi){
 
 
 bool ata_read(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf){
+    if(!dev.exists) return false;
     if(dev.ext_func){
         if(sectors > (UINT16_MAX + 1) || sectors == 0){
             kprint("[ATA]: To many sectors selected\n");
@@ -265,10 +321,10 @@ bool ata_read(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf
         }
         return false;
     }
-
 }
 
 bool ata_write(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf){
+    if(!dev.exists) return false;
     if(dev.ext_func){
         if(sectors > (UINT16_MAX + 1) || sectors == 0){
             kprint("[ATA]: To many sectors selected\n");
@@ -340,7 +396,6 @@ bool ata_write(ata_device dev, uint64_t start_sector, uint64_t sectors, void* bu
             }
             return false;
         }
-        return false;
     }
 
 }
