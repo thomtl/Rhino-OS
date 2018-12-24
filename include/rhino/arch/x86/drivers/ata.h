@@ -43,6 +43,7 @@
 #define ATA_COMMAND_READ_SECTORS_EXTENDED 0x24
 #define ATA_COMMAND_WRITE_SECTORS 0x30
 #define ATA_COMMAND_WRITE_SECTORS_EXTENDED 0x34
+#define ATA_COMMAND_SEND_PACKET 0xA0
 #define ATA_COMMAND_IDENTIFY_PACKET_DEVICE 0xA1
 
 typedef struct{
@@ -73,3 +74,4 @@ bool ata_read(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf
 bool ata_write(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf);
 bool ata_check_identity(ata_device dev);
 bool ata_init_device(ata_device* dev);
+bool ata_send_packet(ata_device dev, uint8_t* packet, uint8_t* return_buffer, uint64_t return_buffer_len);

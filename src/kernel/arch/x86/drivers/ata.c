@@ -43,7 +43,7 @@ void ata_init(uint16_t bus, uint8_t device, uint8_t function){
     ata_init_device(&primary_slave);
     ata_init_device(&secondary_master);
     ata_init_device(&secondary_slave);
-    
+
     debug_log("[ATA]: ATA Driver Initialized\n");
 }
 
@@ -289,14 +289,14 @@ bool ata_read(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf
         if(dev.lba){
             uint16_t* data = buf;
 
-            ata_select_drv(dev, (1<<6), (start_sector << 24) & 0xF);
+            ata_select_drv(dev, (1<<6), (start_sector >> 24) & 0xF);
             ata_wait_busy(dev, 100);
 
             outb(dev.cmd_addr + ATA_FEATURES, 0x0);
             outb(dev.cmd_addr + ATA_SECT_CNT, (sectors == 256) ? (0) : (sectors));
             outb(dev.cmd_addr + ATA_LBA_LOW, (start_sector & 0xFF));
-            outb(dev.cmd_addr + ATA_LBA_MID, (start_sector << 8) & 0xFF);
-            outb(dev.cmd_addr + ATA_LBA_HIGH, (start_sector << 16) & 0xFF);
+            outb(dev.cmd_addr + ATA_LBA_MID, (start_sector >> 8) & 0xFF);
+            outb(dev.cmd_addr + ATA_LBA_HIGH, (start_sector >> 16) & 0xFF);
             outb(dev.cmd_addr + ATA_COMMAND, ATA_COMMAND_READ_SECTORS);
 
             if(ata_wait(dev, ATA_STATUS_DRQ, 100)){
@@ -318,7 +318,7 @@ bool ata_read(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf
             outb(dev.cmd_addr + ATA_SECT_CNT, (sectors == 256) ? (0) : (sectors));
             outb(dev.cmd_addr + ATA_SECT_NUM, chs.sector & 0xFF);
             outb(dev.cmd_addr + ATA_CYL_LOW, (chs.cylinder & 0xFF));
-            outb(dev.cmd_addr + ATA_CYL_HIGH, ((chs.cylinder << 8) & 0xFF));
+            outb(dev.cmd_addr + ATA_CYL_HIGH, ((chs.cylinder >> 8) & 0xFF));
             outb(dev.cmd_addr + ATA_COMMAND, ATA_COMMAND_READ_SECTORS);
 
             if(ata_wait(dev, ATA_STATUS_DRQ, 100)){
@@ -366,14 +366,14 @@ bool ata_write(ata_device dev, uint64_t start_sector, uint64_t sectors, void* bu
         if(dev.lba){
             uint16_t* data = buf;
 
-            ata_select_drv(dev, (1<<6), (start_sector << 24) & 0xF);
+            ata_select_drv(dev, (1<<6), (start_sector >> 24) & 0xF);
             ata_wait_busy(dev, 100);
 
             outb(dev.cmd_addr + ATA_FEATURES, 0x0);
             outb(dev.cmd_addr + ATA_SECT_CNT, (sectors == 256) ? (0) : (sectors));
             outb(dev.cmd_addr + ATA_LBA_LOW, (start_sector & 0xFF));
-            outb(dev.cmd_addr + ATA_LBA_MID, (start_sector << 8) & 0xFF);
-            outb(dev.cmd_addr + ATA_LBA_HIGH, (start_sector << 16) & 0xFF);
+            outb(dev.cmd_addr + ATA_LBA_MID, (start_sector >> 8) & 0xFF);
+            outb(dev.cmd_addr + ATA_LBA_HIGH, (start_sector >> 16) & 0xFF);
             outb(dev.cmd_addr + ATA_COMMAND, ATA_COMMAND_WRITE_SECTORS);
 
             if(ata_wait(dev, ATA_STATUS_DRQ, 100)){
@@ -395,7 +395,7 @@ bool ata_write(ata_device dev, uint64_t start_sector, uint64_t sectors, void* bu
             outb(dev.cmd_addr + ATA_SECT_CNT, (sectors == 256) ? (0) : (sectors));
             outb(dev.cmd_addr + ATA_SECT_NUM, chs.sector & 0xFF);
             outb(dev.cmd_addr + ATA_CYL_LOW, (chs.cylinder & 0xFF));
-            outb(dev.cmd_addr + ATA_CYL_HIGH, ((chs.cylinder << 8) & 0xFF));
+            outb(dev.cmd_addr + ATA_CYL_HIGH, ((chs.cylinder >> 8) & 0xFF));
             outb(dev.cmd_addr + ATA_COMMAND, ATA_COMMAND_WRITE_SECTORS);
 
             if(ata_wait(dev, ATA_STATUS_DRQ, 100)){
@@ -409,4 +409,35 @@ bool ata_write(ata_device dev, uint64_t start_sector, uint64_t sectors, void* bu
         }
     }
 
+}
+
+bool ata_send_packet(ata_device dev, uint8_t* packet, uint8_t* return_buffer, uint64_t return_buffer_len){
+    uint16_t* ptr = (uint16_t*)return_buffer;
+
+    ata_select_drv(dev, 0, 0);
+
+    if(ata_wait(dev, ATA_STATUS_RDY, 100)){
+        outb(dev.cmd_addr + ATA_FEATURES, 0x0);
+        outb(dev.cmd_addr + ATA_SECT_CNT, 0);
+        outb(dev.cmd_addr + ATA_LBA_LOW, 0);
+        outb(dev.cmd_addr + ATA_LBA_MID, (return_buffer_len >> 0) & 0xFF);
+        outb(dev.cmd_addr + ATA_LBA_HIGH, (return_buffer_len >> 8) & 0xFF);
+        outb(dev.cmd_addr + ATA_COMMAND, ATA_COMMAND_SEND_PACKET);
+        if(!ata_wait(dev, ATA_STATUS_DRQ, 100)){
+            kprint("A");
+            return false;
+        }
+
+        for(uint32_t i = 0; i < dev.packet_bytes; i += 2) outw(dev.cmd_addr + ATA_DATA, packet[i] | (packet[i+1] << 8));
+
+        if(ata_wait(dev, ATA_STATUS_DRQ, 100)){
+            for(uint32_t i = 0; i < (return_buffer_len>>1); i++) *ptr++ = inw(dev.cmd_addr + ATA_DATA);
+            return true;
+        }
+            
+    
+            
+    }
+    kprint("B");
+    return false;
 }
