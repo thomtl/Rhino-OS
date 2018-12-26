@@ -43,7 +43,7 @@ void ata_init(uint16_t bus, uint8_t device, uint8_t function){
     ata_init_device(&primary_slave);
     ata_init_device(&secondary_master);
     ata_init_device(&secondary_slave);
-
+    
     debug_log("[ATA]: ATA Driver Initialized\n");
 }
 
@@ -412,6 +412,11 @@ bool ata_write(ata_device dev, uint64_t start_sector, uint64_t sectors, void* bu
 }
 
 bool ata_send_packet(ata_device dev, uint8_t* packet, uint8_t* return_buffer, uint64_t return_buffer_len){
+    if(!dev.atapi){
+        debug_log("[ATA] Tried to do ATAPI operation with non ATAPI device\n");
+        kprint("[ATA] Tried to do ATAPI operation with non ATAPI device\n");
+        return false;
+    }
     uint16_t* ptr = (uint16_t*)return_buffer;
 
     ata_select_drv(dev, 0, 0);
@@ -424,7 +429,6 @@ bool ata_send_packet(ata_device dev, uint8_t* packet, uint8_t* return_buffer, ui
         outb(dev.cmd_addr + ATA_LBA_HIGH, (return_buffer_len >> 8) & 0xFF);
         outb(dev.cmd_addr + ATA_COMMAND, ATA_COMMAND_SEND_PACKET);
         if(!ata_wait(dev, ATA_STATUS_DRQ, 100)){
-            kprint("A");
             return false;
         }
 
@@ -438,6 +442,5 @@ bool ata_send_packet(ata_device dev, uint8_t* packet, uint8_t* return_buffer, ui
     
             
     }
-    kprint("B");
     return false;
 }
