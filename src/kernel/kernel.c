@@ -1,14 +1,14 @@
 #if defined(__linux__)
 #error "No cross compiler detected you will probably run into trouble"
 #endif
-
+#include <rhino/kernel.h>
 #include <rhino/common.h>
 
 #include <libk/string.h>
 #include <libk/stdio.h>
 #include <libk/stdlib.h>
 
-#include <rhino/multiboot.h>
+
 
 #include <rhino/mm/vmm.h>
 #include <rhino/mm/pmm.h>
@@ -52,6 +52,12 @@ extern uint32_t _kernel_start;
 
 multiboot_info_t* multibootInfo;
 uint32_t ramAmountMB = 0;
+
+void user_input(char *input);
+
+multiboot_info_t* get_mbd(){
+  return multibootInfo;
+}
 
 void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   char buf[25] = "";

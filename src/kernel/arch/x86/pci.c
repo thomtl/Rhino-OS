@@ -123,7 +123,7 @@ void pci_print_device_info(uint8_t bus, uint8_t device, uint8_t function){
 
 
 void pci_check_function(uint8_t bus, uint8_t device, uint8_t function){
-  uint8_t baseClass, subClass;
+  uint8_t baseClass, subClass, headerType;
   uint16_t vendorID, deviceID;
   vendorID = pci_get_vendor_id(bus, device, function);
   if(vendorID == PCI_VENDOR_UNUSED) return;
@@ -136,8 +136,8 @@ void pci_check_function(uint8_t bus, uint8_t device, uint8_t function){
 
   baseClass = pci_get_class(bus, device, function);
   subClass = pci_get_subclass(bus, device, function);
-
-  if( (baseClass == PCI_CLASS_BRIDGE) && (subClass == PCI_SUBCLASS_BRIDGE_PCI_TO_PCI)){
+  headerType = pci_get_header_type(bus, device, function);
+  if( (baseClass == PCI_CLASS_BRIDGE) && (subClass == PCI_SUBCLASS_BRIDGE_PCI_TO_PCI) && (headerType == 0x01)){
     pci_check_bus(pci_get_secondary_bus(bus, device, function));
   }
 
@@ -148,10 +148,10 @@ void pci_check_device(uint8_t bus, uint8_t device){
   uint8_t function = 0;
   uint16_t vendorID = pci_get_vendor_id(bus, device, function);
   if(vendorID == PCI_VENDOR_UNUSED) return;
-  pci_check_function(bus, device, function);
+  //pci_check_function(bus, device, function);
   uint8_t headerType = pci_get_header_type(bus, device, function);
   if(BIT_IS_SET(headerType, 7)){
-    for(function = 1; function < PCI_FUNCTION_N; function++){
+    for(function = 0; function < PCI_FUNCTION_N; function++){
       pci_check_function(bus, device, function);
     }
   }

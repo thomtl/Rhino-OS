@@ -1,6 +1,8 @@
 #include <rhino/arch/x86/drivers/ata.h>
 
-ata_device primary_master, primary_slave, secondary_master, secondary_slave;
+ata_device ata_channels[4];
+
+ata_device* boot_dev;
 
 uint8_t cur_selected = 0xFF;
 
@@ -23,26 +25,64 @@ void ata_init(uint16_t bus, uint8_t device, uint8_t function){
         return;
     }
 
-    primary_master.cmd_addr = 0x1f0;
-    primary_master.cntrl_addr = 0x3f4;
-    primary_master.slave = false;
+    uint32_t bar0 = pci_read_bar(bus, device, function, PCI_BAR_0) & 0xFFFFFFFC;
+    uint32_t bar1 = pci_read_bar(bus, device, function, PCI_BAR_1) & 0xFFFFFFFC;
+    uint32_t bar2 = pci_read_bar(bus, device, function, PCI_BAR_2) & 0xFFFFFFFC;
+    uint32_t bar3 = pci_read_bar(bus, device, function, PCI_BAR_3) & 0xFFFFFFFC;
 
-    primary_slave.cmd_addr = 0x1f0;
-    primary_slave.cntrl_addr = 0x3f4;
-    primary_slave.slave = true;
+    if(bar0 == 0x0) bar0 = 0x1F0; // If not defined set ISA values
+    if(bar1 == 0x0) bar1 = 0x3f4;
+    if(bar2 == 0x0) bar2 = 0x170;
+    if(bar3 == 0x0) bar3 = 0x374;
 
-    secondary_master.cmd_addr = 0x170;
-    secondary_master.cntrl_addr = 0x374;
-    secondary_master.slave = false;
+    ata_channels[0].cmd_addr = bar0;//0x1f0;
+    ata_channels[0].cntrl_addr = bar1;//0x3f4;
+    ata_channels[0].slave = false;
 
-    secondary_slave.cmd_addr = 0x170;
-    secondary_slave.cntrl_addr = 0x374;
-    secondary_slave.slave = true;
+    ata_channels[1].cmd_addr = bar0;
+    ata_channels[1].cntrl_addr = bar1;
+    ata_channels[1].slave = true;
 
-    ata_init_device(&primary_master);
-    ata_init_device(&primary_slave);
-    ata_init_device(&secondary_master);
-    ata_init_device(&secondary_slave);
+    ata_channels[2].cmd_addr = bar2;//0x170;
+    ata_channels[2].cntrl_addr = bar3;//0x374;
+    ata_channels[2].slave = false;
+
+    ata_channels[3].cmd_addr = bar2;
+    ata_channels[3].cntrl_addr = bar3;
+    ata_channels[3].slave = true;
+
+    ata_init_device(&ata_channels[0]);
+    ata_init_device(&ata_channels[1]);
+    ata_init_device(&ata_channels[2]);
+    ata_init_device(&ata_channels[3]);
+
+    multiboot_info_t* mbd = get_mbd();
+
+    char buf[25] = "";
+    hex_to_ascii(mbd->boot_device, buf);
+    kprint(buf);
+
+    if(BIT_IS_SET(mbd->flags, 1)){
+        uint8_t bios_dev = (mbd->boot_device >> 24) & 0xFF;
+        if(BIT_IS_SET(bios_dev, 7)){
+
+            BIT_CLEAR(bios_dev, 7);
+
+            char buff[25] = "";
+            hex_to_ascii(bios_dev, buff);
+            kprint(buff);
+
+            if(bios_dev <= 4){
+                boot_dev = &ata_channels[bios_dev];
+            } else {
+                debug_log("[ATA]: BIOS Boot Device extends beyond standardised ATA range\n");
+            }
+        } else {
+            debug_log("[ATA]: BIOS Boot Device is not an ATA device\n It is probably a floppy disk or something else");
+        }
+    } else {
+        debug_log("[ATA]: BIOS Boot Device is not a BIOS device. Manual scan not yet implemented\n");
+    }
     
     debug_log("[ATA]: ATA Driver Initialized\n");
 }
@@ -205,10 +245,10 @@ bool ata_wait(ata_device dev, uint8_t bit, uint32_t timeout){
 }
 
 void ata_io_wait(){
-    inb(primary_master.cntrl_addr + ATA_ALT_STAT);
-    inb(primary_master.cntrl_addr + ATA_ALT_STAT);
-    inb(primary_master.cntrl_addr + ATA_ALT_STAT);
-    inb(primary_master.cntrl_addr + ATA_ALT_STAT);
+    inb(ata_channels[0].cntrl_addr + ATA_ALT_STAT);
+    inb(ata_channels[0].cntrl_addr + ATA_ALT_STAT);
+    inb(ata_channels[0].cntrl_addr + ATA_ALT_STAT);
+    inb(ata_channels[0].cntrl_addr + ATA_ALT_STAT);
 }
 
 bool ata_select_drv(ata_device dev, uint8_t flags, uint8_t lba24_head){

@@ -1,5 +1,6 @@
 #pragma once
 #include <rhino/common.h>
+#include <rhino/kernel.h>
 #include <rhino/arch/x86/pci.h>
 #include <rhino/arch/x86/isr.h>
 #include <rhino/arch/x86/io.h>

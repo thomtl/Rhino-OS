@@ -106,17 +106,18 @@ void* find_table_int(char* signature){
                 }
             }
         }
-    } else if(version2){
+    } else {
         int entries = (xsdt->h.Length - sizeof(xsdt->h)) / 8;
- 
         for (int i = 0; i < entries; i++)
         {
+            
             vmm_map_page((void*)(uint32_t)xsdt->PointerToOtherSDT[i], (void*)(uint32_t)xsdt->PointerToOtherSDT[i], 0);
             SDTHeader *h = (SDTHeader *) (uint32_t)xsdt->PointerToOtherSDT[i];
             if(h->Signature[0] == signature[0] && h->Signature[1] == signature[1] && h->Signature[2] == signature[2] && h->Signature[3] == signature[3]){
                 if(doChecksum(h)){
                     return (void*)h;
                 } else {
+                    debug_log("b");
                     kprint_err("[ACPI] Found");
                     kprint_err(signature);
                     kprint_err(" but checksum is invalid\n");
@@ -156,7 +157,6 @@ void init_acpi(){
         debug_log("[ACPI]: Detected ACPI Version 2\n");
         version2 = true;
         uint8_t *bptr = (uint8_t*)rsdp;
-
         int8_t check = 0;
         for(uint32_t i = 0; i < sizeof(XSDP) - 3; i++){
             check += *bptr;
@@ -166,7 +166,7 @@ void init_acpi(){
             xsdp = (XSDP*)rsdp;
             xsdt = (XSDT*)(uint32_t)xsdp->XsdtAddress;
             vmm_map_page((void*)((uint32_t)xsdt), (void*)((uint32_t)xsdt), 1);
-            if(!doChecksum(&xsdt->h)){
+            if(!doChecksum((SDTHeader*)xsdt)){
                 kprint_err("[ACPI]: XSDT Checksum Failed\n");
                 debug_log("[ACPI]: XSDT Checksum Failed\n");
                 acpi_leave_subsystem();
@@ -189,7 +189,7 @@ void init_acpi(){
         }
     }
 
-
+    debug_log("a");
     fadt = find_table_int("FACP");
     if(!doChecksum((SDTHeader*)fadt)){
         kprint_err("[ACPI]: FADT Checksum Failed\n");
@@ -197,9 +197,10 @@ void init_acpi(){
         acpi_leave_subsystem();
         return;
     }
-
-    vmm_map_page((void*)fadt->Dsdt, (void*)fadt->Dsdt, 0);
-    SDTHeader* dsdt_header = (SDTHeader*)fadt->Dsdt;
+    void* dsdt = (version2) ? ((void*)((uint32_t)fadt->X_Dsdt)) : ((void*)fadt->Dsdt);
+    vmm_map_page(dsdt, dsdt, 0);
+    for(uint32_t i = 1; i < ((((SDTHeader*)dsdt)->Length / 0x1000) + 1); i++) vmm_map_page((void*)(dsdt + (0x1000 * i)), (void*)(dsdt + (0x1000 * i)), 0);
+    SDTHeader* dsdt_header = (SDTHeader*)dsdt;
     if(!doChecksum(dsdt_header)){
         kprint_err("[ACPI]: DSDT Checksum Failed\n");
         debug_log("[ACPI]: DSDT Checksum Failed\n");
@@ -217,7 +218,6 @@ void init_acpi(){
             break;
         dsdt_ptr++;
     }
-
 
     if(dsdt_len > 0){
         if ( ( *(dsdt_ptr-1) == 0x08 || ( *(dsdt_ptr-2) == 0x08 && *(dsdt_ptr-1) == '\\') ) && *(dsdt_ptr+4) == 0x12 )
@@ -289,9 +289,9 @@ bool acpi_reboot(){
         return false;
     }
     GenericAddressStructure resetReg = fadt->ResetReg;
-    if(resetReg.AddressSpace == PHI_ACPI_ADDRESS_SPACE_SYSTEM_IO){
+    if(resetReg.AddressSpace == RHINO_ACPI_ADDRESS_SPACE_SYSTEM_IO){
         outb(resetReg.Address, fadt->ResetValue);
-    } else if(resetReg.AddressSpace == PHI_ACPI_ADDRESS_SPACE_SYSTEM_MEM){
+    } else if(resetReg.AddressSpace == RHINO_ACPI_ADDRESS_SPACE_SYSTEM_MEM){
         vmm_map_page((void*)(uint32_t)resetReg.Address, (void*)(uint32_t)resetReg.Address, 0);
         uint32_t f = (uint32_t)resetReg.Address;
         volatile uint8_t* p = (uint8_t*)((uint32_t*)f);
