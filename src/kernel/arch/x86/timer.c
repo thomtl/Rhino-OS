@@ -28,7 +28,7 @@ void init_timer(){
 
   debug_log("[TIMER]: Initializing Timer\n");
   if(detect_hpet()){
-    hpet = init_hpet(100000);
+    hpet = false;//init_hpet(100000);
     if(hpet){
      debug_log("[TIMER]: Using HPET as main Timer\n");
     } else {

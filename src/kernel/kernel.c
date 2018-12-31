@@ -128,7 +128,6 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   
   pci_check_all_buses();
   
-  
   init_fpu();
   init_sse();
   init_avx();

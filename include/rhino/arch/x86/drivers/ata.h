@@ -6,6 +6,7 @@
 #include <rhino/arch/x86/io.h>
 #include <rhino/arch/x86/timer.h>
 #include <rhino/arch/x86/drivers/serial.h>
+#include <rhino/multitasking/spinlock.h>
 #include <rhino/mm/hmm.h>
 
 #define ATA_DATA 0x0
@@ -52,6 +53,7 @@ typedef struct{
     bool exists;
     bool atapi;
     bool slave;
+    bool secondary;
     uint8_t id_high;
     uint8_t id_mid;
     uint16_t identity[256];

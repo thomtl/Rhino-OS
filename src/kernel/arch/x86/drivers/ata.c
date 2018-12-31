@@ -4,7 +4,51 @@ ata_device ata_channels[4];
 
 ata_device* boot_dev;
 
+mutex_t ata_lock;
+
 uint8_t cur_selected = 0xFF;
+
+volatile uint8_t ata_primary_interrupt_fired = 0;
+volatile uint8_t ata_secondary_interrupt_fired = 0;
+
+static void ata_primary_interrupt_handler(registers_t *r){
+    ata_primary_interrupt_fired = 1;
+    inb(ata_channels[0].cmd_addr + ATA_STATUS);
+    UNUSED(r);
+}
+
+static void ata_secondary_interrupt_handler(registers_t *r){
+    ata_secondary_interrupt_fired = 1;
+    inb(ata_channels[2].cmd_addr + ATA_STATUS);
+    UNUSED(r);
+}
+
+static bool ata_wait_for_primary_interrupt(uint32_t timeout){
+    
+    while(timeout--){
+        if(ata_primary_interrupt_fired == 1) return true;
+        msleep(1);
+    }
+    ata_primary_interrupt_fired = 0;
+    debug_log("[ATA]: Wait for primary interrupt has timed out\n");
+    return false;
+}
+
+static bool wait_for_secondary_interrupt(uint32_t timeout){
+    
+    while(timeout--){
+        if(ata_secondary_interrupt_fired == 1) return true;
+        msleep(1);
+    }
+    ata_secondary_interrupt_fired = 0;
+    debug_log("[ATA]: Wait for secondary interrupt has timed out\n");
+    return false;
+}
+
+static bool wait_for_interrupt(ata_device dev, uint32_t timeout){
+    if(dev.secondary) return wait_for_secondary_interrupt(timeout);
+    else return ata_wait_for_primary_interrupt(timeout);
+}
 
 static ata_chs_t lba_to_chs(ata_device dev, uint64_t lba){
     ata_chs_t chs;
@@ -20,10 +64,19 @@ static ata_chs_t lba_to_chs(ata_device dev, uint64_t lba){
 
 void ata_init(uint16_t bus, uint8_t device, uint8_t function){
     debug_log("[ATA]: Initializing ATA Driver\n");
+
+    acquire_spinlock(&ata_lock);
+
     if(bus > PCI_BUS_N || device > PCI_DEVICE_N || function > PCI_FUNCTION_N){
         kprint("[ATA]: PCI Parameters invalid\n");
         return;
     }
+
+    register_interrupt_handler(IRQ14, ata_primary_interrupt_handler);
+    register_interrupt_handler(IRQ15, ata_secondary_interrupt_handler);
+
+    //deregister_interrupt_handler(IRQ14);
+    //deregister_interrupt_handler(IRQ15);
 
     uint32_t bar0 = pci_read_bar(bus, device, function, PCI_BAR_0) & 0xFFFFFFFC;
     uint32_t bar1 = pci_read_bar(bus, device, function, PCI_BAR_1) & 0xFFFFFFFC;
@@ -38,25 +91,29 @@ void ata_init(uint16_t bus, uint8_t device, uint8_t function){
     ata_channels[0].cmd_addr = bar0;//0x1f0;
     ata_channels[0].cntrl_addr = bar1;//0x3f4;
     ata_channels[0].slave = false;
+    ata_channels[0].secondary = false;
 
     ata_channels[1].cmd_addr = bar0;
     ata_channels[1].cntrl_addr = bar1;
     ata_channels[1].slave = true;
+    ata_channels[1].secondary = false;
 
     ata_channels[2].cmd_addr = bar2;//0x170;
     ata_channels[2].cntrl_addr = bar3;//0x374;
     ata_channels[2].slave = false;
+    ata_channels[2].secondary = true;
 
     ata_channels[3].cmd_addr = bar2;
     ata_channels[3].cntrl_addr = bar3;
     ata_channels[3].slave = true;
+    ata_channels[3].secondary = true;
 
     ata_init_device(&ata_channels[0]);
     ata_init_device(&ata_channels[1]);
     ata_init_device(&ata_channels[2]);
     ata_init_device(&ata_channels[3]);
 
-    multiboot_info_t* mbd = get_mbd();
+    /*multiboot_info_t* mbd = get_mbd();
 
     char buf[25] = "";
     hex_to_ascii(mbd->boot_device, buf);
@@ -82,7 +139,9 @@ void ata_init(uint16_t bus, uint8_t device, uint8_t function){
         }
     } else {
         debug_log("[ATA]: BIOS Boot Device is not a BIOS device. Manual scan not yet implemented\n");
-    }
+    }*/
+
+    release_spinlock(&ata_lock);
     
     debug_log("[ATA]: ATA Driver Initialized\n");
 }
@@ -129,26 +188,40 @@ bool ata_init_device(ata_device* dev){
         return;
     }*/
     
+    outb(dev->cntrl_addr + ATA_DEV_CNTR, 0); // Enable interrupts
 
     dev->id_high = inb(dev->cmd_addr + ATA_LBA_HIGH);
     dev->id_mid = inb(dev->cmd_addr + ATA_LBA_MID);
     if(((dev->id_high == 0xFF) && (dev->id_mid == 0xFF))){
-        debug_log("[ATA]: Unkown ATA type\n");
+        debug_log("[ATA]: No Device\n");
         dev->exists = false;
         return false;
     }
     else if(((dev->id_high == 0x00) && (dev->id_mid == 0x00)) || ((dev->id_high == 0xc3) && (dev->id_mid == 0x3c))) dev->atapi = false;
     else if(((dev->id_high == 0xEB) && (dev->id_mid == 0x14)) || ((dev->id_high == 0x96) && (dev->id_mid == 0x69))) dev->atapi = true;
+    else {
+        debug_log("[ATA]: Unkown Device, LBA_HIGH: ");
+        char buf[25] = "";
+        hex_to_ascii(dev->id_high, buf);
+        debug_log(buf);
+        debug_log(", LBA_MID: ");
+        char buff[25] = "";
+        hex_to_ascii(dev->id_mid, buff);
+        append(buf, '\n');
+        debug_log(buff);
+        dev->exists = false;
+        return false;
+    }
     
     if(!ata_identify(*dev, dev->identity, dev->atapi)){
-        debug_log("[ATA]: No info block");
+        debug_log("[ATA]: No info block\n");
         dev->exists = false;
         return false;
     }
 
 
     if(!ata_check_identity(*dev)){
-        kprint("[ATA]: Info block invalid");
+        kprint("[ATA]: Info block invalid\n");
         dev->exists = false;
         return false;
     }
@@ -203,6 +276,8 @@ bool ata_wait_busy(ata_device dev, uint32_t time){
         --timeout;
     }
     debug_log("[ATA]: ata_wait_busy timed out\n");
+
+    inb(dev.cmd_addr + ATA_STATUS); // Clear interrupt status for the (probably) following command
     return false;
 }
 
@@ -288,7 +363,7 @@ bool ata_identify(ata_device dev, uint16_t* buf, bool atapi){
     outb(dev.cmd_addr + ATA_LBA_MID, 0x0);
     outb(dev.cmd_addr + ATA_LBA_HIGH, 0x0);
     outb(dev.cmd_addr + ATA_COMMAND, cmd);
-    if(ata_wait(dev, ATA_STATUS_DRQ, 100)){
+    if(wait_for_interrupt(dev, 100)){
         for(uint32_t i = 0; i < 256; i++) *info++ = inw(dev.cmd_addr + ATA_DATA);
         return true;
     }
@@ -313,10 +388,10 @@ bool ata_read(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf
 
         outb(dev.cmd_addr + ATA_COMMAND, ATA_COMMAND_READ_SECTORS_EXTENDED);
 
-        if(ata_wait(dev, ATA_STATUS_DRQ, 100)){
+        if(wait_for_interrupt(dev, 100)){
             while(sectors--){
                for(uint32_t i = 0; i < 256; i++) *data++ = inw(dev.cmd_addr + ATA_DATA);
-               if(sectors && !ata_wait(dev, ATA_STATUS_DRQ, 100)) return false;
+               if(sectors && !wait_for_interrupt(dev, 100)) return false;
             } 
             return true;
         }
@@ -339,10 +414,10 @@ bool ata_read(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf
             outb(dev.cmd_addr + ATA_LBA_HIGH, (start_sector >> 16) & 0xFF);
             outb(dev.cmd_addr + ATA_COMMAND, ATA_COMMAND_READ_SECTORS);
 
-            if(ata_wait(dev, ATA_STATUS_DRQ, 100)){
+            if(wait_for_interrupt(dev, 100)){
                 while(sectors--){
                    for(uint32_t i = 0; i < 256; i++) *data++ = inw(dev.cmd_addr + ATA_DATA);
-                   if(sectors && !ata_wait(dev, ATA_STATUS_DRQ, 100)) return false;
+                   if(sectors && !wait_for_interrupt(dev, 100)) return false;
                 } 
               return true;
             }
@@ -361,10 +436,10 @@ bool ata_read(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf
             outb(dev.cmd_addr + ATA_CYL_HIGH, ((chs.cylinder >> 8) & 0xFF));
             outb(dev.cmd_addr + ATA_COMMAND, ATA_COMMAND_READ_SECTORS);
 
-            if(ata_wait(dev, ATA_STATUS_DRQ, 100)){
+            if(wait_for_interrupt(dev, 100)){
                 while(sectors--){
                     for(uint32_t i = 0; i < 256; i++) *data++ = inw(dev.cmd_addr + ATA_DATA);
-                    if(sectors && !ata_wait(dev, ATA_STATUS_DRQ, 100)) return false;
+                    if(sectors && !wait_for_interrupt(dev, 100)) return false;
                 } 
                 return true;
             }
@@ -390,10 +465,10 @@ bool ata_write(ata_device dev, uint64_t start_sector, uint64_t sectors, void* bu
 
         outb(dev.cmd_addr + ATA_COMMAND, ATA_COMMAND_WRITE_SECTORS_EXTENDED);
 
-        if(ata_wait(dev, ATA_STATUS_DRQ, 100)){
+        if(wait_for_interrupt(dev, 100)){
             while(sectors--){
                for(uint32_t i = 0; i < 256; i++) outw(dev.cmd_addr + ATA_DATA, *data++);
-               if(sectors && !ata_wait(dev, ATA_STATUS_DRQ, 100)) return false;
+               if(sectors && !wait_for_interrupt(dev, 100)) return false;
             } 
             return true;
         }
@@ -416,10 +491,10 @@ bool ata_write(ata_device dev, uint64_t start_sector, uint64_t sectors, void* bu
             outb(dev.cmd_addr + ATA_LBA_HIGH, (start_sector >> 16) & 0xFF);
             outb(dev.cmd_addr + ATA_COMMAND, ATA_COMMAND_WRITE_SECTORS);
 
-            if(ata_wait(dev, ATA_STATUS_DRQ, 100)){
+            if(wait_for_interrupt(dev, 100)){
                 while(sectors--){
                    for(uint32_t i = 0; i < 256; i++) outw(dev.cmd_addr + ATA_DATA, *data++);
-                   if(sectors && !ata_wait(dev, ATA_STATUS_DRQ, 100)) return false;
+                   if(sectors && !wait_for_interrupt(dev, 100)) return false;
                 } 
               return true;
             }
@@ -438,10 +513,10 @@ bool ata_write(ata_device dev, uint64_t start_sector, uint64_t sectors, void* bu
             outb(dev.cmd_addr + ATA_CYL_HIGH, ((chs.cylinder >> 8) & 0xFF));
             outb(dev.cmd_addr + ATA_COMMAND, ATA_COMMAND_WRITE_SECTORS);
 
-            if(ata_wait(dev, ATA_STATUS_DRQ, 100)){
+            if(wait_for_interrupt(dev, 100)){
                 while(sectors--){
                     for(uint32_t i = 0; i < 256; i++) outw(dev.cmd_addr + ATA_DATA, *data++);
-                    if(sectors && !ata_wait(dev, ATA_STATUS_DRQ, 100)) return false;
+                    if(sectors && !wait_for_interrupt(dev, 100)) return false;
                 } 
                 return true;
             }
