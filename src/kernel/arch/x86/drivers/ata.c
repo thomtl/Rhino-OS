@@ -72,8 +72,21 @@ void ata_init(uint16_t bus, uint8_t device, uint8_t function){
         return;
     }
 
+    uint8_t ata_power_managment_list = pci_config_read(bus, device, function, 0x34, PCI_SIZE_BYTE);
+    if(ata_power_managment_list != 0x0){
+        uint16_t word = pci_config_read(bus, device, function, ata_power_managment_list + 2, PCI_SIZE_WORD);
+        BIT_CLEAR(word, 0);
+        BIT_CLEAR(word, 1);
+        BIT_SET(word, 15);
+        pci_config_write(bus, device, function, ata_power_managment_list + 2, PCI_SIZE_WORD, word);
+        msleep(10); // Sleep for the 10 miliseconds
+        kprint("WWW");
+    }
+
     register_interrupt_handler(IRQ14, ata_primary_interrupt_handler);
     register_interrupt_handler(IRQ15, ata_secondary_interrupt_handler);
+
+    pci_config_write(bus, device, function, 0x3C, PCI_SIZE_BYTE, 14);
 
     //deregister_interrupt_handler(IRQ14);
     //deregister_interrupt_handler(IRQ15);
