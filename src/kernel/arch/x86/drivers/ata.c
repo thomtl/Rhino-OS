@@ -80,7 +80,15 @@ void ata_init(uint16_t bus, uint8_t device, uint8_t function){
         BIT_SET(word, 15);
         pci_config_write(bus, device, function, ata_power_managment_list + 2, PCI_SIZE_WORD, word);
         msleep(10); // Sleep for the 10 miliseconds
-        kprint("WWW");
+        
+
+        word = pci_config_read(bus, device, function, ata_power_managment_list + 2, PCI_SIZE_WORD);
+        if(BIT_IS_CLEAR(word, 0) && BIT_IS_CLEAR(word, 0)){
+        } else {
+            debug_log("[ATA]: Device was not able to be set back into D0 powermode\n");
+            kprint("[ATA]: Device was not able to be set back into D0 powermode\n");
+            return;
+        }
     }
 
     register_interrupt_handler(IRQ14, ata_primary_interrupt_handler);
@@ -95,6 +103,23 @@ void ata_init(uint16_t bus, uint8_t device, uint8_t function){
     uint32_t bar1 = pci_read_bar(bus, device, function, PCI_BAR_1) & 0xFFFFFFFC;
     uint32_t bar2 = pci_read_bar(bus, device, function, PCI_BAR_2) & 0xFFFFFFFC;
     uint32_t bar3 = pci_read_bar(bus, device, function, PCI_BAR_3) & 0xFFFFFFFC;
+
+    if(BIT_IS_SET(pci_get_programming_interface(bus, device, function), 7)){
+        uint32_t bar4 = pci_read_bar(bus, device, function, PCI_BAR_4) & 0xFFFFFFFC;
+        ata_channels[0].bus_master_dma = true;
+        ata_channels[0].bus_master_addr = bar4;
+        ata_channels[1].bus_master_dma = true;
+        ata_channels[1].bus_master_addr = bar4;
+        ata_channels[2].bus_master_dma = true;
+        ata_channels[2].bus_master_addr = bar4;
+        ata_channels[3].bus_master_dma = true;
+        ata_channels[3].bus_master_addr = bar4;
+    } else {
+        ata_channels[0].bus_master_dma = false;
+        ata_channels[1].bus_master_addr = false;
+        ata_channels[2].bus_master_dma = false;
+        ata_channels[3].bus_master_addr = false; 
+    }
 
     if(bar0 == 0x0) bar0 = 0x1F0; // If not defined set ISA values
     if(bar1 == 0x0) bar1 = 0x3f4;
@@ -226,7 +251,7 @@ bool ata_init_device(ata_device* dev){
         return false;
     }
     
-    if(!ata_identify(*dev, dev->identity, dev->atapi)){
+    if(!ata_identify_16(*dev, dev->identity, dev->atapi)){
         debug_log("[ATA]: No info block\n");
         dev->exists = false;
         return false;
@@ -237,6 +262,17 @@ bool ata_init_device(ata_device* dev){
         kprint("[ATA]: Info block invalid\n");
         dev->exists = false;
         return false;
+    }
+
+    uint8_t buf_32[512] = {0};
+    if(!ata_identify_32(*dev, (uint16_t*)buf_32, dev->atapi)){
+        dev->transfers_32bit = false;
+    } else {
+        if(memcmp(dev->identity, buf_32, 512) == 0){
+            dev->transfers_32bit = true;
+        } else {
+            dev->transfers_32bit = false;
+        }
     }
 
     dev->lba = BIT_IS_SET(dev->identity[49], 9);
@@ -365,7 +401,7 @@ bool ata_select_drv(ata_device dev, uint8_t flags, uint8_t lba24_head){
     return true;
 }
 
-bool ata_identify(ata_device dev, uint16_t* buf, bool atapi){
+bool ata_identify_16(ata_device dev, uint16_t* buf, bool atapi){
     uint16_t* info = buf;
     ata_select_drv(dev, 0, 0);
     uint8_t cmd = (atapi) ? (ATA_COMMAND_IDENTIFY_PACKET_DEVICE) : (ATA_COMMAND_IDENTIFY);
@@ -383,10 +419,113 @@ bool ata_identify(ata_device dev, uint16_t* buf, bool atapi){
     return false;
 }
 
+bool ata_identify_32(ata_device dev, uint16_t* buf, bool atapi){
+    uint32_t* info = (uint32_t*)buf;
+    ata_select_drv(dev, 0, 0);
+    uint8_t cmd = (atapi) ? (ATA_COMMAND_IDENTIFY_PACKET_DEVICE) : (ATA_COMMAND_IDENTIFY);
+    ata_wait_busy(dev, 100);
+    outb(dev.cmd_addr + ATA_FEATURES, 0x0);
+    outb(dev.cmd_addr + ATA_SECT_CNT, 0x0);
+    outb(dev.cmd_addr + ATA_LBA_LOW, 0x0);
+    outb(dev.cmd_addr + ATA_LBA_MID, 0x0);
+    outb(dev.cmd_addr + ATA_LBA_HIGH, 0x0);
+    outb(dev.cmd_addr + ATA_COMMAND, cmd);
+    if(wait_for_interrupt(dev, 100)){
+        for(uint32_t i = 0; i < 128; i++) *info++ = ind(dev.cmd_addr + ATA_DATA);
+        return true;
+    }
+    return false;
+}
 
 bool ata_read(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf){
     if(!dev.exists) return false;
     if(dev.lba_max_sectors < (start_sector + sectors)) return false;
+
+    if(dev.transfers_32bit){
+        return ata_read_32(dev, start_sector, sectors, buf);
+    } else {
+        return ata_read_16(dev, start_sector, sectors, buf);
+    }
+}
+
+bool ata_read_32(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf){
+    if(dev.ext_func){
+        if(sectors > (UINT16_MAX + 1) || sectors == 0){
+            kprint("[ATA]: To many sectors selected\n");
+            return false;
+        }
+        uint32_t* data = (uint32_t*)buf;
+
+        ata_select_drv(dev, (1<<6), 0);
+        ata_wait_busy(dev, 100);
+
+        ata_set_lba48(dev, start_sector, sectors);
+
+        outb(dev.cmd_addr + ATA_COMMAND, ATA_COMMAND_READ_SECTORS_EXTENDED);
+
+        if(wait_for_interrupt(dev, 100)){
+            while(sectors--){
+               for(uint32_t i = 0; i < 128; i++) *data++ = ind(dev.cmd_addr + ATA_DATA);
+               if(sectors && !wait_for_interrupt(dev, 100)) return false;
+            } 
+            return true;
+        }
+        return false;
+    } else {
+        if(sectors > 256 || sectors == 0){
+            kprint("[ATA]: To many sectors selected\n");
+            return false;
+        }
+        if(dev.lba){
+            uint32_t* data = (uint32_t*)buf;
+
+            ata_select_drv(dev, (1<<6), (start_sector >> 24) & 0xF);
+            ata_wait_busy(dev, 100);
+
+            outb(dev.cmd_addr + ATA_FEATURES, 0x0);
+            outb(dev.cmd_addr + ATA_SECT_CNT, (sectors == 256) ? (0) : (sectors));
+            outb(dev.cmd_addr + ATA_LBA_LOW, (start_sector & 0xFF));
+            outb(dev.cmd_addr + ATA_LBA_MID, (start_sector >> 8) & 0xFF);
+            outb(dev.cmd_addr + ATA_LBA_HIGH, (start_sector >> 16) & 0xFF);
+            outb(dev.cmd_addr + ATA_COMMAND, ATA_COMMAND_READ_SECTORS);
+
+            if(wait_for_interrupt(dev, 100)){
+                while(sectors--){
+                   for(uint32_t i = 0; i < 128; i++) *data++ = ind(dev.cmd_addr + ATA_DATA);
+                   if(sectors && !wait_for_interrupt(dev, 100)) return false;
+                } 
+              return true;
+            }
+            return false;
+        } else {
+            uint32_t* data = (uint32_t*)buf;
+
+            ata_chs_t chs = lba_to_chs(dev, start_sector);
+            ata_select_drv(dev, 0, chs.head);
+            ata_wait_busy(dev, 100);
+
+            outb(dev.cmd_addr + ATA_FEATURES, 0x0);
+            outb(dev.cmd_addr + ATA_SECT_CNT, (sectors == 256) ? (0) : (sectors));
+            outb(dev.cmd_addr + ATA_SECT_NUM, chs.sector & 0xFF);
+            outb(dev.cmd_addr + ATA_CYL_LOW, (chs.cylinder & 0xFF));
+            outb(dev.cmd_addr + ATA_CYL_HIGH, ((chs.cylinder >> 8) & 0xFF));
+            outb(dev.cmd_addr + ATA_COMMAND, ATA_COMMAND_READ_SECTORS);
+
+            if(wait_for_interrupt(dev, 100)){
+                while(sectors--){
+                    for(uint32_t i = 0; i < 128; i++) *data++ = ind(dev.cmd_addr + ATA_DATA);
+                    if(sectors && !wait_for_interrupt(dev, 100)) return false;
+                } 
+                return true;
+            }
+            return false;
+        }
+        return false;
+    }
+}
+
+bool ata_read_16(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf){
+
     if(dev.ext_func){
         if(sectors > (UINT16_MAX + 1) || sectors == 0){
             kprint("[ATA]: To many sectors selected\n");
@@ -464,6 +603,92 @@ bool ata_read(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf
 
 bool ata_write(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf){
     if(!dev.exists) return false;
+    if(dev.lba_max_sectors < (start_sector + sectors)) return false;
+
+    if(dev.transfers_32bit){
+        return ata_write_32(dev, start_sector, sectors, buf);
+    } else {
+        return ata_write_16(dev, start_sector, sectors, buf);
+    }
+}
+
+bool ata_write_32(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf){
+    if(dev.ext_func){
+        if(sectors > (UINT16_MAX + 1) || sectors == 0){
+            kprint("[ATA]: To many sectors selected\n");
+            return false;
+        }
+        uint32_t* data = (uint32_t*)buf;
+
+        ata_select_drv(dev, (1<<6), 0);
+        ata_wait_busy(dev, 100);
+
+        ata_set_lba48(dev, start_sector, sectors);
+
+        outb(dev.cmd_addr + ATA_COMMAND, ATA_COMMAND_WRITE_SECTORS_EXTENDED);
+
+        if(wait_for_interrupt(dev, 100)){
+            while(sectors--){
+               for(uint32_t i = 0; i < 128; i++) outd(dev.cmd_addr + ATA_DATA, *data++);
+               if(sectors && !wait_for_interrupt(dev, 100)) return false;
+            } 
+            return true;
+        }
+        return false;
+    } else {
+        if(sectors > 256 || sectors == 0){
+            kprint("[ATA]: To many sectors selected\n");
+            return false;
+        }
+        if(dev.lba){
+            uint32_t* data = (uint32_t*)buf;
+
+            ata_select_drv(dev, (1<<6), (start_sector >> 24) & 0xF);
+            ata_wait_busy(dev, 100);
+
+            outb(dev.cmd_addr + ATA_FEATURES, 0x0);
+            outb(dev.cmd_addr + ATA_SECT_CNT, (sectors == 256) ? (0) : (sectors));
+            outb(dev.cmd_addr + ATA_LBA_LOW, (start_sector & 0xFF));
+            outb(dev.cmd_addr + ATA_LBA_MID, (start_sector >> 8) & 0xFF);
+            outb(dev.cmd_addr + ATA_LBA_HIGH, (start_sector >> 16) & 0xFF);
+            outb(dev.cmd_addr + ATA_COMMAND, ATA_COMMAND_WRITE_SECTORS);
+
+            if(wait_for_interrupt(dev, 100)){
+                while(sectors--){
+                   for(uint32_t i = 0; i < 128; i++) outd(dev.cmd_addr + ATA_DATA, *data++);
+                   if(sectors && !wait_for_interrupt(dev, 100)) return false;
+                } 
+              return true;
+            }
+            return false;
+        } else {
+            uint32_t* data = (uint32_t*)buf;
+
+            ata_chs_t chs = lba_to_chs(dev, start_sector);
+            ata_select_drv(dev, 0, chs.head);
+            ata_wait_busy(dev, 100);
+
+            outb(dev.cmd_addr + ATA_FEATURES, 0x0);
+            outb(dev.cmd_addr + ATA_SECT_CNT, (sectors == 256) ? (0) : (sectors));
+            outb(dev.cmd_addr + ATA_SECT_NUM, chs.sector & 0xFF);
+            outb(dev.cmd_addr + ATA_CYL_LOW, (chs.cylinder & 0xFF));
+            outb(dev.cmd_addr + ATA_CYL_HIGH, ((chs.cylinder >> 8) & 0xFF));
+            outb(dev.cmd_addr + ATA_COMMAND, ATA_COMMAND_WRITE_SECTORS);
+
+            if(wait_for_interrupt(dev, 100)){
+                while(sectors--){
+                    for(uint32_t i = 0; i < 128; i++) outd(dev.cmd_addr + ATA_DATA, *data++);
+                    if(sectors && !wait_for_interrupt(dev, 100)) return false;
+                } 
+                return true;
+            }
+            return false;
+        }
+    }
+
+}
+
+bool ata_write_16(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf){
     if(dev.ext_func){
         if(sectors > (UINT16_MAX + 1) || sectors == 0){
             kprint("[ATA]: To many sectors selected\n");

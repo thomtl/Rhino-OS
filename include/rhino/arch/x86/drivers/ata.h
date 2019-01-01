@@ -27,6 +27,17 @@
 #define ATA_DEV_CNTR 0x2
 #define ATA_DRV_ADDR 0x3
 
+#define BM0_COMMAND 0x0
+#define BM0_RESV0 0x1
+#define BM0_STATUS 0x2
+#define BM0_RESV1 0x3
+#define BM0_ADDRESS 0x4
+
+#define BM1_COMMAND 0x8
+#define BM1_RESV0 0x9
+#define BM1_STATUS 0xA
+#define BM1_RESV1 0xB
+#define BM1_ADDRESS 0xC
 
 #define ATA_STATUS_ERR 0
 #define ATA_STATUS_DRQ 3
@@ -48,12 +59,21 @@
 #define ATA_COMMAND_SEND_PACKET 0xA0
 #define ATA_COMMAND_IDENTIFY_PACKET_DEVICE 0xA1
 
+typedef struct {
+    uint32_t physical_base; // 4byte aligned base addr bit0 should stay clear
+    uint16_t transfer_size; // in bytes
+    uint16_t reserved : 15;
+    uint8_t end_of_transfer : 1;
+} __attribute__((packed)) prdt_t;
+
 typedef struct{
-    uint16_t cmd_addr, cntrl_addr;
+    uint16_t cmd_addr, cntrl_addr, bus_master_addr;
     bool exists;
     bool atapi;
     bool slave;
     bool secondary;
+    bool transfers_32bit;
+    bool bus_master_dma;
     uint8_t id_high;
     uint8_t id_mid;
     uint16_t identity[256];
@@ -72,9 +92,14 @@ bool ata_wait(ata_device dev, uint8_t bit, uint32_t timeout);
 bool ata_wait_busy(ata_device dev, uint32_t time);
 void ata_io_wait();
 bool ata_select_drv(ata_device dev, uint8_t flags, uint8_t lba24_head);
-bool ata_identify(ata_device dev, uint16_t* buf, bool atapi);
+bool ata_identify_16(ata_device dev, uint16_t* buf, bool atapi);
+bool ata_identify_32(ata_device dev, uint16_t* buf, bool atapi);
 bool ata_read(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf);
 bool ata_write(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf);
 bool ata_check_identity(ata_device dev);
 bool ata_init_device(ata_device* dev);
 bool ata_send_packet(ata_device dev, uint8_t* packet, uint8_t* return_buffer, uint64_t return_buffer_len);
+bool ata_read_16(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf);
+bool ata_read_32(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf);
+bool ata_write_16(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf);
+bool ata_write_32(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf);

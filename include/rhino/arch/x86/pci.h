@@ -57,3 +57,4 @@ uint8_t pci_get_secondary_bus(uint8_t bus, uint8_t device, uint8_t function);
 uint16_t pci_get_device_id(uint8_t bus, uint8_t device, uint8_t function);
 uint16_t pci_get_vendor_id(uint8_t bus, uint8_t device, uint8_t function);
 uint8_t pci_get_header_type(uint8_t bus, uint8_t device, uint8_t function);
+uint8_t pci_get_programming_interface(uint8_t bus, uint8_t device, uint8_t function);

@@ -1,5 +1,10 @@
 #include <rhino/arch/x86/pci.h>
 
+uint8_t pci_get_programming_interface(uint8_t bus, uint8_t device, uint8_t function){
+  uint16_t t = pci_config_read(bus, device, function, 9, PCI_SIZE_BYTE);
+  return t;
+}
+
 uint8_t pci_get_class(uint8_t bus, uint8_t device, uint8_t function){
   uint16_t t = pci_config_read(bus, device, function, 11, PCI_SIZE_BYTE);
   return t;
