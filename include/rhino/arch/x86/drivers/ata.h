@@ -59,6 +59,8 @@
 #define ATA_COMMAND_SEND_PACKET 0xA0
 #define ATA_COMMAND_IDENTIFY_PACKET_DEVICE 0xA1
 
+#define ATAPI_COMMAND_READ_CAPACITY 0x25
+
 typedef struct {
     uint32_t physical_base; // 4byte aligned base addr bit0 should stay clear
     uint16_t transfer_size; // in bytes

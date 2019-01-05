@@ -57,10 +57,11 @@ fs_node_t *initialise_initrd(uint32_t location){
   debug_log("[INITRD]: Initializing INITRD\n");
   initrd_header = (initrd_header_t *)location;
   file_headers = (initrd_file_header_t *) (location+sizeof(initrd_header_t));
+
   initrd_root = (fs_node_t*)umalloc(sizeof(fs_node_t));
   strcpy(initrd_root->name, "initrd");
 
-  initrd_root->mask = initrd_root->uid = initrd_root->gid = initrd_root->inode = initrd_root->length = 0;
+  initrd_root->inode = initrd_root->mask = initrd_root->uid = initrd_root->gid = initrd_root->length = 0;
   initrd_root->flags = FS_DIRECTORY;
   initrd_root->read = 0;
   initrd_root->write = 0;

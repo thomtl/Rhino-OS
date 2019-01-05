@@ -151,6 +151,7 @@ void ata_init(uint16_t bus, uint8_t device, uint8_t function){
     ata_init_device(&ata_channels[2]);
     ata_init_device(&ata_channels[3]);
 
+
     /*multiboot_info_t* mbd = get_mbd();
 
     char buf[25] = "";
@@ -250,7 +251,7 @@ bool ata_init_device(ata_device* dev){
         dev->exists = false;
         return false;
     }
-    
+
     if(!ata_identify_16(*dev, dev->identity, dev->atapi)){
         debug_log("[ATA]: No info block\n");
         dev->exists = false;
@@ -290,13 +291,15 @@ bool ata_init_device(ata_device* dev){
     dev->lba_max_sectors = total_sectors;
 
     if(dev->atapi){
-        if(BIT_IS_SET(dev->identity[0], 0) && BIT_IS_CLEAR(dev->identity[0], 1)) dev->packet_bytes = 16;
+        /*if(BIT_IS_SET(dev->identity[0], 0) && BIT_IS_CLEAR(dev->identity[0], 1)) dev->packet_bytes = 16;
         else if(BIT_IS_CLEAR(dev->identity[0], 0) && BIT_IS_CLEAR(dev->identity[0], 1)) dev->packet_bytes = 12;
         else {
             kprint("[ATA]: ATAPI device has unkown packet size\n");
             dev->exists = false;
             return false;
-        }
+        }*/
+
+        dev->packet_bytes = ((dev->identity[0] & 0x3) == 0) ? 12 : 16;
     }
     dev->exists = true;
     return true;
@@ -772,28 +775,31 @@ bool ata_send_packet(ata_device dev, uint8_t* packet, uint8_t* return_buffer, ui
     }
     uint16_t* ptr = (uint16_t*)return_buffer;
 
+    if(!ata_wait_busy(dev, 100)){
+        debug_log("[ATA]: ata_wait_busy timed out in ata_send_packet");
+        return false;
+    }
+
     ata_select_drv(dev, 0, 0);
 
-    if(ata_wait(dev, ATA_STATUS_RDY, 100)){
-        outb(dev.cmd_addr + ATA_FEATURES, 0x0);
-        outb(dev.cmd_addr + ATA_SECT_CNT, 0);
-        outb(dev.cmd_addr + ATA_LBA_LOW, 0);
-        outb(dev.cmd_addr + ATA_LBA_MID, (return_buffer_len >> 0) & 0xFF);
-        outb(dev.cmd_addr + ATA_LBA_HIGH, (return_buffer_len >> 8) & 0xFF);
-        outb(dev.cmd_addr + ATA_COMMAND, ATA_COMMAND_SEND_PACKET);
-        if(!ata_wait(dev, ATA_STATUS_DRQ, 100)){
-            return false;
-        }
+    ata_primary_interrupt_fired = 0;
 
+    outb(dev.cmd_addr + ATA_FEATURES, 0x0);
+    outb(dev.cmd_addr + ATA_SECT_CNT, 0);
+    outb(dev.cmd_addr + ATA_LBA_LOW, 0);
+    outb(dev.cmd_addr + ATA_LBA_MID, (return_buffer_len >> 0) & 0xFF);
+    outb(dev.cmd_addr + ATA_LBA_HIGH, (return_buffer_len >> 8) & 0xFF);
+    outb(dev.cmd_addr + ATA_COMMAND, ATA_COMMAND_SEND_PACKET);
+    if(wait_for_interrupt(dev, 100)){//ata_wait(dev, ATA_STATUS_DRQ, 100)){
         for(uint32_t i = 0; i < dev.packet_bytes; i += 2) outw(dev.cmd_addr + ATA_DATA, packet[i] | (packet[i+1] << 8));
 
-        if(ata_wait(dev, ATA_STATUS_DRQ, 100)){
-            for(uint32_t i = 0; i < (return_buffer_len>>1); i++) *ptr++ = inw(dev.cmd_addr + ATA_DATA);
+        if(wait_for_interrupt(dev, 100)){
+            uint16_t transfer_bytes = inb(dev.cmd_addr + ATA_LBA_MID) | (inb(dev.cmd_addr + ATA_LBA_HIGH) << 8);
+            for(uint32_t i = 0; i < (transfer_bytes / 2); i++){
+                *ptr++ = inw(dev.cmd_addr + ATA_DATA);
+            }
             return true;
         }
-            
-    
-            
     }
     return false;
 }

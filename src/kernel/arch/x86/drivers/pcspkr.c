@@ -16,7 +16,7 @@ void beep(uint32_t ticks){
     if(start != playing){
         outb(0x61, playing);
     }
-    ticks++;
-    for(volatile int i = 0; i < 1000; i++);
+    //for(volatile int i = 0; i < 1000; i++);
+    sleep(ticks);
     outb(0x61, stop);
 }
