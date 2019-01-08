@@ -230,3 +230,17 @@ void vmm_free_dir(pdirectory* dir){
     }
     pmm_free_block((void*)((uint32_t)dir - (uint32_t)KERNEL_VBASE));
 }
+
+void* vmm_virt_to_phys(void* virt){
+    uint32_t pdindex = ((uint32_t)virt) >> 22;
+    uint32_t ptindex = ((uint32_t)virt) >> 12 & 0x03FF;
+ 
+    uint32_t* pd = (uint32_t*)vmm_cur_directory;
+    if(vmm_pd_entry_is_present((pd_entry)(pd[pdindex]))){
+        uint32_t* pt = ((uint32_t*)(((uint32_t)vmm_pd_entry_pfn((pd_entry)pd[pdindex]) + 0xC0000000)));
+        if(vmm_pt_entry_is_present((pt_entry)(pt[ptindex]))){
+            return (void *)((pt[ptindex] & ~0xFFF) + (((uint32_t)virt) & 0xFFF));
+        }
+    }
+    return (void*)-1;
+}

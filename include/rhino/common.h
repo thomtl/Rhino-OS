@@ -1,5 +1,7 @@
 #pragma once
 
+#define DEBUG
+
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
@@ -25,4 +27,5 @@
 uint32_t save_eflags();
 void load_eflags(uint32_t eflags);
 
-#define DEBUG
+#define IDIV_CEIL(x, y) ((x + y - 1) / y)
+#define IDIV_CEIL_NO_OVERFLOW(x, y) (1 + ((x - 1) / y))

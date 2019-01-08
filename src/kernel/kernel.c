@@ -1,14 +1,13 @@
 #if defined(__linux__)
 #error "No cross compiler detected you will probably run into trouble"
 #endif
+
 #include <rhino/kernel.h>
 #include <rhino/common.h>
 
 #include <libk/string.h>
 #include <libk/stdio.h>
 #include <libk/stdlib.h>
-
-
 
 #include <rhino/mm/vmm.h>
 #include <rhino/mm/pmm.h>
@@ -20,14 +19,23 @@
 #include <rhino/multitasking/task.h>
 #include <rhino/multitasking/scheduler.h>
 
+#include <rhino/acpi/acpi.h>
+
+#include <rhino/Deer/deer.h>
+
+#include <rhino/user/program.h>
+
+#include <rhino/pwr/power.h>
+
 #include <rhino/arch/x86/isr.h>
 #include <rhino/arch/x86/pci.h>
 #include <rhino/arch/x86/gdt.h>
 #include <rhino/arch/x86/msr.h>
 #include <rhino/arch/x86/cpuid.h>
 #include <rhino/arch/x86/io.h>
-#include <rhino/arch/x86/drivers/rtc.h>
 #include <rhino/arch/x86/timer.h>
+
+#include <rhino/arch/x86/drivers/rtc.h>
 #include <rhino/arch/x86/drivers/screen.h>
 #include <rhino/arch/x86/drivers/keyboard.h>
 #include <rhino/arch/x86/drivers/pcspkr.h>
@@ -39,13 +47,6 @@
 
 #include <rhino/kernel.h>
 #include <rhino/panic.h>
-#include <rhino/acpi/acpi.h>
-
-#include <rhino/Deer/deer.h>
-
-#include <rhino/user/program.h>
-
-#include <rhino/pwr/power.h>
 
 extern uint32_t placement_address;
 extern uint32_t _kernel_start;
@@ -109,6 +110,10 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   gdt_install();
   isr_install();
 
+  init_fpu();
+  init_sse();
+  init_avx();
+
   kprint("Initializing Memory Manager\n");
 
   ASSERT(mbd->mods_count >= 1);
@@ -128,9 +133,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   
   pci_check_all_buses();
   
-  init_fpu();
-  init_sse();
-  init_avx();
+
 
   kprint("Initializing Multitasking\n");
   initTasking();

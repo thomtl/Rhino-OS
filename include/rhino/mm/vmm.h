@@ -96,3 +96,5 @@ void vmm_ptable_clear(ptable* tab);
 void vmm_pdirectory_clear(pdirectory* dir);
 
 bool init_vmm();
+
+void* vmm_virt_to_phys(void* virt);
