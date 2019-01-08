@@ -24,8 +24,8 @@
 
 #define UNUSED(x) (void)(x)
 
-uint32_t save_eflags();
-void load_eflags(uint32_t eflags);
-
 #define IDIV_CEIL(x, y) ((x + y - 1) / y)
 #define IDIV_CEIL_NO_OVERFLOW(x, y) (1 + ((x - 1) / y))
+
+uint32_t save_eflags();
+void load_eflags(uint32_t eflags);
