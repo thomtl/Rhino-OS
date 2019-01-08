@@ -454,6 +454,7 @@ bool ata_read(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf
 
     if(dev.dma && dev.bus_master_dma && dev.lba){
         if(dev.atapi){
+            debug_log("[ATA]: Error unimplemented\n");
             return false;
         } else {
             uint8_t* b = (uint8_t*)buf;
@@ -634,6 +635,7 @@ bool ata_write(ata_device dev, uint64_t start_sector, uint64_t sectors, void* bu
 
     if(dev.dma && dev.bus_master_dma && dev.lba){
         if(dev.atapi){
+            debug_log("[ATA]: Error unimplemented\n");
             return false;
         } else {
             uint8_t* b = (uint8_t*)buf;
@@ -1069,18 +1071,4 @@ bool ata_write_dma(ata_device dev, uint64_t lba, uint8_t* buf){
         }
     }
     return false;
-}
-
-bool atapi_read_dma(ata_device dev, uint64_t lba, uint8_t* buf){
-    if(!dev.atapi){
-        debug_log("[ATA]: Tried to execute ATAPI DMA operation with ATA device\n");
-        return false;
-    }
-
-    UNUSED(lba);
-    UNUSED(buf);
-
-    debug_log("[ATA]: Error unimplemented\n");
-    return false;
-
 }

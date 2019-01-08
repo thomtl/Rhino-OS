@@ -124,7 +124,6 @@ bool ata_write_pio_32(ata_device dev, uint64_t start_sector, uint64_t sectors, v
 bool ata_read_dma(ata_device dev, uint64_t lba, uint8_t* buf);
 bool ata_write_dma(ata_device dev, uint64_t lba, uint8_t* buf);
 
-bool atapi_read_dma(ata_device dev, uint64_t lba, uint8_t* buf);
 
 bool atapi_send_packet(ata_device dev, uint8_t* packet, uint8_t* return_buffer, uint64_t return_buffer_len);
 
