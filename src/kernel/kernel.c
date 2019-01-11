@@ -54,7 +54,9 @@ extern uint32_t _kernel_start;
 multiboot_info_t* multibootInfo;
 uint32_t ramAmountMB = 0;
 
+#ifdef DEBUG
 void user_input(char *input);
+#endif
 
 multiboot_info_t* get_mbd(){
   return multibootInfo;
@@ -65,9 +67,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
 
   #ifndef DEBUG
   clear_screen();
-  #endif
-
-  #ifdef DEBUG
+  #else
   set_color(VGA_COLOR_LIGHT_CYAN, VGA_COLOR_BLACK);
   uint32_t kern_base = (uint32_t)&_kernel_start;
   hex_to_ascii(kern_base, buf);
@@ -96,7 +96,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   }
   init_serial_early();
   set_color(VGA_COLOR_LIGHT_BLUE, VGA_COLOR_BLACK);
-  kprint("Starting Rhino 0.3.2, Copyright 2018 Thomas Woertman, The Netherlands\n");
+  kprint("Starting Rhino 0.3.3, Copyright 2018 Thomas Woertman, The Netherlands\n");
   debug_log("[KERNEL]: Starting Rhino\n");
   int_to_ascii(ramAmountMB, buf);
   kprint("Detected Memory: ");
@@ -104,9 +104,9 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   debug_log("[KERNEL]: Detected Memory: ");
   debug_log(buf);
   debug_log("MB\n");
-  kprint("MB\n");
+  kprint("MB\n\n");
 
-  kprint("\nEnabling 386 Protected Mode\n");
+  kprint("Initializing x86 Protected Mode\n");
   gdt_install();
   isr_install();
 
@@ -127,14 +127,13 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   init_heap();
 
   kprint("Initializing drivers\n");
+
   fs_root = initialise_initrd(initrd_location);
   init_acpi();
   irq_install();
   
   pci_check_all_buses();
   
-
-
   kprint("Initializing Multitasking\n");
   initTasking();
 
@@ -165,10 +164,10 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
   init("init");
   while(1);
-  #endif
+  
+  #else
 
-
-  kprint("Rhino Kernel Internal Shell version 0.0.4");
+  kprint("Rhino Kernel Internal Shell version 0.0.5");
   set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
   kprint("\n$");
   enable_scheduling();
@@ -179,7 +178,11 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
 
     user_input(c);
   }
+
+  #endif
 }
+
+#ifdef DEBUG
 
 void user_input(char *input){
   if(strcmp(input, "exit") == 0){
@@ -191,17 +194,17 @@ void user_input(char *input){
   if(strcmp(input, "help") == 0){
     kprint("----------------------------------------------\n");
     kprint("run: Initialize the OS.\n");
+    kprint("deer: Start the deer display manager.\n");
     kprint("exit: Exit the Kernel.\n");
     kprint("help: To show this Page.\n");
     kprint("clear: To clear the screen.\n");
     kprint("reboot: To reboot the machine.\n");
-    kprint("cpuid: Print CPUID info.\n");
     #ifdef DEBUG
+    kprint("cpuid: Print CPUID info.\n");
     kprint("pid: To show the current PID.\n");
     kprint("panic: Panic the kernel.\n");
     kprint("init: To show the files on the initrd.\n");
     kprint("mmap: Print the sections in the BIOS mmap.\n");
-    kprint("deer: Start the deer display manager.\n");
     #endif
     kprint("----------------------------------------------\n");
     kprint("$");
@@ -300,6 +303,8 @@ void user_input(char *input){
     return;
   }
   kprint(input);
-  kprint(" is not an executable program.");
+  kprint(" is not an kernel command.");
   kprint("\n$");
 }
+
+#endif

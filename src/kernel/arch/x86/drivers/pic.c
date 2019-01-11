@@ -19,13 +19,10 @@ uint16_t pic_get_isr(){
 }
 
 void pic_remap(uint8_t pic1_vector_offset, uint8_t pic2_vector_offset){
-    char buf[5] = "";
     debug_log("[PIC]: Remapping PIC to master: ");
-    int_to_ascii(pic1_vector_offset, buf);
-    debug_log(buf);
+    debug_log_number_dec(pic1_vector_offset);
     debug_log(", slave: ");
-    int_to_ascii(pic2_vector_offset, buf);
-    debug_log(buf);
+    debug_log_number_dec(pic2_vector_offset);
     debug_log("\n");
     outb(PIC1_CMD, PIC_INIT); // Send Init To PIC1 and PIC2
     outb(PIC2_CMD, PIC_INIT);

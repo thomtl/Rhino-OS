@@ -33,7 +33,7 @@ void main(int argc, char* argv[])
   printf("            All Rights Reserved\n");
   syscall(1, 3, 15, 0);
   char buf[25] = "";
-  int_to_ascii(syscall(0,7,0,0), buf);
+  itoa(syscall(0,3,0,0), buf, 10);
   printf("PID: ");
   printf(buf);
   printf("\n");
@@ -64,9 +64,9 @@ int t_launch(char** args){
   char* m = malloc(sizeof(char) * strlen(args[0]));
   strcpy(m, args[0]);
   uint32_t pid;
-  syscall(0,2,0,0);
-  if(!syscall(0,13,(uint32_t)m,(uint32_t)(&pid))){
-    syscall(0,3,0,0);
+  syscall(0,0,0,0);
+  if(!syscall(0,9,(uint32_t)m,(uint32_t)(&pid))){
+    syscall(0,1,0,0);
     syscall(1, 3, 4, 0);
     printf("[TSH] Could not run program \"");
     printf(args[0]);
@@ -77,11 +77,10 @@ int t_launch(char** args){
   uint32_t argc = 0; 
   while(args[++argc]);
   
-  syscall(0, 11, pid, argc);
-  syscall(0, 9, pid, (uint32_t)args);
-  syscall(0,3,0,0);
-  syscall(0,8,pid,0);
-  
+  syscall(0, 7, pid, argc);
+  syscall(0, 5, pid, (uint32_t)args);
+  syscall(0,1,0,0);
+  syscall(0,4,pid,0);
 
   return 1;
 }
@@ -111,7 +110,7 @@ int t_help(char** args)
 
 int t_exit(char** args)
 {
-  syscall(0,3,0,0);
+  syscall(0,1,0,0);
   clear_screen();
   syscall(1, 3, 14, 0);
   for(int i = 0; i < 980; i++) printf(" ");

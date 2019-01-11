@@ -11,5 +11,6 @@ void free(void* addr);
 void exit();
 char* dtoa(double x, char* p);
 
+char* itoa(int32_t value, char* str, uint32_t base);
 
 #endif

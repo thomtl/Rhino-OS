@@ -95,7 +95,7 @@ typedef struct {
 
 typedef struct{
     uint16_t cmd_addr, cntrl_addr, bus_master_addr;
-    uint8_t id_high, id_mid, packet_bytes;
+    uint8_t id_high, id_mid, packet_bytes, channel_num;
     uint16_t identity[256];
     bool lba, dma, iordy, ext_func, exists, atapi, slave, secondary, transfers_32bit, bus_master_dma;
     uint64_t lba_max_sectors;

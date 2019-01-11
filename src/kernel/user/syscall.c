@@ -10,7 +10,17 @@
 #include <rhino/fs/initrd.h>
 #include <rhino/arch/x86/drivers/keyboard.h>
 #include <rhino/user/program.h>
+#include <rhino/pwr/power.h>
+
 extern pdirectory* kernel_directory;
+
+static inline void sys_reboot(){
+  reboot();
+}
+
+static inline void sys_shutdown(){
+  shutdown();
+}
 
 static inline void sys_task_set_argv(pid_t pid, uint32_t argv){
   task_set_argv(pid, argv);
@@ -95,37 +105,37 @@ void syscall_handler(registers_t *regs){
   switch (regs->eax) {
     case 0:
       switch(regs->ebx){
-        case 2:
+        case 0:
           sys_start_task_atomic();
           break;
-        case 3:
+        case 1:
           sys_end_task_atomic();
           break;
-        case 5:
+        case 2:
           sys_exit();
           break;
-        case 7:
+        case 3:
           regs->eax = sys_current_pid();
           break;
-        case 8:
+        case 4:
           sys_waitpid(regs->ecx);
           break;
-        case 9:
+        case 5:
           sys_task_set_argv((pid_t)regs->ecx, regs->edx);
           break;
-        case 10:
+        case 6:
           regs->eax = sys_task_get_argv(regs->ecx);
           break;
-        case 11:
+        case 7:
           sys_task_set_argc((pid_t)regs->ecx, regs->edx);
           break;
-        case 12:
+        case 8:
           regs->eax = sys_task_get_argc(regs->ecx);
           break;
-        case 13:
+        case 9:
           regs->eax = sys_create_process((char*)regs->ecx, (uint32_t*)regs->edx);
           break;
-        case 14:
+        case 10:
           sys_kill(regs->ecx);
           break;
         default:
@@ -181,6 +191,19 @@ void syscall_handler(registers_t *regs){
         default:
           break;
       }
+      break;
+    case 6:
+      switch(regs->ebx){
+        case 0:
+          sys_shutdown();
+          break;
+        case 1:
+          sys_reboot();
+          break;
+        default:
+          break;
+      }
+      break;
     default:
       return;
   }

@@ -14,9 +14,10 @@ volatile uint8_t ata_secondary_interrupt_fired = 0;
 prdt_t ata_primary_prdt __attribute__ ((aligned (4)));
 prdt_t ata_secondary_prdt __attribute__ ((aligned (4)));
 
+bool ata_initialized = false;
+
 static void ata_primary_interrupt_handler(registers_t *r){
     ata_primary_interrupt_fired = 1;
-
     
     inb(ata_channels[0].cmd_addr + ATA_STATUS);
     UNUSED(r);
@@ -24,6 +25,7 @@ static void ata_primary_interrupt_handler(registers_t *r){
 
 static void ata_secondary_interrupt_handler(registers_t *r){
     ata_secondary_interrupt_fired = 1;
+
     inb(ata_channels[2].cmd_addr + ATA_STATUS);
     UNUSED(r);
 }
@@ -39,7 +41,7 @@ static bool ata_wait_for_primary_interrupt(uint32_t timeout){
     return false;
 }
 
-static bool wait_for_secondary_interrupt(uint32_t timeout){
+static bool ata_wait_for_secondary_interrupt(uint32_t timeout){
     
     while(timeout--){
         if(ata_secondary_interrupt_fired == 1) return true;
@@ -51,7 +53,7 @@ static bool wait_for_secondary_interrupt(uint32_t timeout){
 }
 
 static bool ata_wait_for_interrupt(ata_device dev, uint32_t timeout){
-    if(dev.secondary) return wait_for_secondary_interrupt(timeout);
+    if(dev.secondary) return ata_wait_for_secondary_interrupt(timeout);
     else return ata_wait_for_primary_interrupt(timeout);
 }
 
@@ -72,6 +74,10 @@ static ata_chs_t lba_to_chs(ata_device dev, uint64_t lba){
 }
 
 void ata_init(uint16_t bus, uint8_t device, uint8_t function){
+    if(ata_initialized != false){
+        debug_log("[ATA]: Tried to init ATA device but it was already inited\n");
+        return;
+    }
     debug_log("[ATA]: Initializing ATA Driver\n");
 
     acquire_spinlock(&ata_lock);
@@ -139,21 +145,25 @@ void ata_init(uint16_t bus, uint8_t device, uint8_t function){
     ata_channels[0].cntrl_addr = bar1;//0x3f4;
     ata_channels[0].slave = false;
     ata_channels[0].secondary = false;
+    ata_channels[0].channel_num = 0;
 
     ata_channels[1].cmd_addr = bar0;
     ata_channels[1].cntrl_addr = bar1;
     ata_channels[1].slave = true;
     ata_channels[1].secondary = false;
+    ata_channels[1].channel_num = 1;
 
     ata_channels[2].cmd_addr = bar2;//0x170;
     ata_channels[2].cntrl_addr = bar3;//0x374;
     ata_channels[2].slave = false;
     ata_channels[2].secondary = true;
+    ata_channels[2].channel_num = 2;
 
     ata_channels[3].cmd_addr = bar2;
     ata_channels[3].cntrl_addr = bar3;
     ata_channels[3].slave = true;
     ata_channels[3].secondary = true;
+    ata_channels[3].channel_num = 3;
 
     ata_init_device(&ata_channels[0]);
     ata_init_device(&ata_channels[1]);
@@ -191,6 +201,7 @@ void ata_init(uint16_t bus, uint8_t device, uint8_t function){
     release_spinlock(&ata_lock);
     
     debug_log("[ATA]: ATA Driver Initialized\n");
+    ata_initialized = true;
 }
 
 bool ata_init_device(ata_device* dev){
@@ -223,24 +234,31 @@ bool ata_init_device(ata_device* dev){
     outb(dev->cntrl_addr + ATA_DEV_CNTR, (1<<1));
     msleep(2);
     if(!ata_wait_busy(*dev, 100)){
-        debug_log("[ATA] No Device\n");
+        debug_log("[ATA] No Device at channel: ");
+        debug_log_number_dec(dev->channel_num);
+        debug_log("\n");
         dev->exists = false;
         return false;
     }
     msleep(5);
 
     inb(dev->cmd_addr + ATA_ERROR);
-    /*if(inb(primary_master.cmd_addr + ATA_ERROR) != 0){
-        kprint("[ATA]: Error not 0 after reset");
-        return;
-    }*/
+    if(BIT_IS_SET(inb(dev->cmd_addr + ATA_ERROR), 7)){
+        debug_log("[ATA]: ATA_ERROR bit 7 set after reset at channel: ");
+        debug_log_number_dec(dev->channel_num);
+        debug_log("\n");
+        dev->exists = false;
+        return false;
+    }
     
     outb(dev->cntrl_addr + ATA_DEV_CNTR, 0); // Enable interrupts
 
     dev->id_high = inb(dev->cmd_addr + ATA_LBA_HIGH);
     dev->id_mid = inb(dev->cmd_addr + ATA_LBA_MID);
     if(((dev->id_high == 0xFF) && (dev->id_mid == 0xFF))){
-        debug_log("[ATA]: No Device\n");
+        debug_log("[ATA] No Device at channel: ");
+        debug_log_number_dec(dev->channel_num);
+        debug_log("\n");
         dev->exists = false;
         return false;
     }
@@ -248,27 +266,27 @@ bool ata_init_device(ata_device* dev){
     else if(((dev->id_high == 0xEB) && (dev->id_mid == 0x14)) || ((dev->id_high == 0x96) && (dev->id_mid == 0x69))) dev->atapi = true;
     else {
         debug_log("[ATA]: Unkown Device, LBA_HIGH: ");
-        char buf[25] = "";
-        hex_to_ascii(dev->id_high, buf);
-        debug_log(buf);
+        debug_log_number_hex(dev->id_high);
         debug_log(", LBA_MID: ");
-        char buff[25] = "";
-        hex_to_ascii(dev->id_mid, buff);
-        append(buf, '\n');
-        debug_log(buff);
+        debug_log_number_hex(dev->id_mid);
+        debug_log("\n");
         dev->exists = false;
         return false;
     }
 
     if(!ata_identify_16(*dev, dev->identity, dev->atapi)){
-        debug_log("[ATA]: No info block\n");
+        debug_log("[ATA]: No info block at channel: ");
+        debug_log_number_dec(dev->channel_num);
+        debug_log("\n");
         dev->exists = false;
         return false;
     }
 
 
     if(!ata_check_identity(*dev)){
-        kprint("[ATA]: Info block invalid\n");
+        kprint("[ATA]: Info block invalid at: ");
+        debug_log_number_dec(dev->channel_num);
+        debug_log("\n");
         dev->exists = false;
         return false;
     }

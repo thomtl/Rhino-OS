@@ -11,7 +11,7 @@ extern main
 global _start
 _start:
     xor eax, eax
-    mov ebx, 3
+    mov ebx, 1
     xor ecx, ecx
     xor edx, edx
     int 0x80
@@ -23,14 +23,14 @@ _start:
     int 0x80
 
     xor eax, eax
-    mov ebx, 7
+    mov ebx, 3
     xor ecx, ecx
     xor edx, edx
     int 0x80
     mov byte [pid], al
 
     xor eax, eax
-    mov ebx, 10
+    mov ebx, 6
     xor ecx, ecx
     mov cl, byte [pid]
     xor edx, edx
@@ -38,7 +38,7 @@ _start:
     mov dword [argv], eax
 
     xor eax, eax
-    mov ebx, 12
+    mov ebx, 8
     xor ecx, ecx
     mov cl, byte [pid]
     xor edx, edx
@@ -51,7 +51,7 @@ _start:
     call main
 
     xor eax, eax
-    mov ebx, 14
+    mov ebx, 10
     xor ecx, ecx
     mov cl, byte [pid]
     xor edx, edx

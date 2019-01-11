@@ -1,5 +1,6 @@
 #include "include/stdio.h"
 #include "include/sys.h"
+
 uint8_t putchar(uint8_t c){
     syscall(1, 1, c, 0);
     return c;
@@ -18,7 +19,6 @@ char getchar(){
 }
 
 char* getline(char *lineptr, size_t bufsize){
-  //char str[256] = "";
   for(uint16_t i = 0; i < bufsize; i++){
     lineptr[i] = '\0';
   }

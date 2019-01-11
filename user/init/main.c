@@ -1,4 +1,6 @@
 #include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
 #include <stdio.h>
 #include <sys.h>
 
@@ -12,7 +14,7 @@ void main(int argc, char* argv[]){
   (void)(argv);
   syscall(1, 2, 0, 0);
   init_print("Rhino OS init v0\n");;
-  if(syscall(0,7,0,0) != 1){
+  if(syscall(0,3,0,0) != 1){
     init_printerr("PID != 1, This is not the first process aborting\n");
     while(1);
   }
@@ -21,17 +23,23 @@ void main(int argc, char* argv[]){
 
   char *m = "tsh";
   uint32_t pid;
-  syscall(0,2,0,0);
-  if(!syscall(0,13,(uint32_t)m,(uint32_t)(&pid))){
-    syscall(0,3,0,0);
+  syscall(0,0,0,0);
+  if(!syscall(0,9,(uint32_t)m,(uint32_t)(&pid))){
+    syscall(0,1,0,0);
     init_printerr("Could not run program \"");
     syscall(1, 3, 4, 0);
     printf(m);
     printf("\"\n");
     while(1);
   }
-  syscall(0,3,0,0);
-  syscall(0,8,pid,0);
+  syscall(0,1,0,0);
+  syscall(0,4,pid,0);
+
+  syscall(1,2,0,0);
+  init_printerr("First user program exited press any key to shutdown\n");
+  getchar();
+  syscall(6,0,0,0);
+
   while(1);
 }
 

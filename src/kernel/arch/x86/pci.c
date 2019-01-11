@@ -57,74 +57,64 @@ uint32_t pci_config_write(uint8_t bus, uint8_t slot, uint8_t function, uint8_t o
   return ret;
 }
 
+#ifdef DEBUG
+
 void pci_print_device_info(uint8_t bus, uint8_t device, uint8_t function){
-  char buf[25] = "";
-  kprint("Class: ");
-  hex_to_ascii(pci_get_class(bus, device, function), buf);
-  kprint(buf);
-  for(int i = 0; i < 25; i++) buf[i] = '\0';
+  debug_log("[PCI]: Detected Device Class: ");
+  debug_log_number_hex(pci_get_class(bus, device, function));
 
-  kprint(", Subclass: ");
-  hex_to_ascii(pci_get_subclass(bus, device, function), buf);
-  kprint(buf);
-  for(int i = 0; i < 25; i++) buf[i] = '\0';
+  debug_log(", Subclass: ");
+  debug_log_number_hex(pci_get_subclass(bus, device, function));
 
-  kprint(", VendorID: ");
-  hex_to_ascii(pci_get_vendor_id(bus, device, function), buf);
-  kprint(buf);
+  debug_log(", VendorID: ");
+  debug_log_number_hex(pci_get_vendor_id(bus, device, function));
 
-  for(int i = 0; i < 25; i++) buf[i] = '\0';
+  debug_log(", DeviceID: ");
+  debug_log_number_hex(pci_get_device_id(bus, device, function));
 
-  kprint(", DeviceID: ");
-  hex_to_ascii(pci_get_device_id(bus, device, function), buf);
-  kprint(buf);
+  debug_log(", ");
+  debug_log_number_hex(bus);
 
-  for(int i = 0; i < 25; i++) buf[i] = '\0';
+  debug_log(":");
+  debug_log_number_hex(device);
 
-  kprint(", ");
-  hex_to_ascii(bus, buf);
-  kprint(buf);
-
-  for(int i = 0; i < 25; i++) buf[i] = '\0';
-
-  kprint(":");
-  hex_to_ascii(device, buf);
-  kprint(buf);
-  for(int i = 0; i < 25; i++) buf[i] = '\0';
-
-  kprint(":");
-  hex_to_ascii(function, buf);
-  kprint(buf);
+  debug_log(":");
+  debug_log_number_hex(function);
 
   switch(pci_get_class(bus, device, function)){
       case PCI_UNCLASSIFIED:
-        kprint(" Unclassified");
+        debug_log(" Unclassified");
         break;
       case PCI_STORAGE_CONTROLLER:
-        kprint(" Storage Controller");
+        debug_log(" Storage Controller");
         break;
       case PCI_NETWORK_CONTROLLER:
-        kprint(" Network Controller");
+        debug_log(" Network Controller");
         break;
       case PCI_DISPLAY_CONTROLLER:
-        kprint(" Display Controller");
+        debug_log(" Display Controller");
         break;
       case PCI_MULTIMEDIA_CONTROLLER:
-        kprint(" Multimedia Controller");
+        debug_log(" Multimedia Controller");
         break;
       case PCI_MEMORY_CONTROLLER:
-        kprint(" Memory Controller");
+        debug_log(" Memory Controller");
         break;
       case PCI_BRIDGE_CONTROLLER:
-        kprint(" Bridge Device");
+        debug_log(" Bridge Device");
+        break;
+      case PCI_SERIAL_BUS_CONTROLLER:
+        debug_log(" Serial bus controller");
         break;
       default:
-        kprint("Unkown Device");
+        debug_log("Unkown Device");
         break;
   }
 
-  kprint("\n");
+  debug_log("\n");
 }
+
+#endif
 
 
 void pci_check_function(uint8_t bus, uint8_t device, uint8_t function){
@@ -142,11 +132,13 @@ void pci_check_function(uint8_t bus, uint8_t device, uint8_t function){
   baseClass = pci_get_class(bus, device, function);
   subClass = pci_get_subclass(bus, device, function);
   headerType = pci_get_header_type(bus, device, function);
-  if( (baseClass == PCI_CLASS_BRIDGE) && (subClass == PCI_SUBCLASS_BRIDGE_PCI_TO_PCI) && (headerType == 0x01)){
+  if( (baseClass == PCI_CLASS_BRIDGE) && (subClass == PCI_SUBCLASS_BRIDGE_PCI_TO_PCI) && (headerType == 0x01) && (pci_get_secondary_bus(bus, device, function) != 0)){
     pci_check_bus(pci_get_secondary_bus(bus, device, function));
   }
 
-  //pci_print_device_info(bus, device, function);
+  #ifdef DEBUG
+  pci_print_device_info(bus, device, function);
+  #endif
 }
 
 void pci_check_device(uint8_t bus, uint8_t device){
