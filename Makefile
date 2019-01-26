@@ -8,7 +8,7 @@ CC = i686-elf-gcc
 AS = yasm
 QEMU = qemu-system-x86_64
 # -fda flp.flp 
-QEMUFLAGS = -m 256M -hda rhino.iso -fda flp.flp -d cpu_reset -D build/log/qemu.log -rtc base=localtime -monitor stdio -soundhw pcspk -vga std -serial file:./build/log/com1.out #/dev/stdout
+QEMUFLAGS = -m 256M -hda rhino.iso -d cpu_reset -D build/log/qemu.log -rtc base=localtime -monitor stdio -soundhw pcspk -vga std -serial file:/dev/stdout -drive id=disk,file=flp.flp,if=none -device ahci,id=ahci -device ide-drive,drive=disk,bus=ahci.0 
 
 CFLAGS = -g -m32 -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs \
 					-Wall -Wextra -Werror -std=gnu99 -I include/

@@ -118,17 +118,19 @@ void pci_print_device_info(uint8_t bus, uint8_t device, uint8_t function){
 
 
 void pci_check_function(uint8_t bus, uint8_t device, uint8_t function){
-  uint8_t baseClass, subClass, headerType;
+  uint8_t baseClass, subClass, headerType, progIF;
   uint16_t vendorID, deviceID;
   vendorID = pci_get_vendor_id(bus, device, function);
   if(vendorID == PCI_VENDOR_UNUSED) return;
   baseClass = pci_get_class(bus, device, function);
   subClass = pci_get_subclass(bus, device, function);
   deviceID = pci_get_device_id(bus, device, function);
+  progIF = pci_get_programming_interface(bus, device, function);
 
   if((vendorID == 0x1234 && deviceID == 0x1111) || (vendorID == 0x80EE && deviceID == 0xBEEF) || (vendorID == 0x10de && deviceID == 0x0a20)) init_bga(bus, device, function);
   if(baseClass == 0x1 && (subClass == 0x1 || subClass == 0x5)) ata_init(bus,  device, function);
-  
+  if(baseClass == 0x1 && subClass == 0x6 && progIF == 0x01) ahci_init(bus, device, function);
+
   baseClass = pci_get_class(bus, device, function);
   subClass = pci_get_subclass(bus, device, function);
   headerType = pci_get_header_type(bus, device, function);
