@@ -48,6 +48,8 @@
 #include <rhino/kernel.h>
 #include <rhino/panic.h>
 
+#include <rhino/types/linked_list.h>
+
 extern uint32_t placement_address;
 extern uint32_t _kernel_start;
 
@@ -189,6 +191,7 @@ void user_input(char *input){
     clear_screen();
     kprint("Shutting down Rhino");
     shutdown();
+
     return;
   }
   if(strcmp(input, "help") == 0){
