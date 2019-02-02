@@ -1,4 +1,4 @@
-# Project Rhino is a x86 Operating System
+# Rhino OS is a x86 Operating System
 ### System Requirements:
 
       32 Megs ram
