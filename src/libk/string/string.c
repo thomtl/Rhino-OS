@@ -60,3 +60,10 @@ int strcmp(char s1[], char s2[]){
   }
   return s1[i] - s2[i];
 }
+
+char* strdup(char* s){
+  char* d = malloc(strlen(s) + 1);
+  if(d == NULL) return NULL;
+  strcpy(d, s);
+  return d;
+}

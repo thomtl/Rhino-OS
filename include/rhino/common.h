@@ -29,3 +29,7 @@
 
 uint32_t save_eflags();
 void load_eflags(uint32_t eflags);
+
+struct GUID{
+    uint8_t bytes[16];
+};

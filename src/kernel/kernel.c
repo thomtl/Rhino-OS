@@ -129,8 +129,8 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   init_heap();
 
   kprint("Initializing drivers\n");
-
-  fs_root = initialise_initrd(initrd_location);
+  init_vfs();
+  initialise_initrd(initrd_location);
   init_acpi();
   irq_install();
   
