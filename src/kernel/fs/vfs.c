@@ -5,27 +5,33 @@ fs_node_t* fs_root;
 
 mutex_t vfs_lock;
 
+static void vfs_split_path(char* path){
+	char* base = path;
+	uint32_t path_len = strlen(base);
+	while(path < base + path_len){
+		if(*path == '/') *path = '\0';
+		path++;
+	}
+}
+
 uint32_t read_fs(fs_node_t *node, uint32_t offset, uint32_t size, uint8_t *buffer){
-  if(node->read != 0){
-    return node->read(node, offset, size, buffer);
-  } else {
-    return 0;
-  }
+  if(node->read)return node->read(node, offset, size, buffer);
+  else return 0;
 }
 
 uint32_t write_fs(fs_node_t *node, uint32_t offset, uint32_t size, uint8_t *buffer){
-	if(node->write != 0) return node->write(node, offset, size, buffer);
+	if(node->write) return node->write(node, offset, size, buffer);
 	else return 0;
 }
 
 void open_fs(fs_node_t *node, uint8_t read, uint8_t write){
 	UNUSED(read);
 	UNUSED(write);
-	if(node->open != 0) node->open(node);
+	if(node->open) node->open(node);
 	else return;
 }
 void close_fs(fs_node_t *node){
-	if(node->close != 0) node->close(node);
+	if(node->close) node->close(node);
 	else return;
 }
 
@@ -53,11 +59,9 @@ void* vfs_mount(char* path, fs_node_t* local_root){
 	char* p = strdup(path);
 	char* i = p;
 
-	uint32_t path_len = strlen(p);
-	while(i < p + path_len){
-		if(*i == '/') *i = '\0';
-		i++;
-	}
+	size_t path_len = strlen(p);
+
+	vfs_split_path(i);
 
 	p[path_len] = '\0';
 	i = p + 1;
@@ -66,13 +70,50 @@ void* vfs_mount(char* path, fs_node_t* local_root){
 
 	if(*i == '\0'){
 		struct vfs_entry* root = (struct vfs_entry*)root_node->value;
-		if(root->file) kprint("unmount first or something");
+		if(root->file){
+			debug_log("[VFS]: Path already mounted unmount first\n");
+			return NULL;
+		} 
 		root->file = local_root;
 		fs_root = local_root;
 		ret_val = root_node;
 	} else {
-		kprint_err("UNIM");
+		binary_tree_node_t* node = root_node;
+		char* at = i;
+		while(1){
+			if(at >= (p + path_len)) break;
+
+			bool found = false;
+			for(linked_list_node_t* child = node->children->head; child != NULL; child = child->next){
+				binary_tree_node_t* tchild = (binary_tree_node_t*)child->data;
+				struct vfs_entry* ent = (struct vfs_entry*)tchild->value;
+				if(strcmp(ent->name, at) == 0){
+					found = true;
+					node = tchild;
+					ret_val = node;
+					break;
+				}
+			}
+			if(!found){
+				struct vfs_entry* entry = kmalloc(sizeof(struct vfs_entry));
+				entry->name = strdup(at);
+				entry->file = NULL;
+				entry->device = NULL;
+				entry->fs_type = NULL;
+				node = binary_tree_node_insert_child(mount_tree, node, entry);
+			}
+			at = at + strlen(at) + 1;
+		}
+		struct vfs_entry* entry = (struct vfs_entry*)node->value;
+		if(entry->file){
+			debug_log("[VFS]: Path already mounted unmount first\n");
+			return NULL;
+		} 
+		entry->file = local_root;
+		ret_val = node;
 	}
+
+	free(p);
 
 	release_spinlock(&vfs_lock);
 
@@ -80,13 +121,16 @@ void* vfs_mount(char* path, fs_node_t* local_root){
 }
 
 void init_vfs(){
+	acquire_spinlock(&vfs_lock);
+
 	mount_tree = binary_tree_create();
 	struct vfs_entry* root = kmalloc(sizeof(struct vfs_entry));
 	memset(root, 0, sizeof(struct vfs_entry));
-	root->name = kmalloc(7);
-	memcpy(root->name, "[root]\0", 7);
+	root->name = strdup("[root]");
 
 	binary_tree_set_root(mount_tree, root);
+
+	release_spinlock(&vfs_lock);
 }
 
 bool fnmatch(const char* wild, const char* tame, const uint32_t flags){

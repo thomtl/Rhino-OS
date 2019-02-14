@@ -129,13 +129,15 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   init_heap();
 
   kprint("Initializing drivers\n");
-  init_vfs();
-  initialise_initrd(initrd_location);
+
   init_acpi();
   irq_install();
   
   pci_check_all_buses();
-  
+
+  init_vfs();
+  initialise_initrd(initrd_location);
+  UNUSED(initrd_location);
   kprint("Initializing Multitasking\n");
   initTasking();
 
@@ -173,6 +175,8 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
   kprint("\n$");
   enable_scheduling();
+
+
   while(1)
   {
     char c[256] = "";

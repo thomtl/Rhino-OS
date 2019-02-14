@@ -62,8 +62,10 @@ int strcmp(char s1[], char s2[]){
 }
 
 char* strdup(char* s){
-  char* d = malloc(strlen(s) + 1);
+  size_t len = strlen(s) + 1;
+  char* d = malloc(len);
   if(d == NULL) return NULL;
+  memset(d, 0, len);
   strcpy(d, s);
   return d;
 }

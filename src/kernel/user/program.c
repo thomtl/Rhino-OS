@@ -82,15 +82,12 @@ void init(char *prg){
 
   vmm_switch_pdirectory(dir);
 
-  //uint32_t m = (header->len / 4096) + 1;
-  //for(uint32_t j = 0; j < m; j++){                               //should be 1024 but page fault investigate
   for (int i=0, virt=(uint32_t)PROGRAM_LOAD_ADDRESS; i<60; i++, virt+=4096){
     void* frame = pmm_alloc_block();
     vmm_map_page((void*)frame, (void*)virt, 1);
     task_register_frame(task, frame);
   }
   
-  //kfree((void*)(task->regs.esp - 0x1000));
   vmm_map_page(pmm_alloc_block(), 0x0, 1);
   task->regs.esp = 0x1000;
 
