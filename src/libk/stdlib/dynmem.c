@@ -8,3 +8,8 @@ void* malloc(size_t size){
 void free(void* ptr){
   kfree(ptr);
 }
+
+
+void* realloc(void* ptr, size_t size){
+  return krealloc(ptr, size);
+}

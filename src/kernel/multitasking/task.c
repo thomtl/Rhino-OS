@@ -40,6 +40,7 @@ void initTasking(){
   for(uint32_t i = 0; i < MAX_TASKS; i++){
     tasks[i].used = false;
     tasks[i].state = TASK_ACTIVE;
+    tasks[i].pid.path = strdup("/");
   }
 
 
@@ -222,4 +223,15 @@ void block_task(uint32_t reason){
 
 void unblock_task(){
   get_running_task()->state = TASK_ACTIVE;
+}
+
+void task_set_working_directory(task_t* task, char* dir){
+  char* clone = strdup(dir);
+  if(clone == NULL) return;
+  char* backup = task->pid.path;
+  task->pid.path = clone;
+  kfree(backup);
+}
+char* task_get_working_directory(task_t* task){
+  return task->pid.path;
 }

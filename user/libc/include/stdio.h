@@ -30,26 +30,34 @@ typedef void (*open_type_t)(struct file_node*);
 typedef void (*close_type_t)(struct file_node*);
 typedef struct dirent * (*readdir_type_t)(struct file_node*,uint32_t);
 typedef struct file_node * (*finddir_type_t)(struct file_node*,char *name);
+typedef int (*readlink_type_t) (struct file_node *, char *, size_t);
+
 
 typedef struct file_node {
   char name[128];
+  void* device;
   uint32_t mask;
   uint32_t uid;
   uint32_t gid;
   uint32_t inode;
-  uint32_t flags;
-  uint32_t length;
+  uint64_t flags;
+  uint64_t length;
   uint32_t impl;
+  int32_t refcount;
   read_type_t read;
   write_type_t write;
   open_type_t open;
   close_type_t close;
   readdir_type_t readdir;
   finddir_type_t finddir;
-  struct file_node *ptr;
+
+  readlink_type_t readlink;
+
+  struct fs_node *ptr;
 } FILE;
 
 FILE* fopen(char* filename);
-FILE* fread_dir(uint32_t index);
+void fclose(FILE* file);
+struct dirent* fread_dir(uint32_t index);
 void fread(void* ptr, size_t size, FILE* file);
 #endif

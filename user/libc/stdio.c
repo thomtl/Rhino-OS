@@ -47,16 +47,20 @@ void clear_screen(){
 }
 
 FILE* fopen(char* filename){
-  return (FILE*)syscall(3, 1, (uint32_t)filename, 0);
+  return (FILE*)syscall(3, 1, (uint32_t)filename, 2); // rdwr
+}
+
+void fclose(FILE* file){
+  syscall(3, 2, (uint32_t)file, 0);
 }
 
 void fread(void* ptr, size_t size, FILE* file){
   syscall(4, (uint32_t)file, size, (uint32_t)ptr);
 }
 
-FILE* fread_dir(uint32_t index){
-  uint32_t dirent = syscall(3, 2, index, 0);
-  if(dirent == 0) return 0;
+struct dirent* fread_dir(uint32_t index){
+  uint32_t dirent = syscall(3, 3, index, 0);
+  //if(dirent == 0) return 0;
 
-  return fopen(((struct dirent*)dirent)->name);
+  return (struct dirent*)dirent;//fopen(((struct dirent*)dirent)->name);
 }

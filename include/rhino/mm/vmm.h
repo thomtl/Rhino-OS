@@ -57,6 +57,7 @@ typedef struct {
 } pdirectory;
 
 extern void tlb_flush();
+extern void set_cr3(uint32_t phys);
 
 void vmm_pt_entry_add_attrib(pt_entry* e, uint32_t attrib);
 void vmm_pt_entry_del_attrib(pt_entry* e, uint32_t attrib);

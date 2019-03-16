@@ -79,13 +79,15 @@ pd_entry* vmm_pdirectory_lookup_entry(pdirectory* p, void* addr){
 
 bool vmm_switch_pdirectory(pdirectory* dir){
     if(!dir){
+        kprint("[VMM]: Tried to switch to nonexistent pagedir\n");
         return false;
     }
 
     vmm_cur_directory = dir;
     uint32_t phys = (uint32_t)((uint32_t)dir - (uint32_t)KERNEL_VBASE);
-    asm("mov %0, %%cr3":: "r"(phys));
-    //debug_log("[VMM]: CR3 Set\n");
+
+    set_cr3(phys);
+
     return true;
 }
 pdirectory* vmm_get_directory(){

@@ -107,6 +107,11 @@ void isr_handler(registers_t *r){
     kprint_err("\n");
     kprint_err(exception_messages[int_no]);
     kprint_err("\n");
+    char buf[12] = "";
+    hex_to_ascii(r->eip, buf);
+    kprint_err("EIP: ");
+    kprint_err(buf);
+    kprint_err("\n");
     while(1);
   }
 }
@@ -187,6 +192,11 @@ void page_fault_handler(registers_t* regs){
   char buf[12] = "";
   hex_to_ascii(cr2, buf);
   kprint(buf);
+  kprint("\n");
+  char bbuf[12] = "";
+  hex_to_ascii(regs->eip, bbuf);
+  kprint("EIP: ");
+  kprint(bbuf);
   kprint("\n");
   while(1);
   UNUSED(regs);

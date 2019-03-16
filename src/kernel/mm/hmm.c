@@ -1,52 +1,208 @@
 #include <rhino/mm/hmm.h>
-#include <libk/string.h>
-#include <rhino/arch/x86/drivers/screen.h>
-#include <rhino/mm/pmm.h>
-#include <rhino/common.h>
-uint32_t kheapPos = 0xD0000000;
-uint32_t uheapPos = 0xB0000000;
-extern uint32_t _kernel_end;
-extern uintptr_t page_directory;
-uint32_t placement_address = (uint32_t)&_kernel_end;
-heap_t *kheap=0;
-heap_t *uheap=0;
 
-void* kmalloc_int(size_t sz, int align, uint32_t *phys)
+mutex_t tmalloc_global_mutex;
+struct tmalloc_header* head;
+struct tmalloc_header* tail;
+
+uint32_t heap_position = KHEAP_START;
+uint32_t index = 0x0;
+
+extern uint32_t _kernel_end;
+uint32_t placement_address = (uint32_t)&_kernel_end;
+
+// Find a way to redo this, can't keep pages update between processes
+
+static void* tmalloc_morecore(intptr_t increment){
+    void* addr = (void*)(heap_position + index);
+    index += increment;
+
+    if(index >= KHEAP_INITIAL_SIZE){
+        kprint_err("[HMM]: HEAP OUT OF SIZE\n");
+        return NULL;
+    }
+
+    /*for(uintptr_t i = heap_position; i < heap_position + index; i += RHINO_PMM_BLOCK_SIZE){
+        vmm_map_page(pmm_alloc_block(), (void*)heap_position, 1, true);
+        heap_position += RHINO_PMM_BLOCK_SIZE;
+
+        index -= RHINO_PMM_BLOCK_SIZE;
+    }*/
+
+    /*if(index >= RHINO_PMM_BLOCK_SIZE){ // Old morecore allocation code
+        heap_position += RHINO_PMM_BLOCK_SIZE;
+        vmm_map_page(pmm_alloc_block(), (void*)heap_position, 1);
+
+        index = (RHINO_PMM_BLOCK_SIZE - index);
+    }*/
+
+    return addr;
+}
+
+static struct tmalloc_header* tmalloc_get_free_block(size_t size){
+    struct tmalloc_header* curr = head;
+    while(curr){
+        if(curr->is_free && curr->size >= size) return curr;
+        curr = curr->next;
+    }
+    return NULL;
+}
+
+void* tmalloc_malloc(size_t size){
+    if(!size) return NULL;
+
+
+    acquire_spinlock(&tmalloc_global_mutex);
+    struct tmalloc_header* header = tmalloc_get_free_block(size);
+
+    if(header){
+        if(header->magic){
+            release_spinlock(&tmalloc_global_mutex);
+            debug_log("[HMM]: header magic not correct\n");
+            return NULL; 
+        }
+
+        header->is_free = false;
+        release_spinlock(&tmalloc_global_mutex);
+        return (void*)(header + 1);
+    }
+
+    size_t total_size = size + sizeof(struct tmalloc_header);
+    void* block = tmalloc_morecore(total_size);
+    if(block == NULL){
+        release_spinlock(&tmalloc_global_mutex);
+        debug_log("[HMM]: tmalloc_morecore returned NULL?\n");
+        return NULL;
+    }
+
+    header = block;
+    header->size = size;
+    header->is_free = false;
+    header->next = NULL;
+    header->magic = TMALLOC_MAGIC;
+
+    if(!head) head = header;
+    if(tail) tail->next = header;
+    tail = header;
+    release_spinlock(&tmalloc_global_mutex);
+    return (void*)(header + 1);
+}
+
+void tmalloc_free(void* ptr){
+    if(!ptr) return;
+
+    acquire_spinlock(&tmalloc_global_mutex);
+
+    struct tmalloc_header* header = (struct tmalloc_header*)ptr - 1;
+    if(header->magic != TMALLOC_MAGIC){
+        debug_log("[HMM]: tmalloc_morecore returned NULL?\n");
+        release_spinlock(&tmalloc_global_mutex);
+        return;
+    }
+
+    header->is_free = false;
+
+    release_spinlock(&tmalloc_global_mutex);
+}
+
+void* tmalloc_realloc(void* ptr, size_t size){
+    if(!ptr && !size) return NULL;
+
+    if(size == 0 && ptr != NULL){
+        tmalloc_free(ptr);
+        return NULL;
+    }
+
+    if(!ptr) return tmalloc_malloc(size);
+
+    struct tmalloc_header* header = (struct tmalloc_header*)ptr - 1;
+    if(header->size >= size) return ptr;
+
+    void* ret = tmalloc_malloc(size);
+    if(ret){
+        memcpy(ret, ptr, header->size);
+        tmalloc_free(ptr);
+    }
+
+    return ret;
+}
+
+void init_heap(){
+    debug_log("[HMM]: Initializing HMM\n");
+
+    for(uint32_t i = heap_position; i < (heap_position + KHEAP_INITIAL_SIZE); i += RHINO_PMM_BLOCK_SIZE){
+        vmm_map_page(pmm_alloc_block(), (void*)i, 1);
+    }
+
+    
+    //heap_position += RHINO_PMM_BLOCK_SIZE;
+
+    debug_log("[HMM]: HMM Initialized\n");
+}
+
+void* umalloc(size_t sz){
+    //return slab_alloc(sz);//alloc(sz, 0, uheap);
+    return tmalloc_malloc(sz);
+}
+void ufree(void *p){
+    //slab_free(p);//free_int(p, uheap);
+    tmalloc_free(p);
+}
+
+void* kmalloc(size_t sz)
 {
-    if (kheap != 0)
-    {
-        void *addr = alloc(sz, (uint8_t)align, kheap);
-        /*if (phys != 0)
-        {
-            page_t *page = get_page((uint32_t)addr, 0, kernel_directory);
-            *phys = page->frame*0x1000 + (uint32_t)addr&0xFFF;
-        }*/
-        return (void*)addr;
-    }
-    else
-    {
-        if (align == 1 && (placement_address & 0xFFFFF000) )
-        {
-            // Align the placement address;
-            placement_address &= 0xFFFFF000;
-            placement_address += 0x1000;
-        }
-        if (phys)
-        {
-            *phys = placement_address;
-        }
-        uint32_t tmp = placement_address;
-        placement_address += sz;
-        return (void*)tmp;
-    }
+    //return slab_alloc(sz);//kmalloc_int(sz, 0, 0);
+    return tmalloc_malloc(sz);
+}
+
+void* krealloc(void* ptr, size_t size){
+    //return slab_realloc(ptr, size);
+    return tmalloc_realloc(ptr, size);
 }
 
 void kfree(void *p)
 {
-    free_int(p, kheap);
+    //free_int(p, kheap);
+    //slab_free(p);
+    tmalloc_free(p);
 }
 
-void* kmalloc_a(size_t sz)
+//extern uint32_t _kernel_end;
+//uint32_t placement_address = (uint32_t)&_kernel_end;
+
+/*uint32_t kheapPos = 0xD0000000;
+uint32_t uheapPos = 0xB0000000;
+
+heap_t *kheap=0;
+heap_t *uheap=0;*/
+
+
+// krealloc
+    /*if(ptr == NULL) return kmalloc(size);
+
+    header_t *header = (header_t*) ( (uint32_t)ptr - sizeof(header_t) );
+    footer_t *footer = (footer_t*) ( (uint32_t)header + header->size - sizeof(footer_t) );
+
+    ASSERT(header->magic == HEAP_MAGIC);
+    ASSERT(footer->magic == HEAP_MAGIC);
+
+    if(size == 0){
+        kfree(ptr);
+        return NULL;
+    }
+
+    void* ret = kmalloc(size);
+
+    size_t old_alloc_size = header->size - sizeof(footer_t) - sizeof(header);
+    size_t copy_size = (size < old_alloc_size) ? (size) : (old_alloc_size);
+
+    memcpy(ret, ptr, copy_size);
+
+    kfree(ptr);
+
+    return ret;*/
+
+
+/*void* kmalloc_a(size_t sz)
 {
     return kmalloc_int(sz, 1, 0);
 }
@@ -59,14 +215,9 @@ void* kmalloc_p(size_t sz, uint32_t *phys)
 void* kmalloc_ap(size_t sz, uint32_t *phys)
 {
     return kmalloc_int(sz, 1, phys);
-}
+}*/
 
-void* kmalloc(size_t sz)
-{
-    return kmalloc_int(sz, 0, 0);
-}
-
-static void expand(uint32_t new_size, heap_t *heap)
+/*static void expand(uint32_t new_size, heap_t *heap)
 {
     // Sanity check.
     ASSERT(new_size > heap->end_address - heap->start_address);
@@ -91,14 +242,14 @@ static void expand(uint32_t new_size, heap_t *heap)
           //           (heap->supervisor)?1:0, (heap->readonly)?0:1);
         void* frame = pmm_alloc_block();
         vmm_map_page((void*)((uintptr_t)frame - KERNEL_VBASE), (void*)heap->start_address+1, !heap->supervisor);
-        i += 0x1000 /* page size */;
+        i += 0x1000;
     }
     heap->end_address = heap->start_address+new_size;
 }
 
 static uint32_t contract(uint32_t new_size, heap_t *heap)
 {
-    /*// Sanity check.
+    // Sanity check.
     ASSERT(new_size < heap->end_address-heap->start_address);
 
     // Get the nearest following page boundary.
@@ -120,7 +271,7 @@ static uint32_t contract(uint32_t new_size, heap_t *heap)
         i -= 0x1000;
     }
 
-    heap->end_address = heap->start_address + new_size;*/
+    heap->end_address = heap->start_address + new_size;
     UNUSED(heap);
     return new_size;
 }
@@ -139,7 +290,7 @@ static int32_t find_smallest_hole(uint32_t size, uint8_t page_align, heap_t *hea
             uint32_t location = (uint32_t)header;
             int32_t offset = 0;
             if (((location+sizeof(header_t)) & 0xFFFFF000) != 0)
-                offset = 0x1000 /* page size */  - (location+sizeof(header_t))%0x1000;
+                offset = 0x1000 - (location+sizeof(header_t))%0x1000;
             int32_t hole_size = (int32_t)header->size - offset;
             // Can we fit now?
             if (hole_size >= (int32_t)size)
@@ -272,9 +423,9 @@ void *alloc(uint32_t size, uint8_t page_align, heap_t *heap)
     // If we need to page-align the data, do it now and make a new hole in front of our block.
     if (page_align && orig_hole_pos&0xFFFFF000)
     {
-        uint32_t new_location   = orig_hole_pos + 0x1000 /* page size */ - (orig_hole_pos&0xFFF) - sizeof(header_t);
+        uint32_t new_location   = orig_hole_pos + 0x1000 - (orig_hole_pos&0xFFF) - sizeof(header_t);
         header_t *hole_header = (header_t *)orig_hole_pos;
-        hole_header->size     = 0x1000 /* page size */ - (orig_hole_pos&0xFFF) - sizeof(header_t);
+        hole_header->size     = 0x1000 - (orig_hole_pos&0xFFF) - sizeof(header_t);
         hole_header->magic    = HEAP_MAGIC;
         hole_header->is_hole  = 1;
         footer_t *hole_footer = (footer_t *) ( (uint32_t)new_location - sizeof(footer_t) );
@@ -407,40 +558,34 @@ void free_int(void *p, heap_t *heap)
     if (do_add == 1)
         insert_ordered_array((void*)header, &heap->index);
 
-}
+}*/
 
-
-void init_heap(){
-    debug_log("[HMM]: Initializing HMM\n");
-    for(uint32_t i = 0; i < (KHEAP_INITIAL_SIZE / 4096); i++){
-        void* frame;
-        if(!(frame = pmm_alloc_block())){
-            kprint_err("[HMM]: Could not allocate physical page\n");
-            debug_log("[HMM]: Could not allocate physical page\n");
-            return;
-        }
-        vmm_map_page(frame, (void*)kheapPos, 0);
-        kheapPos += 4096;
+/*void* kmalloc_int(size_t sz, int align, uint32_t *phys)
+{
+    if (kheap != 0)
+    {
+        void *addr = alloc(sz, (uint8_t)align, kheap);
+        //if (phys != 0)
+        //{
+        //    page_t *page = get_page((uint32_t)addr, 0, kernel_directory);
+        //    *phys = page->frame*0x1000 + (uint32_t)addr&0xFFF;
+        //}
+        return (void*)addr;
     }
-    kheap = create_heap(KHEAP_START, KHEAP_START+KHEAP_INITIAL_SIZE, 0xDFFFF000, 0, 0);
-
-    for(uint32_t i = 0; i < (KHEAP_INITIAL_SIZE / 4096); i++){
-        void* frame;
-        if(!(frame = pmm_alloc_block())){
-            kprint_err("[HMM]: Could not allocate physical page\n");
-            debug_log("[HMM]: Could not allocate physical page\n");
-            return;
+    else
+    {
+        if (align == 1 && (placement_address & 0xFFFFF000) )
+        {
+            // Align the placement address;
+            placement_address &= 0xFFFFF000;
+            placement_address += 0x1000;
         }
-        vmm_map_page(frame, (void*)uheapPos, 1);
-        uheapPos += 4096;
+        if (phys)
+        {
+            *phys = placement_address;
+        }
+        uint32_t tmp = placement_address;
+        placement_address += sz;
+        return (void*)tmp;
     }
-    uheap = create_heap(0xB0000000, 0xB0000000+KHEAP_INITIAL_SIZE, 0xBFFFF000, 1, 0);
-    debug_log("[HMM]: HMM Initialized\n");
-}
-
-void* umalloc(size_t sz){
-    return alloc(sz, 0, uheap);
-}
-void ufree(void *p){
-    free_int(p, uheap);
-}
+}*/

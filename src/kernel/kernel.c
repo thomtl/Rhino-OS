@@ -48,6 +48,8 @@
 #include <rhino/kernel.h>
 #include <rhino/panic.h>
 
+#include <rhino/types/linked_list.h>
+
 extern uint32_t placement_address;
 extern uint32_t _kernel_start;
 
@@ -128,12 +130,19 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
 
   kprint("Initializing drivers\n");
 
-  fs_root = initialise_initrd(initrd_location);
   init_acpi();
   irq_install();
   
   pci_check_all_buses();
+
+  init_vfs();
+
+  map_vfs_directory("/dev");
   
+  initialise_initrd(initrd_location);
+
+  if(!fs_root) map_vfs_directory("/");
+
   kprint("Initializing Multitasking\n");
   initTasking();
 
@@ -162,7 +171,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   enable_scheduling();
   deer_start();
   set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
-  init("init");
+  init("/dev/initrd/init");
   while(1);
   
   #else
@@ -171,6 +180,7 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   set_color(VGA_COLOR_WHITE, VGA_COLOR_BLACK);
   kprint("\n$");
   enable_scheduling();
+
   while(1)
   {
     char c[256] = "";
@@ -189,6 +199,7 @@ void user_input(char *input){
     clear_screen();
     kprint("Shutting down Rhino");
     shutdown();
+
     return;
   }
   if(strcmp(input, "help") == 0){
@@ -219,12 +230,22 @@ void user_input(char *input){
     PANIC_M("Deliberate Kernel Panic");
   }
   if(strcmp(input, "init") == 0){
+    //int i = 0;
+    //fs_node_t *root = kopen("/dev/initrd/init", O_RDWR);
+
+    //debug_log_number_hex((uint32_t)root);
+
+    //kprint(root->name);
+    fs_node_t *root = kopen("/dev/initrd", O_RDWR);  // working, mounting isn't
     int i = 0;
+
     struct dirent *node = 0;
-    while ( (node = readdir_fs(fs_root, i)) != 0)
+    while ( (node = readdir_fs(root, i)) != 0)
     {
-      kprint(node->name);
-      kprint("\n");
+      if(node != NULL){
+        kprint(node->name);
+        kprint("\n");
+      }
       i++;
     }
     kprint("$");
@@ -289,7 +310,7 @@ void user_input(char *input){
   }
   if(strcmp(input, "reboot") == 0) reboot();
   if(strcmp(input, "run") == 0){
-    init("init");
+    init("/dev/initrd/init");
     kprint("\n$");
     return;
   }

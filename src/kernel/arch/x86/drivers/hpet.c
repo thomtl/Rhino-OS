@@ -47,7 +47,7 @@ void hpet_init_timer(uint32_t n, uint64_t frq, bool periodicTimer){
 bool init_hpet(uint64_t frq){
     debug_log("[HPET]: Initializing HPET\n");
     void* tab = find_table(HPET_ACPI_SIGNATURE);
-    vmm_map_page(tab, tab, 0);
+    //vmm_map_page(tab, tab, 0);
     hpet = (HPET*)tab;
     hpet_base = mmio_read64((uint32_t*)&(hpet->address.Address));
     uint64_t res;

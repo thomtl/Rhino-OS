@@ -14,6 +14,33 @@
 
 extern pdirectory* kernel_directory;
 
+static inline void sys_chdir(char* path, uint32_t pid){
+  char* p = canonicalize_path(task_get_working_directory(task_for_pid(pid)), path);
+
+  task_set_working_directory(task_for_pid(pid), p);
+
+  kfree(p);
+}
+
+static inline void sys_getcwd(char* buf, size_t len){
+  char* cwd = task_get_working_directory(get_running_task());
+
+  size_t cwd_len = strlen(cwd);
+  if(len < cwd_len) memcpy(buf, cwd, len);
+  else memcpy(buf, cwd, cwd_len);
+}
+
+static inline void sys_close(uint32_t node){
+  close_fs((fs_node_t*)node);
+}
+
+static inline struct dirent* sys_readdir(int i){
+  fs_node_t* n = kopen(task_get_working_directory(get_running_task()), O_RDONLY);
+  struct dirent* dir = readdir_fs(n, i);
+  close_fs(n);
+  return dir;
+}
+
 static inline void sys_reboot(){
   reboot();
 }
@@ -38,10 +65,6 @@ static inline uint32_t sys_task_get_argc(pid_t pid){
   return task_get_argc(pid);
 }
 
-static inline struct dirent* sys_readir(uint32_t i){
-  return readdir_fs(fs_root, i);
-}
-
 static inline void sys_waitpid(uint32_t pid){
   waitpid(pid);
 }
@@ -58,8 +81,8 @@ static inline void sys_set_color(uint8_t fg, uint8_t bg){
   set_color(fg, bg);
 }
 
-static inline fs_node_t* sys_finddir_fs(char* file){
-  return finddir_fs(fs_root, file);
+static inline fs_node_t* sys_open(char* file, uint32_t flags){
+  return kopen(file, flags);
 }
 
 static inline void* sys_malloc(size_t size){
@@ -138,6 +161,12 @@ void syscall_handler(registers_t *regs){
         case 10:
           sys_kill(regs->ecx);
           break;
+        case 11:
+          sys_chdir((char*)regs->ecx, regs->edx);
+          break;
+        case 12:
+          sys_getcwd((char*)regs->ecx, regs->edx);
+          break;
         default:
           return;
       }
@@ -172,10 +201,14 @@ void syscall_handler(registers_t *regs){
     case 3:
       switch(regs->ebx){
         case 1:
-          regs->eax = (uint32_t)sys_finddir_fs((char*)regs->ecx);
+          regs->eax = (uint32_t)sys_open((char*)regs->ecx, regs->edx);
           break;
         case 2:
-          regs->eax = (uint32_t)sys_readir(regs->ecx);
+          sys_close(regs->ecx);
+          break;
+        case 3:
+          regs->eax = (uint32_t)sys_readdir(regs->ecx);
+          break;
         default:
           break;
       }

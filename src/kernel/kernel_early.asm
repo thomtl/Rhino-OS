@@ -29,7 +29,7 @@ KERNEL_PAGE_NUMBER equ (KERNEL_VIRTUAL_BASE >> 22)
 align 16
 global stack_top
 stack_bottom:
-  resb 16384
+  resb 32768
 stack_top:
 
 [section .text]

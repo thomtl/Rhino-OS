@@ -2,11 +2,42 @@
 
 #include <rhino/common.h>
 #include <rhino/mm/vmm.h>
-#include <rhino/types/ordered_array.h>
+#include <rhino/mm/pmm.h>
+#include <libk/string.h>
+#include <rhino/multitasking/spinlock.h>
 
 #define KHEAP_START 0xD0000000
 #define KHEAP_INITIAL_SIZE 0x100000
-#define KHEAP_MAX_SIZE 0xFFFF000
+
+// tmalloc memory allocator from https://www.github.com/thomtl/tmalloc rewritten for kernel use
+// Using First Fit mode
+
+#define TMALLOC_MAGIC 0xBEEFCAFE
+
+struct tmalloc_header {
+    size_t size;
+    bool is_free;
+    struct tmalloc_header* next;
+    uint32_t magic;
+};
+
+void* tmalloc_malloc(size_t size);
+void tmalloc_free(void* ptr);
+void* tmalloc_realloc(void* ptr, size_t size);
+
+
+
+
+
+
+void* kmalloc(size_t sz);
+void kfree(void *p);
+void* krealloc(void* ptr, size_t size);
+void* umalloc(size_t sz);
+void ufree(void *p);
+void init_heap();
+
+/*#define KHEAP_MAX_SIZE 0xFFFF000
 #define HEAP_INDEX_SIZE 0x20000
 #define HEAP_MAGIC 0x123890AB
 #define HEAP_MIN_SIZE 0x70000
@@ -46,14 +77,5 @@ void* kmalloc_a(size_t sz);
 
 void* kmalloc_p(size_t sz, uint32_t *phys);
 
-void* kmalloc_ap(size_t sz, uint32_t *phys);
-
-void* kmalloc(size_t sz);
-
-void kfree(void *p);
-
-void* umalloc(size_t sz);
-void ufree(void *p);
-
-void init_heap();
+void* kmalloc_ap(size_t sz, uint32_t *phys);*/
 

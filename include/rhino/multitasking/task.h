@@ -72,3 +72,6 @@ void switch_context(task_t *old, task_t *new, registers_t* r);
 
 void block_task(uint32_t reason);
 void unblock_task();
+
+void task_set_working_directory(task_t* task, char* dir);
+char* task_get_working_directory(task_t* task);
