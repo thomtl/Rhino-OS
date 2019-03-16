@@ -4,7 +4,7 @@ ata_device ata_channels[4];
 
 ata_device* boot_dev;
 
-mutex_t ata_lock;
+spinlock_mutex_t ata_lock;
 
 uint8_t cur_selected = 0xFF;
 

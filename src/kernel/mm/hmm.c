@@ -1,6 +1,6 @@
 #include <rhino/mm/hmm.h>
 
-mutex_t tmalloc_global_mutex;
+spinlock_mutex_t tmalloc_global_mutex;
 struct tmalloc_header* head;
 struct tmalloc_header* tail;
 

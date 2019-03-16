@@ -3,7 +3,7 @@
 #include <rhino/arch/x86/drivers/screen.h>
 
 bool scheduling_enabled = false;
-mutex_t lock;
+spinlock_mutex_t lock;
 /**
    @brief Called from the PIT interrupt it yields away into the next task if about 1 second has passed.
    @param args List of args.  args[0] is the current tick count.

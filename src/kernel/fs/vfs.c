@@ -3,7 +3,7 @@
 binary_tree_t* mount_tree;
 fs_node_t* fs_root;
 
-mutex_t vfs_lock, refcount_lock;
+spinlock_mutex_t vfs_lock, refcount_lock;
 
 
 static struct dirent* readdir_mapper(fs_node_t* node, uint32_t index){

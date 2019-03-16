@@ -2,7 +2,7 @@
 
 ahci_device_t ahci_devices[32];
 
-mutex_t ahci_mutex;
+spinlock_mutex_t ahci_mutex;
 
 uint32_t ahci_control_sets_n = 0;
 
