@@ -68,3 +68,10 @@ char *strtok(char* str, const char* restrict delim){
   p = *p ? *p=0,p+1 : 0;
   return str;
 }
+
+void* memset(void* bufptr, int value, size_t size) {
+	unsigned char* buf = (unsigned char*) bufptr;
+	for (size_t i = 0; i < size; i++)
+		buf[i] = (unsigned char) value;
+	return bufptr;
+}

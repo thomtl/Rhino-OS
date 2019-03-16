@@ -50,6 +50,7 @@ static struct tmalloc_header* tmalloc_get_free_block(size_t size){
 void* tmalloc_malloc(size_t size){
     if(!size) return NULL;
 
+
     acquire_spinlock(&tmalloc_global_mutex);
     struct tmalloc_header* header = tmalloc_get_free_block(size);
 

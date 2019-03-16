@@ -26,9 +26,7 @@ loaded_program_t* load_program(char* filename, uint8_t type){
       header->end = (uint32_t*)(buf + node->length);
       header->len = node->length;
       header->type = type;
-      kprint("REEE");
       read_fs(node, 0, node->length, (uint8_t*)buf);
-      kprint("REEE");
       return header;
     } else {
       kprint_err("program.c: ELF and A.OUT types are not yet implemented!\n");

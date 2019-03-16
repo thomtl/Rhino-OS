@@ -26,12 +26,15 @@ void main(int argc, char* argv[]){
     printf(" file doesn't exist\n");
     return;
   }
+
   char *buf = (char*)malloc(file->length);
   fread(buf, file->length, file);
 
-  for(uint32_t i = 0; i < file->length; i++){
-    char b[2] = {buf[i], '\0'};
-    printf(b);
+  for(int32_t i = 0; i < (int64_t)file->length; i++){
+    putchar(buf[i]);
   }
+
   free(buf);
+
+  fclose(file);
 }

@@ -411,7 +411,7 @@ fs_node_t* kopen_recursive(char *filename, uint32_t flags, uint32_t symlink_dept
 		node_ptr = node_next;
 		if(!node_ptr){
 			kfree((void*)path);
-			debug_log("[VFSFDFKJSAFJLKFJLKASJFLKJDSA");
+			debug_log("[VFS]: Could not find file\n");
 			return NULL;
 		}
 		path_offset += strlen(path_offset) + 1;

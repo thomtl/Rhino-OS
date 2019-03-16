@@ -5,6 +5,7 @@
   @brief        TSH
 *******************************************************************************/
 
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,6 +18,7 @@ int t_exit();
 int t_num_builtins();
 int t_help(char **args);
 int t_clear(char **args);
+int t_cd(char **args);
 int t_exit(char **args);
 int t_nothing(char **f);
 int t_execute(char **args);
@@ -44,6 +46,7 @@ void main(int argc, char* argv[])
 }
 
 char *builtin_str[] = {
+  "cd",
   "help",
   "exit",
   "clear",
@@ -51,6 +54,7 @@ char *builtin_str[] = {
 };
 
 int (*builtin_func[]) (char **) = {
+  &t_cd,
   &t_help,
   &t_exit,
   &t_clear,
@@ -61,8 +65,11 @@ int t_num_builtins() {
   return sizeof(builtin_str) / sizeof(char *);
 }
 int t_launch(char** args){
-  char* m = malloc(sizeof(char) * strlen(args[0]));
-  strcpy(m, args[0]);
+  char* m = malloc(strlen(args[0]) + 1);
+
+  memset(m, 0, strlen(args[0]) + 1);
+  memcpy(m, args[0], strlen(args[0]));
+
   uint32_t pid;
   syscall(0,0,0,0);
   if(!syscall(0,9,(uint32_t)m,(uint32_t)(&pid))){
@@ -74,6 +81,13 @@ int t_launch(char** args){
     syscall(1, 3, 15, 0);
     return 0;
   }
+
+  char buf[128] = "";
+  getcwd(buf, 128);
+
+  syscall(0, 11, (uint32_t)buf, pid);
+
+
   uint32_t argc = 0; 
   while(args[++argc]);
   
@@ -88,6 +102,17 @@ int t_launch(char** args){
 
 int t_nothing(char** args){
   UNUSED(args);
+  return 1;
+}
+
+int t_cd(char **args){
+  if (args[1] == NULL) {
+    printf("TSHELL: expected argument to \"cd\"\n");
+  } else {
+    if (chdir(args[1]) != 0) {
+     printf("TSHELL: failed chdir");
+    }
+  }
   return 1;
 }
 
@@ -182,9 +207,17 @@ void t_loop(void)
     syscall(1, 3, 15, 0);
     printf("@");
     syscall(1, 3, 1, 0);
-    printf("localhost  ");
+    printf("localhost:  ");
+
     syscall(1, 3, 15, 0);
-    printf("> ");
+
+    char buf[128];
+    memset(buf, 0, 128);
+    getcwd(buf, 128);
+
+    printf(buf);
+
+    printf(" > ");
     getline(line, 256);
     t_execute(t_split_line(line));
 

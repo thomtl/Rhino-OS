@@ -9,7 +9,7 @@ fs_node_t *initrd_root;
 fs_node_t *root_nodes;
 uint32_t nroot_nodes;
 
-struct dirent dirent;
+struct dirent* dirent;
 
 static uint32_t initrd_read(fs_node_t *node, uint32_t offset, uint32_t size, uint8_t *buffer)
 {
@@ -25,10 +25,10 @@ static struct dirent *initrd_readdir(fs_node_t *node, uint32_t index)
   	UNUSED(node);
   	if (index >= nroot_nodes)
     	return 0;
-  	strcpy(dirent.name, root_nodes[index].name);
-  	dirent.name[strlen(root_nodes[index].name)] = 0; // Make sure the string is NULL-terminated.
-  	dirent.inode = root_nodes[index].inode;
-  	return &dirent;
+  	strcpy(dirent->name, root_nodes[index].name);
+  	dirent->name[strlen(root_nodes[index].name)] = 0; // Make sure the string is NULL-terminated.
+  	dirent->inode = root_nodes[index].inode;
+  	return dirent;
 }
 
 static fs_node_t *initrd_finddir(fs_node_t *node, char *name)
@@ -44,6 +44,9 @@ static fs_node_t *initrd_finddir(fs_node_t *node, char *name)
 
 void initialise_initrd(uint32_t location){
   	debug_log("[INITRD]: Initializing INITRD\n");
+
+	dirent = kmalloc(sizeof(struct dirent));
+
   	initrd_header = (initrd_header_t *)location;
   	file_headers = (initrd_file_header_t *) (location+sizeof(initrd_header_t));
 
@@ -78,6 +81,7 @@ void initialise_initrd(uint32_t location){
     	strcpy(root_nodes[i].name, (char*)&file_headers[i].name);
     	root_nodes[i].mask = root_nodes[i].uid = root_nodes[i].gid = 0;
     	root_nodes[i].length = file_headers[i].length;
+
     	root_nodes[i].inode = i;
     	root_nodes[i].flags = FS_FILE;
     	root_nodes[i].read = &initrd_read;
