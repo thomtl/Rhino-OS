@@ -10,8 +10,8 @@ extern pdirectory* kernel_directory;
  */
 loaded_program_t* load_program(char* filename, uint8_t type){
     if(type == PROGRAM_BINARY_TYPE_BIN){
-      fs_node_t *node = 0;
-      node = finddir_fs(fs_root, filename);
+      fs_node_t *node = kopen(filename, O_RDONLY);//0;
+      //node = finddir_fs(fs_root, filename);
       if(node == 0){
         //kprint_err("program.c: Could not find program on the INITRD\n");
         return 0;
@@ -26,7 +26,9 @@ loaded_program_t* load_program(char* filename, uint8_t type){
       header->end = (uint32_t*)(buf + node->length);
       header->len = node->length;
       header->type = type;
+      kprint("REEE");
       read_fs(node, 0, node->length, (uint8_t*)buf);
+      kprint("REEE");
       return header;
     } else {
       kprint_err("program.c: ELF and A.OUT types are not yet implemented!\n");
@@ -110,17 +112,20 @@ void init(char *prg){
    @return returns the status.
  */
 uint32_t create_process(char* prg, uint32_t* pid){
-  pdirectory* cur = (pdirectory*)((uint32_t)get_running_task()->regs.cr3 + (uint32_t)KERNEL_VBASE);
   loaded_program_t* header = load_program(prg, PROGRAM_BINARY_TYPE_BIN);
   if(header == 0){
     return false;
   }
+
+  pdirectory* cur = (pdirectory*)((uint32_t)get_running_task()->regs.cr3 + (uint32_t)KERNEL_VBASE);
+
   pdirectory* dir = vmm_clone_dir(kernel_directory);
 
   //TODO: Set Interrupt bit
   task_t* task = createTask((void*)PROGRAM_LOAD_ADDRESS, task_for_pid(0)->regs.eflags, ((uint32_t)dir - (uint32_t)KERNEL_VBASE));
 
   vmm_switch_pdirectory(dir);
+
   for (int i=0, virt=(uint32_t)PROGRAM_LOAD_ADDRESS; i<60; i++, virt+=4096){
     void* frame = pmm_alloc_block();
     vmm_map_page((void*)frame, (void*)virt, 1);
@@ -129,6 +134,8 @@ uint32_t create_process(char* prg, uint32_t* pid){
 
   vmm_map_page(pmm_alloc_block(), 0x0, 1);
   task->regs.esp = 0x1000;
+
+  vmm_switch_pdirectory(dir);
 
   memcpy((void*)PROGRAM_LOAD_ADDRESS, header->base, header->len);
 

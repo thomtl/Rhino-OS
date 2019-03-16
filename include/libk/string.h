@@ -22,3 +22,12 @@ void append(char s[], char n);
 int strcmp(char s1[], char s2[]);
 
 char* strdup(char* s);
+
+size_t strspn(const char* s, const char* c);
+char* strpbrk(const char* s, const char* b);
+size_t strcspn(const char* s, const char* c);
+char* strchrnul(const char* s, int c);
+char* strchr(const char* s, int c);
+
+
+char* strtok_r(char* str, const char* delim, char** saveptr);

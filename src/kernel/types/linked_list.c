@@ -23,7 +23,7 @@ void linked_list_append(linked_list_t * list, linked_list_node_t * item){
     item->next = NULL;
 
     item->owner = list;
-    if(!list->length){
+    if(list->length == 0){
         list->head = item;
         list->tail = item;
         item->previous = NULL;

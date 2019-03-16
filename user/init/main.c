@@ -21,7 +21,7 @@ void main(int argc, char* argv[]){
 
   init_print("Starting TSH\n");
 
-  char *m = "tsh";
+  char *m = "/dev/initrd/tsh";
   uint32_t pid;
   syscall(0,0,0,0);
   if(!syscall(0,9,(uint32_t)m,(uint32_t)(&pid))){

@@ -4,19 +4,39 @@
 #include <rhino/types/binary_tree.h>
 #include <rhino/types/linked_list.h>
 #include <rhino/multitasking/spinlock.h>
-
+#include <rhino/multitasking/task.h>
 #include <libk/string.h>
 
 #define MAX_PATH 1024
 #define MAX_FILENAME_LEN 128
 
+#define MAX_SYMLINK_DEPTH 8
+#define MAX_SYMLINK_SIZE 4096
+
+#define O_RDONLY     0x0000
+#define O_WRONLY     0x0001
+#define O_RDWR       0x0002
+#define O_APPEND     0x0008
+#define O_CREAT      0x0200
+#define O_TRUNC      0x0400
+#define O_EXCL       0x0800
+#define O_NOFOLLOW   0x1000
+#define O_PATH       0x2000
+#define O_NONBLOCK   0x4000
+#define O_DIRECTORY  0x8000
+
 #define FS_FILE        0x01
 #define FS_DIRECTORY   0x02
-#define FS_CHARDEVICE  0x03
-#define FS_BLOCKDEVICE 0x04
-#define FS_PIPE        0x05
-#define FS_SYMLINK     0x06
-#define FS_MOUNTPOINT  0x08
+#define FS_CHARDEVICE  0x04
+#define FS_BLOCKDEVICE 0x08
+#define FS_PIPE        0x10
+#define FS_SYMLINK     0x20
+#define FS_MOUNTPOINT  0x40
+
+#define PATH_SEPARATOR '/'
+#define PATH_SEPARATOR_STRING "/"
+#define PATH_UP ".."
+#define PATH_DOT "."
 
 struct fs_node;
 
@@ -27,13 +47,16 @@ struct dirent{
 
 typedef uint32_t (*read_type_t)(struct fs_node*,uint32_t,uint32_t,uint8_t*);
 typedef uint32_t (*write_type_t)(struct fs_node*,uint32_t,uint32_t,uint8_t*);
-typedef void (*open_type_t)(struct fs_node*);
+typedef void (*open_type_t)(struct fs_node*, uint32_t);
 typedef void (*close_type_t)(struct fs_node*);
 typedef struct dirent * (*readdir_type_t)(struct fs_node*,uint32_t);
 typedef struct fs_node * (*finddir_type_t)(struct fs_node*,char *name);
+typedef int (*readlink_type_t) (struct fs_node *, char *, size_t);
+
 
 typedef struct fs_node {
   char name[MAX_FILENAME_LEN];
+  void* device;
   uint32_t mask;
   uint32_t uid;
   uint32_t gid;
@@ -41,13 +64,16 @@ typedef struct fs_node {
   uint64_t flags;
   uint64_t length;
   uint32_t impl;
-  uint32_t refcount;
+  int32_t refcount;
   read_type_t read;
   write_type_t write;
   open_type_t open;
   close_type_t close;
   readdir_type_t readdir;
   finddir_type_t finddir;
+
+  readlink_type_t readlink;
+
   struct fs_node *ptr;
 } fs_node_t;
 
@@ -62,13 +88,21 @@ extern fs_node_t *fs_root;
 
 uint32_t read_fs(fs_node_t *node, uint32_t offset, uint32_t size, uint8_t *buffer);
 uint32_t write_fs(fs_node_t *node, uint32_t offset, uint32_t size, uint8_t *buffer);
-void open_fs(fs_node_t *node, uint8_t read, uint8_t write);
+void open_fs(fs_node_t *node, uint32_t flags);
 void close_fs(fs_node_t *node);
 struct dirent *readdir_fs(fs_node_t *node, uint32_t index);
 fs_node_t *finddir_fs(fs_node_t *node, char *name);
+uint32_t readlink_fs(fs_node_t* node, char* buf, size_t size);
+
+
 void* vfs_mount(char* path, fs_node_t* local_root);
+char* canonicalize_path(char* cwd, char* input);
+
 void init_vfs();
 
+fs_node_t* kopen(char* path, uint32_t flags);
+
+void map_vfs_directory(char* c);
 
 #define FNM_NOCASE (1 << 0)
 bool fnmatch(const char* wild, const char* tame, const uint32_t flags);
