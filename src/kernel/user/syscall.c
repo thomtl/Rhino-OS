@@ -14,12 +14,20 @@
 
 extern pdirectory* kernel_directory;
 
-static inline void sys_chdir(char* path, uint32_t pid){
+static inline int sys_chdir(char* path, uint32_t pid){
   char* p = canonicalize_path(task_get_working_directory(task_for_pid(pid)), path);
-
-  task_set_working_directory(task_for_pid(pid), p);
-
+  fs_node_t* chd = kopen(p, 0);
+  if(chd){
+    if((chd->flags & FS_DIRECTORY) == 0){
+      close_fs(chd);
+      debug_log("[MULTITASKING]: tried to chdir to file not directory\n");
+      return 1;
+    }
+    task_set_working_directory(task_for_pid(pid), p);
+    close_fs(chd);
+  }
   kfree(p);
+  return 0;
 }
 
 static inline void sys_getcwd(char* buf, size_t len){
@@ -292,7 +300,7 @@ void syscall_handler(registers_t *regs){
       break;
 
     case 11:
-      sys_chdir((char*)regs->ebx, regs->ecx);
+      regs->eax = (uint32_t)sys_chdir((char*)regs->ebx, regs->ecx);
       break;
 
     case 12:

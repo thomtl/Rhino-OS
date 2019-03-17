@@ -110,7 +110,7 @@ int t_cd(char **args){
     printf("TSHELL: expected argument to \"cd\"\n");
   } else {
     if (chdir(args[1]) != 0) {
-     printf("TSHELL: failed chdir");
+      printf("TSHELL: can't cd");
     }
   }
   return 1;

@@ -10,7 +10,7 @@ EAX   EBX   ECX   EDX   NAME                FUNCTION                            
 8     A     0     0     get task argc       name                                            A = pid                             argc
 9     A     B     0     create Process      Create process                                  A = name of process b = &pid
 10    A     0     0     kill process        names                                           A = pid
-11    A     B     0     chdir               name                                            A = path B = pid
+11    A     B     0     chdir               name                                            A = path B = pid                    success
 12    A     B     0     getcwd              name                                            A = pointer to buf B = buf length
 13    A     0     0     Printc              Prints whats the char in ecx                    A = char code to data
 14    0     0     0     Clear Screen        Clears the screen

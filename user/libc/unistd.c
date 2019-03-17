@@ -1,8 +1,7 @@
 #include "include/unistd.h"
 
 int chdir(const char* path){
-    syscall(11, (uint32_t)path, syscall(3, 0, 0, 0), 0);
-    return 0;
+    return syscall(11, (uint32_t)path, syscall(3, 0, 0, 0), 0);
 }
 
 char* getcwd(char* buf, size_t size){
