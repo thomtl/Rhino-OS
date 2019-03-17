@@ -41,6 +41,13 @@ void initTasking(){
     tasks[i].used = false;
     tasks[i].state = TASK_ACTIVE;
     tasks[i].pid.path = strdup("/");
+
+    tasks[i].fd_table.refs = 1;
+    tasks[i].fd_table.length = 0;
+    tasks[i].fd_table.capacity = 8;
+    tasks[i].fd_table.entries = kmalloc(sizeof(fs_node_t*) * tasks[i].fd_table.capacity);
+    tasks[i].fd_table.entries = kmalloc(sizeof(int) * tasks[i].fd_table.capacity);
+    tasks[i].fd_table.entries = kmalloc(sizeof(uint64_t) * tasks[i].fd_table.capacity);
   }
 
 
@@ -92,6 +99,8 @@ void kill(uint32_t pid){
   vmm_free_dir((pdirectory*)((uint32_t)task->regs.cr3 + KERNEL_VBASE));
   task->res.frameIndex = 0;
   task->used = false;
+
+  task->fd_table.length = 0;// reset fd table
 }
 
 void kill_kern(){
@@ -234,4 +243,31 @@ void task_set_working_directory(task_t* task, char* dir){
 }
 char* task_get_working_directory(task_t* task){
   return task->pid.path;
+}
+
+uint32_t task_append_fd(task_t* task, fs_node_t* node){
+  for(uint32_t i = 0; i < task->fd_table.length; i++){
+    if(!task->fd_table.entries[i]){
+      task->fd_table.entries[i] = node;
+
+      task->fd_table.modes[i] = 0;
+      task->fd_table.offsets[i] = 0;
+      return i;
+    }
+  }
+
+  if(task->fd_table.length == task->fd_table.capacity){
+    task->fd_table.capacity *= 2;
+
+    task->fd_table.entries = krealloc(task->fd_table.entries, sizeof(fs_node_t*) * task->fd_table.capacity);
+    task->fd_table.modes = krealloc(task->fd_table.modes, sizeof(int) * task->fd_table.capacity);
+    task->fd_table.offsets = krealloc(task->fd_table.offsets, sizeof(uint64_t) * task->fd_table.capacity);
+  }
+
+  task->fd_table.entries[task->fd_table.length] = node;
+  task->fd_table.modes[task->fd_table.length] = 0;
+  task->fd_table.offsets[task->fd_table.length] = 0;
+
+  task->fd_table.length++;
+  return task->fd_table.length-1;
 }

@@ -1,5 +1,6 @@
 #include "include/stdio.h"
 #include "include/sys.h"
+#include "include/unistd.h"
 
 uint8_t putchar(uint8_t c){
     syscall(13, c, 0, 0);
@@ -44,23 +45,4 @@ char* getline(char *lineptr, size_t bufsize){
 
 void clear_screen(){
     syscall(14, 0, 0, 0);
-}
-
-FILE* fopen(char* filename){
-  return (FILE*)syscall(18, (uint32_t)filename, 2, 0); // rdwr
-}
-
-void fclose(FILE* file){
-  syscall(19, (uint32_t)file, 0, 0);
-}
-
-void fread(void* ptr, size_t size, FILE* file){
-  syscall(21, (uint32_t)file, size, (uint32_t)ptr);
-}
-
-struct dirent* fread_dir(uint32_t index){
-  uint32_t dirent = syscall(20, index, 0, 0);
-  //if(dirent == 0) return 0;
-
-  return (struct dirent*)dirent;//fopen(((struct dirent*)dirent)->name);
 }

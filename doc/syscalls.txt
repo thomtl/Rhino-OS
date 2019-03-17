@@ -19,9 +19,10 @@ EAX   EBX   ECX   EDX   NAME                FUNCTION                            
 17	  A	  	0	  0	    free				free											A = pointer to free
 18	  A 	B	  0	    open			    open a file 									A = name of file B = flags  	    fs_node_t of the file
 19    A     0     0     close               close a file                                    A = fs_node_t
-20    A     0     0     readdir_fs          name                                            A = index;
+20    A     B     0     readdir_fs          name                                            A = fd, B = index
 21	  A     B     C	    read_fs				name											A = node, B = size, C = buffer		int with status
 22    A     B     C     write_fs            name                                            A = node, B = size, C = buffer      int with status
 23    0     0     0     getchar             read char from the keyboard                                                         char with ascii code
 24    0     0     0     shutdown            shutdown the pc
 25    0     0     0     reboot              reboot the pc
+26    A     B     0     fstat               name                                            A = fd B = pointer to struct stat   status

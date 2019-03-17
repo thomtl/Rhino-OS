@@ -4,6 +4,8 @@
 #include <string.h>
 #include <sys.h>
 
+#include <sys/stat.h>
+
 void main(int argc, char* argv[]){
   if(argc < 2 || argc > 3){
     printf("read: no arguments use -h or --help for help\n");
@@ -19,22 +21,28 @@ void main(int argc, char* argv[]){
     return;
   }
 
-  FILE* file = fopen(argv[1]);
-  if(file == 0){
+  int file = open(argv[1]);
+  if(file == -1){
     printf("read: ");
     printf(argv[1]);
     printf(" file doesn't exist\n");
     return;
   }
 
-  char *buf = (char*)malloc(file->length);
-  fread(buf, file->length, file);
+  struct stat st;
 
-  for(int32_t i = 0; i < (int64_t)file->length; i++){
+  fstat(file, &st);
+
+  size_t l = st.st_size;
+
+  char *buf = (char*)malloc(l);
+  read(buf, l, file);
+
+  for(int32_t i = 0; i < (int64_t)l; i++){
     putchar(buf[i]);
   }
 
   free(buf);
 
-  fclose(file);
+  close(file);
 }

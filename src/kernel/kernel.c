@@ -13,9 +13,6 @@
 #include <rhino/mm/pmm.h>
 #include <rhino/mm/hmm.h>
 
-#include <rhino/fs/vfs.h>
-#include <rhino/fs/initrd.h>
-
 #include <rhino/multitasking/task.h>
 #include <rhino/multitasking/scheduler.h>
 
@@ -214,7 +211,6 @@ void user_input(char *input){
     kprint("cpuid: Print CPUID info.\n");
     kprint("pid: To show the current PID.\n");
     kprint("panic: Panic the kernel.\n");
-    kprint("init: To show the files on the initrd.\n");
     kprint("mmap: Print the sections in the BIOS mmap.\n");
     #endif
     kprint("----------------------------------------------\n");
@@ -228,28 +224,6 @@ void user_input(char *input){
   }
   if(strcmp(input, "panic") == 0){
     PANIC_M("Deliberate Kernel Panic");
-  }
-  if(strcmp(input, "init") == 0){
-    //int i = 0;
-    //fs_node_t *root = kopen("/dev/initrd/init", O_RDWR);
-
-    //debug_log_number_hex((uint32_t)root);
-
-    //kprint(root->name);
-    fs_node_t *root = kopen("/dev/initrd", O_RDWR);  // working, mounting isn't
-    int i = 0;
-
-    struct dirent *node = 0;
-    while ( (node = readdir_fs(root, i)) != 0)
-    {
-      if(node != NULL){
-        kprint(node->name);
-        kprint("\n");
-      }
-      i++;
-    }
-    kprint("$");
-    return;
   }
   if(strcmp(input, "pid") == 0){
     char c[4] = "";

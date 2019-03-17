@@ -4,7 +4,6 @@
 #include <rhino/types/binary_tree.h>
 #include <rhino/types/linked_list.h>
 #include <rhino/multitasking/spinlock.h>
-#include <rhino/multitasking/task.h>
 #include <libk/string.h>
 
 #define MAX_PATH 1024
@@ -12,6 +11,34 @@
 
 #define MAX_SYMLINK_DEPTH 8
 #define MAX_SYMLINK_SIZE 4096
+
+#define	_IFMT		0170000
+#define		_IFDIR	0040000
+#define		_IFCHR	0020000
+#define		_IFBLK	0060000
+#define		_IFREG	0100000
+#define		_IFLNK	0120000
+#define		_IFSOCK	0140000
+#define		_IFIFO	0010000
+
+struct stat  {
+	uint16_t  st_dev;
+	uint16_t  st_ino;
+	uint32_t  st_mode;
+	uint16_t  st_nlink;
+	uint16_t  st_uid;
+	uint16_t  st_gid;
+	uint16_t  st_rdev;
+	int32_t  st_size;
+	uint32_t  st_atime;
+	uint32_t  unused1;
+	int32_t  st_mtime;
+	uint32_t  unused2;
+	uint32_t  st_ctime;
+	uint32_t  unused3;
+	uint32_t  st_blksize;
+	uint32_t  st_blocks;
+};
 
 #define O_RDONLY     0x0000
 #define O_WRONLY     0x0001
@@ -106,6 +133,9 @@ void map_vfs_directory(char* c);
 
 #define FNM_NOCASE (1 << 0)
 bool fnmatch(const char* wild, const char* tame, const uint32_t flags);
+
+#include <rhino/multitasking/task.h> //wtf
+
 
 /*#define FOPEN 0
 #define FCLOSE 1

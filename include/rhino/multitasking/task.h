@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <rhino/common.h>
 #include <rhino/arch/x86/isr.h>
+#include <rhino/fs/vfs.h>
 
 #define MAX_TASKS 256
 #define TASK_MAX_FRAMES 64
@@ -33,6 +34,15 @@ typedef struct {
   uint32_t frameIndex;
 } task_resources_t;
 
+typedef struct {
+  fs_node_t** entries;
+  uint64_t* offsets;
+  int* modes;
+  size_t length;
+  size_t capacity;
+  size_t refs;
+} fd_table_t;
+
 typedef struct Task {
   task_registers_t regs;
   bool used;
@@ -41,6 +51,7 @@ typedef struct Task {
   uint32_t argc;
   process_data_t pid;
   task_resources_t res;
+  fd_table_t fd_table;
 } task_t;
 
 void initTasking();
@@ -75,3 +86,5 @@ void unblock_task();
 
 void task_set_working_directory(task_t* task, char* dir);
 char* task_get_working_directory(task_t* task);
+
+uint32_t task_append_fd(task_t* task, fs_node_t* node);

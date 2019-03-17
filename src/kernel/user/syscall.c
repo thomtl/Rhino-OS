@@ -14,6 +14,30 @@
 
 extern pdirectory* kernel_directory;
 
+static int sys_stat(int fd, uint32_t st){
+  fs_node_t* node = get_running_task()->fd_table.entries[fd];
+  struct stat* f = (struct stat*)st;
+  f->st_dev = 0;
+  f->st_ino = node->inode;
+
+  uint32_t flags = 0;
+  if(node->flags & FS_FILE) flags |= _IFREG;
+  if(node->flags & FS_DIRECTORY) flags |= _IFDIR;
+  if(node->flags & FS_CHARDEVICE) flags |= _IFCHR;
+  if(node->flags & FS_BLOCKDEVICE) flags |= _IFBLK;
+  if(node->flags & FS_PIPE) flags |= _IFIFO;
+  if(node->flags & FS_SYMLINK) flags |= _IFLNK;
+
+  f->st_mode = node->mask | flags;
+  f->st_nlink = 0;
+  f->st_uid = node->uid;
+  f->st_gid = node->gid;
+  f->st_rdev = 0;
+  f->st_size = node->length;
+
+  return 0;
+}
+
 static inline int sys_chdir(char* path, uint32_t pid){
   char* p = canonicalize_path(task_get_working_directory(task_for_pid(pid)), path);
   fs_node_t* chd = kopen(p, 0);
@@ -38,14 +62,13 @@ static inline void sys_getcwd(char* buf, size_t len){
   else memcpy(buf, cwd, cwd_len);
 }
 
-static inline void sys_close(uint32_t node){
-  close_fs((fs_node_t*)node);
+static inline void sys_close(uint32_t fd){
+  close_fs(get_running_task()->fd_table.entries[fd]);
+  get_running_task()->fd_table.entries[fd] = NULL;
 }
 
-static inline struct dirent* sys_readdir(int i){
-  fs_node_t* n = kopen(task_get_working_directory(get_running_task()), O_RDONLY);
-  struct dirent* dir = readdir_fs(n, i);
-  close_fs(n);
+static inline struct dirent* sys_readdir(int fd, int i){
+  struct dirent* dir = readdir_fs(get_running_task()->fd_table.entries[fd], i);
   return dir;
 }
 
@@ -89,8 +112,16 @@ static inline void sys_set_color(uint8_t fg, uint8_t bg){
   set_color(fg, bg);
 }
 
-static inline fs_node_t* sys_open(char* file, uint32_t flags){
-  return kopen(file, flags);
+static inline int sys_open(char* file, uint32_t flags){
+  fs_node_t* node = kopen(file, flags);
+
+  int fd = task_append_fd(get_running_task(), node);
+
+  get_running_task()->fd_table.modes[fd] = 0;
+  if(flags & O_APPEND) get_running_task()->fd_table.offsets[fd] = node->length;
+  else get_running_task()->fd_table.offsets[fd] = 0;
+
+  return fd;
 }
 
 static inline void* sys_malloc(size_t size){
@@ -101,12 +132,20 @@ static inline void sys_free(void* addr){
   kfree(addr);
 }
 
-static inline uint32_t sys_read_fs(fs_node_t* node, uint32_t size, uint8_t* buffer){
-  return read_fs(node, 0, size, buffer);
+static inline uint32_t sys_read_fs(uint32_t fd, uint32_t size, uint8_t* buffer){
+  fs_node_t* node = get_running_task()->fd_table.entries[fd];
+  uint32_t out = read_fs(node, get_running_task()->fd_table.offsets[fd], size, buffer);
+  get_running_task()->fd_table.offsets[fd] += out;
+
+  return out;
 }
 
-static inline uint32_t sys_write_fs(fs_node_t* node, uint32_t size, uint8_t* buffer){
-  return write_fs(node, 0, size, buffer);
+static inline uint32_t sys_write_fs(uint32_t fd, uint32_t size, uint8_t* buffer){
+  fs_node_t* node = get_running_task()->fd_table.entries[fd];
+  uint32_t out = write_fs(node, get_running_task()->fd_table.offsets[fd], size, buffer);
+  get_running_task()->fd_table.offsets[fd] += out;
+
+  return out;
 }
 
 static inline void sys_exit(){
@@ -336,15 +375,15 @@ void syscall_handler(registers_t *regs){
       break;
 
     case 20:
-      regs->eax = (uint32_t)sys_readdir(regs->ebx);
+      regs->eax = (uint32_t)sys_readdir(regs->ebx, regs->ecx);
       break;
 
     case 21:
-      regs->eax = sys_read_fs((fs_node_t*)regs->ebx, regs->ecx, (uint8_t*)regs->edx);
+      regs->eax = sys_read_fs(regs->ebx, regs->ecx, (uint8_t*)regs->edx);
       break;
 
     case 22:
-      regs->eax = sys_write_fs((fs_node_t*)regs->ebx, regs->ecx, (uint8_t*)regs->edx);
+      regs->eax = sys_write_fs(regs->ebx, regs->ecx, (uint8_t*)regs->edx);
       break;
 
     case 23:
@@ -357,6 +396,10 @@ void syscall_handler(registers_t *regs){
 
     case 25:
       sys_reboot();
+      break;
+
+    case 26:
+      regs->eax = sys_stat(regs->ebx, regs->ecx);
       break;
         
     default:
