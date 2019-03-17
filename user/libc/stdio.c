@@ -2,7 +2,7 @@
 #include "include/sys.h"
 
 uint8_t putchar(uint8_t c){
-    syscall(1, 1, c, 0);
+    syscall(13, c, 0, 0);
     return c;
 }
 
@@ -15,7 +15,7 @@ void printf(char* msg){
 }
 
 char getchar(){
-    return syscall(5, 1, 0, 0);
+    return syscall(23, 0, 0, 0);
 }
 
 char* getline(char *lineptr, size_t bufsize){
@@ -43,23 +43,23 @@ char* getline(char *lineptr, size_t bufsize){
 }
 
 void clear_screen(){
-    syscall(1, 2, 0, 0);
+    syscall(14, 0, 0, 0);
 }
 
 FILE* fopen(char* filename){
-  return (FILE*)syscall(3, 1, (uint32_t)filename, 2); // rdwr
+  return (FILE*)syscall(18, (uint32_t)filename, 2, 0); // rdwr
 }
 
 void fclose(FILE* file){
-  syscall(3, 2, (uint32_t)file, 0);
+  syscall(19, (uint32_t)file, 0, 0);
 }
 
 void fread(void* ptr, size_t size, FILE* file){
-  syscall(4, (uint32_t)file, size, (uint32_t)ptr);
+  syscall(21, (uint32_t)file, size, (uint32_t)ptr);
 }
 
 struct dirent* fread_dir(uint32_t index){
-  uint32_t dirent = syscall(3, 3, index, 0);
+  uint32_t dirent = syscall(20, index, 0, 0);
   //if(dirent == 0) return 0;
 
   return (struct dirent*)dirent;//fopen(((struct dirent*)dirent)->name);

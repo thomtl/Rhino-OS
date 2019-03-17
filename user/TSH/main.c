@@ -29,13 +29,13 @@ void main(int argc, char* argv[])
   (void)(argc);
   (void)(argv);
   clear_screen();
-  syscall(1, 3, 9, 0);
+  syscall(15, 9, 0, 0);
   printf("Starting TSH v0.0.1, Thomas Woertman 2018\n");
-  syscall(1, 3, 4, 0);
+  syscall(15, 4, 0, 0);
   printf("            All Rights Reserved\n");
-  syscall(1, 3, 15, 0);
+  syscall(15, 15, 0, 0);
   char buf[25] = "";
-  itoa(syscall(0,3,0,0), buf, 10);
+  itoa(syscall(3,0,0,0), buf, 10);
   printf("PID: ");
   printf(buf);
   printf("\n");
@@ -71,30 +71,30 @@ int t_launch(char** args){
   memcpy(m, args[0], strlen(args[0]));
 
   uint32_t pid;
-  syscall(0,0,0,0);
-  if(!syscall(0,9,(uint32_t)m,(uint32_t)(&pid))){
-    syscall(0,1,0,0);
-    syscall(1, 3, 4, 0);
+  syscall(1,0,0,0);
+  if(!syscall(9,(uint32_t)m,(uint32_t)(&pid),0)){
+    syscall(2,0,0,0);
+    syscall(15, 4, 0, 0);
     printf("[TSH] Could not run program \"");
     printf(args[0]);
     printf("\"\n");
-    syscall(1, 3, 15, 0);
+    syscall(15, 15, 0, 0);
     return 0;
   }
 
   char buf[128] = "";
   getcwd(buf, 128);
 
-  syscall(0, 11, (uint32_t)buf, pid);
+  syscall(11, (uint32_t)buf, pid, 0);
 
 
   uint32_t argc = 0; 
   while(args[++argc]);
   
-  syscall(0, 7, pid, argc);
-  syscall(0, 5, pid, (uint32_t)args);
-  syscall(0,1,0,0);
-  syscall(0,4,pid,0);
+  syscall(7, pid, argc, 0);
+  syscall(5, pid, (uint32_t)args, 0);
+  syscall(2,0,0,0);
+  syscall(4,pid,0,0);
 
   return 1;
 }
@@ -135,9 +135,9 @@ int t_help(char** args)
 
 int t_exit(char** args)
 {
-  syscall(0,1,0,0);
+  syscall(2,0,0,0);
   clear_screen();
-  syscall(1, 3, 14, 0);
+  syscall(15, 14, 0, 0);
   for(int i = 0; i < 980; i++) printf(" ");
   printf("It is now safe to turn of your pc");
   exit();
@@ -202,14 +202,14 @@ int t_execute(char** args)
 void t_loop(void)
 {
   while(1) {
-    syscall(1, 3, 2, 0);
+    syscall(15, 2, 0, 0);
     printf("admin");
-    syscall(1, 3, 15, 0);
+    syscall(15, 15, 0, 0);
     printf("@");
-    syscall(1, 3, 1, 0);
+    syscall(15, 1, 0, 0);
     printf("localhost:  ");
 
-    syscall(1, 3, 15, 0);
+    syscall(15, 15, 0, 0);
 
     char buf[128];
     memset(buf, 0, 128);

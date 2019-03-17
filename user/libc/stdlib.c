@@ -1,15 +1,15 @@
 #include "include/stdlib.h"
 
 void* malloc(size_t sz){
-    return (void*)syscall(2, 1, sz, 0);
+    return (void*)syscall(16, sz, 0, 0);
 }
 void free(void* addr){
-    syscall(2, 2, (uint32_t)addr, 0);
+    syscall(17, (uint32_t)addr, 0, 0);
 }
 
 void exit(){
-    syscall(0, 1, 0, 0);
-    syscall(0, 2, 0, 0);
+    syscall(2, 0, 0, 0);
+    syscall(0, 0, 0, 0);
 }
 
 char* dtoa(double x, char* p){

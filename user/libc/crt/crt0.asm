@@ -10,37 +10,37 @@ section .text
 extern main
 global _start
 _start:
-    xor eax, eax
-    mov ebx, 1
+    mov eax, 2
+    xor ebx, ebx
     xor ecx, ecx
     xor edx, edx
     int 0x80
 
-    mov eax, 1
-    mov ebx, 3
-    mov ecx, 15
+    mov eax, 15
+    mov ebx, 15
+    xor ecx, ecx
     xor edx, edx
     int 0x80
 
-    xor eax, eax
-    mov ebx, 3
+    mov eax, 3
+    xor ebx, ebx
     xor ecx, ecx
     xor edx, edx
     int 0x80
     mov byte [pid], al
 
-    xor eax, eax
-    mov ebx, 6
+    mov eax, 6 ; Here
+    xor ebx, ebx
+    mov bl, byte [pid]
     xor ecx, ecx
-    mov cl, byte [pid]
     xor edx, edx
     int 0x80
     mov dword [argv], eax
 
-    xor eax, eax
-    mov ebx, 8
+    mov eax, 8
+    xor ebx, ebx
+    mov bl, byte [pid]
     xor ecx, ecx
-    mov cl, byte [pid]
     xor edx, edx
     int 0x80
     mov dword [argc], eax
@@ -50,10 +50,10 @@ _start:
 
     call main
 
-    xor eax, eax
-    mov ebx, 10
+    mov eax, 10
+    xor ebx, ebx
+    mov bl, byte [pid]
     xor ecx, ecx
-    mov cl, byte [pid]
     xor edx, edx
     int 0x80
     jmp $
