@@ -27,14 +27,9 @@ void* tmalloc_realloc(void* ptr, size_t size);
 
 
 
-
-
-
 void* kmalloc(size_t sz);
 void kfree(void *p);
 void* krealloc(void* ptr, size_t size);
-void* umalloc(size_t sz);
-void ufree(void *p);
 void init_heap();
 
 /*#define KHEAP_MAX_SIZE 0xFFFF000

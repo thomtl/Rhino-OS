@@ -86,11 +86,11 @@ static inline fs_node_t* sys_open(char* file, uint32_t flags){
 }
 
 static inline void* sys_malloc(size_t size){
-  return umalloc(size);
+  return kmalloc(size);
 }
 
 static inline void sys_free(void* addr){
-  ufree(addr);
+  kfree(addr);
 }
 
 static inline uint32_t sys_read_fs(fs_node_t* node, uint32_t size, uint8_t* buffer){

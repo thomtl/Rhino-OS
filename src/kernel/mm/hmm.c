@@ -133,38 +133,20 @@ void init_heap(){
         vmm_map_page(pmm_alloc_block(), (void*)i, 1);
     }
 
-    
-    //heap_position += RHINO_PMM_BLOCK_SIZE;
-
     debug_log("[HMM]: HMM Initialized\n");
 }
 
-void* umalloc(size_t sz){
-    //return slab_alloc(sz);//alloc(sz, 0, uheap);
+void* kmalloc(size_t sz){
     return tmalloc_malloc(sz);
 }
-void ufree(void *p){
-    //slab_free(p);//free_int(p, uheap);
+void kfree(void *p){
     tmalloc_free(p);
-}
-
-void* kmalloc(size_t sz)
-{
-    //return slab_alloc(sz);//kmalloc_int(sz, 0, 0);
-    return tmalloc_malloc(sz);
 }
 
 void* krealloc(void* ptr, size_t size){
-    //return slab_realloc(ptr, size);
     return tmalloc_realloc(ptr, size);
 }
 
-void kfree(void *p)
-{
-    //free_int(p, kheap);
-    //slab_free(p);
-    tmalloc_free(p);
-}
 
 //extern uint32_t _kernel_end;
 //uint32_t placement_address = (uint32_t)&_kernel_end;
