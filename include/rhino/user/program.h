@@ -14,10 +14,10 @@
 #include <rhino/common.h>
 #include <libk/string.h>
 #include <rhino/multitasking/task.h>
+#include <rhino/user/elf.h>
 
-#define PROGRAM_BINARY_TYPE_BIN 0x0
-#define PROGRAM_BINARY_TYPE_AOUT 0x1
-#define PROGRAM_BINARY_TYPE_ELF 0x2
+#define PROGRAM_TYPE_UNKOWN 0
+#define PROGRAM_TYPE_ELF 1
 
 #define PROGRAM_LOAD_ADDRESS 0x1000
 
@@ -28,10 +28,7 @@ typedef struct loadedProgram{
     uint8_t type;
 } loaded_program_t;
 
-typedef void (*call_module_t)(void);
-
-loaded_program_t* load_program(char* filename, uint8_t type);
+loaded_program_t* load_program(char* filename);
 void free_program(loaded_program_t* header);
-void run_program(void *address);
 void init(char *prg);
 uint32_t create_process(char* prg, uint32_t* pid);

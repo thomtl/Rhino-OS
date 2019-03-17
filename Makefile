@@ -20,7 +20,7 @@ all: run
 initrd:
 	rm -f initrd.img
 	./user/makeall.sh
-	./utils/initrdgen/genrd ./utils/initrdgen/test.txt test.txt ./utils/initrdgen/test1.txt test1.txt ./user/example/example example ./user/TSH/tsh tsh ./user/ls/ls ls ./user/cat/cat cat ./user/init/init init
+	./utils/initrdgen/genrd ./utils/initrdgen/test.txt test.txt ./utils/initrdgen/test1.txt test1.txt ./user/example/example example ./user/TSH/tsh tsh  ./user/init/init init ./user/ls/ls ls ./user/cat/cat cat
 
 rhino.iso: kernel.bin initrd
 	mkdir -p build/sys/boot/grub
