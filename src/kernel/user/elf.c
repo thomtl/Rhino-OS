@@ -92,13 +92,6 @@ static void* elf_load_executable(Elf32_Ehdr* hdr){
 bool elf_is_elf(void* file){
     Elf32_Ehdr* hdr = (Elf32_Ehdr*)file;
 
-    for(int i = 0; i < 4; i++){
-        char buf[25] = "";
-        hex_to_ascii(((uint8_t*)file)[i], buf);
-        debug_log(buf);
-        debug_log("\n");
-    }
-
     if(hdr->e_ident[ELF_IDENT_MAGIC_0] != ELF_MAGIC_0) return false;
     if(hdr->e_ident[ELF_IDENT_MAGIC_1] != ELF_MAGIC_1) return false; 
     if(hdr->e_ident[ELF_IDENT_MAGIC_2] != ELF_MAGIC_2) return false;
@@ -113,8 +106,19 @@ uint32_t elf_get_load_addr(void* file){
         debug_log("[ELF]: File invalid or not supported\n");
         return 0;
     }
+
     Elf32_Phdr* phdr = (Elf32_Phdr*)((int)hdr + hdr->e_phoff);
-    return phdr->p_vaddr;
+
+    uint32_t low = 0xFFFFFFFF;
+
+    for(uint32_t i = 0; i < hdr->e_phnum; i++){
+        if(phdr[i].p_type == PT_LOAD){
+            if(phdr[i].p_vaddr < low) low = phdr[i].p_vaddr;
+        }
+    }
+
+    return low;
+
 }
 
 uint32_t elf_get_file_length(void* file){
@@ -124,7 +128,17 @@ uint32_t elf_get_file_length(void* file){
         return 0;
     }
     Elf32_Phdr* phdr = (Elf32_Phdr*)((int)hdr + hdr->e_phoff);
-    return phdr->p_memsz;
+    uint32_t high = 0;
+
+    uint32_t base = elf_get_load_addr(file);
+
+    for(uint32_t i = 0; i < hdr->e_phnum; i++){
+        if(phdr[i].p_type == PT_LOAD){
+            if((phdr[i].p_vaddr + phdr[i].p_memsz - base) > high) high = (phdr[i].p_vaddr + phdr[i].p_memsz - base);
+        }
+    }
+
+    return high;
 }
 
 

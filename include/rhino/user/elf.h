@@ -143,4 +143,5 @@ typedef struct {
 
 bool elf_is_elf(void* file);
 uint32_t elf_get_load_addr(void* file);
+uint32_t elf_get_file_length(void* file);
 void* elf_load_file(void* file);

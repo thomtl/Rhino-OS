@@ -75,7 +75,11 @@ void init(char *prg){
 
   	vmm_switch_pdirectory(dir);
 
-  	for (int i=0, virt=(uint32_t)load_address; i<60; i++, virt+=4096){ // todo file length
+	uint32_t n_pages;
+	if(header->type == PROGRAM_TYPE_ELF) n_pages = IDIV_CEIL(elf_get_file_length(header->base), RHINO_PMM_BLOCK_SIZE);
+	else n_pages = 60;
+
+  	for (uint32_t i=0, virt=(uint32_t)load_address; i<n_pages; i++, virt+=4096){ // todo file length
     	void* frame = pmm_alloc_block();
     	vmm_map_page((void*)frame, (void*)virt, 1);
     	task_register_frame(task, frame);
@@ -114,7 +118,7 @@ uint32_t create_process(char* prg, uint32_t* pid){
   	pdirectory* dir = vmm_clone_dir(kernel_directory);
 
 	uint32_t load_address;
-	if(header->type == PROGRAM_TYPE_ELF) elf_get_load_addr(header->base);
+	if(header->type == PROGRAM_TYPE_ELF) load_address = elf_get_load_addr(header->base);
 	else {
 		debug_log("[INIT]: Trying to load unkown file type, assuming raw binary with entry 0x1000\n");
 		load_address = PROGRAM_LOAD_ADDRESS;
@@ -124,7 +128,11 @@ uint32_t create_process(char* prg, uint32_t* pid){
 
   	vmm_switch_pdirectory(dir);
 
-  	for (int i=0, virt=(uint32_t)PROGRAM_LOAD_ADDRESS; i<60; i++, virt+=4096){
+	uint32_t n_pages;
+	if(header->type == PROGRAM_TYPE_ELF) n_pages = IDIV_CEIL(elf_get_file_length(header->base), RHINO_PMM_BLOCK_SIZE);
+	else n_pages = 60;
+
+  	for (uint32_t i=0, virt=(uint32_t)load_address; i<n_pages; i++, virt+=4096){
     	void* frame = pmm_alloc_block();
     	vmm_map_page((void*)frame, (void*)virt, 1);
     	task_register_frame(task, frame);
