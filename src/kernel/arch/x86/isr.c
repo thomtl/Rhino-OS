@@ -112,6 +112,42 @@ void isr_handler(registers_t *r){
     kprint_err("EIP: ");
     kprint_err(buf);
     kprint_err("\n");
+
+    debug_log("Received interupt: ");
+    debug_log_number_hex(int_no);
+    debug_log(" ");
+    debug_log(exception_messages[int_no]);
+
+    debug_log("\nEAX: ");
+    debug_log_number_hex(r->eax);
+    debug_log(" EBX: ");
+    debug_log_number_hex(r->ebx);    
+    debug_log(" ECX: ");
+    debug_log_number_hex(r->ecx);    
+    debug_log(" EDX: ");
+    debug_log_number_hex(r->edx);
+
+    debug_log("\nEDI: ");
+    debug_log_number_hex(r->edi);
+    debug_log(" ESI: ");
+    debug_log_number_hex(r->esi);
+
+    debug_log("\nESP: ");
+    debug_log_number_hex(r->esp);
+    debug_log(" EBP: ");
+    debug_log_number_hex(r->ebp);
+    debug_log(" EIP: ");
+    debug_log_number_hex(r->eip);
+    debug_log(" EFLAGS: ");
+    debug_log_number_hex(r->eflags);
+    debug_log("\nCS: ");
+    debug_log_number_hex(r->cs);
+    debug_log(" DS: ");
+    debug_log_number_hex(r->ds);
+    debug_log(" SS: ");
+    debug_log_number_hex(r->ss);
+    debug_log("\n");
+
     while(1);
   }
 }
