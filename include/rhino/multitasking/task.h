@@ -41,7 +41,15 @@ typedef struct {
   size_t length;
   size_t capacity;
   size_t refs;
-} fd_table_t;
+} task_fd_table_t;
+
+typedef struct {
+  size_t size;
+  uint32_t program_entry;
+  uint32_t heap;
+  uint32_t heap_actual;
+  uint32_t start;
+} task_ram_image_t;
 
 typedef struct Task {
   task_registers_t regs;
@@ -51,7 +59,8 @@ typedef struct Task {
   uint32_t argc;
   process_data_t pid;
   task_resources_t res;
-  fd_table_t fd_table;
+  task_fd_table_t fd_table;
+  task_ram_image_t ram_image;
 } task_t;
 
 void initTasking();

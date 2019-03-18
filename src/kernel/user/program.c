@@ -93,6 +93,9 @@ void init(char *prg){
 	} 
   	else memcpy((void*)load_address, header->base, header->len);
 
+	task->ram_image.program_entry = 0x0; // Stack start
+	task->ram_image.size = (RHINO_PMM_BLOCK_SIZE * n_pages);
+
   	vmm_switch_pdirectory(kernel_directory);
 
   	free_program(header);
@@ -141,9 +144,14 @@ uint32_t create_process(char* prg, uint32_t* pid){
   	vmm_map_page(pmm_alloc_block(), 0x0, 1);
   	task->regs.esp = 0x1000;
 
+	
+
 	if(header->type == PROGRAM_TYPE_ELF){
 		task->regs.eip = (uint32_t)elf_load_file(header->base);
 	} else memcpy((void*)load_address, header->base, header->len);
+
+	task->ram_image.program_entry = 0x0;
+	task->ram_image.size = (RHINO_PMM_BLOCK_SIZE * n_pages);
 
   	vmm_switch_pdirectory(cur);
   	free_program(header);

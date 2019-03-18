@@ -38,16 +38,17 @@ static task_t* getTaskForPid(uint32_t pid){
  */
 void initTasking(){
   for(uint32_t i = 0; i < MAX_TASKS; i++){
+    memset(&tasks[i], 0, sizeof(task_t));
     tasks[i].used = false;
     tasks[i].state = TASK_ACTIVE;
     tasks[i].pid.path = strdup("/");
 
     tasks[i].fd_table.refs = 1;
     tasks[i].fd_table.length = 0;
-    tasks[i].fd_table.capacity = 8;
+    tasks[i].fd_table.capacity = 4;
     tasks[i].fd_table.entries = kmalloc(sizeof(fs_node_t*) * tasks[i].fd_table.capacity);
-    tasks[i].fd_table.entries = kmalloc(sizeof(int) * tasks[i].fd_table.capacity);
-    tasks[i].fd_table.entries = kmalloc(sizeof(uint64_t) * tasks[i].fd_table.capacity);
+    tasks[i].fd_table.modes = kmalloc(sizeof(int) * tasks[i].fd_table.capacity);
+    tasks[i].fd_table.offsets = kmalloc(sizeof(uint64_t) * tasks[i].fd_table.capacity);
   }
 
 
@@ -100,7 +101,15 @@ void kill(uint32_t pid){
   task->res.frameIndex = 0;
   task->used = false;
 
-  task->fd_table.length = 0;// reset fd table
+  task->fd_table.refs--;
+  if(task->fd_table.refs == 0){
+    for(uint32_t i = 0; i < task->fd_table.length; i++){
+      if(task->fd_table.entries[i]){
+        close_fs(task->fd_table.entries[i]);
+        task->fd_table.entries[i] = NULL;
+      }
+    }
+  }
 }
 
 void kill_kern(){
