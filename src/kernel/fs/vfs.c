@@ -200,6 +200,12 @@ void* vfs_mount(char* path, fs_node_t* local_root){
 
 	acquire_spinlock(&vfs_lock);
 
+	debug_log("[VFS]: Mounting ");
+	debug_log(local_root->name);
+	debug_log(" to ");
+	debug_log(path);
+	debug_log("\n");
+
 	local_root->refcount = -1;
 
 	binary_tree_node_t* ret_val = NULL;

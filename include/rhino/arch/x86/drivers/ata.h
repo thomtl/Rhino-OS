@@ -94,6 +94,8 @@ typedef struct {
 } __attribute__((packed)) prdt_t;
 
 typedef struct{
+    char name[5];
+    char dev_char;
     uint16_t cmd_addr, cntrl_addr, bus_master_addr;
     uint8_t id_high, id_mid, packet_bytes, channel_num;
     uint16_t identity[256];
@@ -106,6 +108,8 @@ typedef struct {
 } ata_chs_t;
 
 void ata_init(uint16_t bus, uint8_t device, uint8_t function);
+
+uint32_t read_ata_bytes(fs_node_t* node, uint64_t offset, uint32_t size, uint8_t* buffer);
 
 bool ata_read(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf);
 bool ata_write(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf);

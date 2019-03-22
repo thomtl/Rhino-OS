@@ -11,12 +11,12 @@ uint32_t nroot_nodes;
 
 struct dirent* dirent;
 
-static uint32_t initrd_read(fs_node_t *node, uint32_t offset, uint32_t size, uint8_t *buffer)
+static uint32_t initrd_read(fs_node_t *node, uint64_t offset, uint32_t size, uint8_t *buffer)
 {
 	initrd_file_header_t header = file_headers[node->inode];
    	if (offset > header.length)  return 0;
    	if (offset+size > header.length) size = header.length-offset;
-   	memcpy(buffer, (uint8_t*) (header.offset+offset), size);
+   	memcpy(buffer, (uint8_t*) (uint32_t)(header.offset+offset), size);
    	return size;
 }
 

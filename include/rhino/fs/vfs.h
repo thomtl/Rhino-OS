@@ -72,7 +72,7 @@ struct dirent{
   uint32_t inode;
 };
 
-typedef uint32_t (*read_type_t)(struct fs_node*,uint32_t,uint32_t,uint8_t*);
+typedef uint32_t (*read_type_t)(struct fs_node*,uint64_t,uint32_t,uint8_t*);
 typedef uint32_t (*write_type_t)(struct fs_node*,uint32_t,uint32_t,uint8_t*);
 typedef void (*open_type_t)(struct fs_node*, uint32_t);
 typedef void (*close_type_t)(struct fs_node*);

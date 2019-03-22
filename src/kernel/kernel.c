@@ -129,13 +129,6 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
 
   kprint("Initializing drivers\n");
 
-  udi_initialize();
-
-  init_acpi();
-  irq_install();
-  
-  pci_check_all_buses();
-
   init_vfs();
 
   map_vfs_directory("/dev");
@@ -143,6 +136,15 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   initialise_initrd(initrd_location);
 
   if(!fs_root) map_vfs_directory("/");
+
+  udi_initialize();
+
+  init_acpi();
+  irq_install();
+  
+  pci_check_all_buses();
+
+
 
   kprint("Initializing Multitasking\n");
   initTasking();

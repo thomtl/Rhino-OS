@@ -73,6 +73,26 @@ static ata_chs_t lba_to_chs(ata_device dev, uint64_t lba){
     return chs;
 }
 
+static uint64_t ata_max_offset(ata_device* dev){
+    return dev->lba_max_sectors * ((dev->atapi) ? (ATAPI_SECTOR_SIZE) : (ATA_SECTOR_SIZE));
+}
+
+static fs_node_t* ata_device_create(ata_device* dev){
+    fs_node_t* node = kmalloc(sizeof(fs_node_t));
+    memset(node, 0, sizeof(fs_node_t));
+    strcpy(node->name, dev->name);
+    append(node->name, dev->dev_char - 'a');
+    node->device = dev;
+    node->mask = 0664;
+
+    node->length = ata_max_offset(dev);
+    node->flags = FS_BLOCKDEVICE;
+    node->read = read_ata_bytes;
+
+    return node;
+
+}
+
 void ata_init(uint16_t bus, uint8_t device, uint8_t function){
     if(ata_initialized != false){
         debug_log("[ATA]: Tried to init ATA device but it was already inited\n");
@@ -146,24 +166,32 @@ void ata_init(uint16_t bus, uint8_t device, uint8_t function){
     ata_channels[0].slave = false;
     ata_channels[0].secondary = false;
     ata_channels[0].channel_num = 0;
+    strcpy(ata_channels[0].name, "hd");
+    ata_channels[0].dev_char = 'a';
 
     ata_channels[1].cmd_addr = bar0;
     ata_channels[1].cntrl_addr = bar1;
     ata_channels[1].slave = true;
     ata_channels[1].secondary = false;
     ata_channels[1].channel_num = 1;
+    strcpy(ata_channels[1].name, "hd");
+    ata_channels[1].dev_char = 'b';
 
     ata_channels[2].cmd_addr = bar2;//0x170;
     ata_channels[2].cntrl_addr = bar3;//0x374;
     ata_channels[2].slave = false;
     ata_channels[2].secondary = true;
     ata_channels[2].channel_num = 2;
+    strcpy(ata_channels[2].name, "hd");
+    ata_channels[2].dev_char = 'c';
 
     ata_channels[3].cmd_addr = bar2;
     ata_channels[3].cntrl_addr = bar3;
     ata_channels[3].slave = true;
     ata_channels[3].secondary = true;
     ata_channels[3].channel_num = 3;
+    strcpy(ata_channels[3].name, "hd");
+    ata_channels[3].dev_char = 'd';
 
     ata_init_device(&ata_channels[0]);
     ata_init_device(&ata_channels[1]);
@@ -203,6 +231,64 @@ void ata_init(uint16_t bus, uint8_t device, uint8_t function){
     debug_log("[ATA]: ATA Driver Initialized\n");
     ata_initialized = true;
 }
+
+uint32_t read_ata_bytes(fs_node_t* node, uint64_t offset, uint32_t size, uint8_t* buffer){
+    ata_device* dev = (ata_device*)node->device;
+    
+    uint32_t sector_size = (dev->atapi) ? (ATAPI_SECTOR_SIZE) : (ATA_SECTOR_SIZE);
+    uint32_t start_block = offset / sector_size;
+    uint32_t end_block = (offset + size - 1) / sector_size;
+
+    uint32_t x_offset = 0;
+
+    if(offset > ata_max_offset(dev)) return 0;
+
+    if((offset + size) > ata_max_offset(dev)){
+        uint32_t i = ata_max_offset(dev) - size;
+        size = i;
+    }
+
+    if(offset % sector_size || size < sector_size){
+        uint32_t prefix_size = (sector_size - (offset % sector_size));
+
+        if(prefix_size > size) prefix_size = size;
+
+        char* tmp = kmalloc(sector_size);
+        ata_read(*dev, start_block, 1, (uint8_t*)tmp);
+
+        memcpy(buffer, (void*)((uintptr_t)tmp + ((uintptr_t)offset % sector_size)), prefix_size);
+
+        kfree(tmp);
+
+        x_offset += prefix_size;
+        start_block++;
+    }
+
+    if((offset + size) % sector_size && start_block <= end_block){
+        uint32_t postfix_size = (offset + size) % sector_size;
+
+        char* tmp = kmalloc(sector_size);
+
+        ata_read(*dev, end_block, 1, (uint8_t*)tmp);
+
+        memcpy((void*)((uintptr_t)buffer + size - postfix_size), tmp, postfix_size);
+
+        kfree(tmp);
+        end_block--;
+    }
+
+    while(start_block <= end_block){
+        ata_read(*dev, start_block, 1, (uint8_t*)((uintptr_t)buffer + x_offset));
+        x_offset += sector_size;
+        start_block++;
+    }
+
+    return size;
+}
+
+
+
+
 
 bool ata_init_device(ata_device* dev){
     
@@ -327,6 +413,17 @@ bool ata_init_device(ata_device* dev){
 
         dev->packet_bytes = ((dev->identity[0] & 0x3) == 0) ? 12 : 16;
     }
+
+    fs_node_t* node = ata_device_create(dev);
+
+    char buf[25] = "/dev/hd";
+    append(buf, dev->dev_char);
+
+    debug_log(buf);
+    debug_log("\n");
+
+    vfs_mount(buf, node);
+
     dev->exists = true;
     return true;
 }
