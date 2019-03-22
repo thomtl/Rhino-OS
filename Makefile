@@ -1,5 +1,5 @@
-C_SOURCES = $(wildcard src/kernel/*.c src/kernel/mm/*.c src/kernel/Deer/*.c src/kernel/types/*.c src/kernel/fs/*.c src/kernel/security/*.c src/kernel/multitasking/*.c src/kernel/pwr/*.c src/kernel/user/*.c src/kernel/arch/x86/drivers/*.c src/kernel/acpi/*.c src/kernel/arch/x86/*.c src/libk/*.c src/libk/string/*.c src/libk/stdio/*.c src/libk/stdlib/*.c)
-ASM_SOURCES = $(wildcard src/kernel/*.asm src/kernel/mm/*.asm src/kernel/Deer/*.asm src/kernel/types/*.asm src/kernel/fs/*.asm src/kernel/security/*.asm src/kernel/multitasking/*.asm src/kernel/pwr/*.asm src/kernel/user/*.asm src/kernel/arch/x86/drivers/*.asm src/kernel/arch/x86/*.asm src/kernel/acpi/*.asm src/libk/*.asm src/libk/string/*.asm src/libk/stdio/*.asm src/libk/stdlib/*.asm src/kernel/*.s src/kernel/mm/*.s src/kernel/Deer/*.s src/kernel/types/*.s src/kernel/fs/*.s src/kernel/security/*.s src/kernel/multitasking/*.s src/kernel/pwr/*.s src/kernel/user/*.s src/kernel/arch/x86/drivers/*.s src/kernel/arch/x86/*.s src/kernel/acpi/*.s src/libk/*.s src/libk/string/*.s src/libk/stdio/*.s src/libk/stdlib/*.s)
+C_SOURCES = $(wildcard src/kernel/*.c src/kernel/mm/*.c src/kernel/Deer/*.c src/kernel/types/*.c src/kernel/fs/*.c src/kernel/security/*.c src/kernel/multitasking/*.c src/kernel/pwr/*.c src/kernel/user/*.c src/kernel/arch/x86/drivers/*.c src/kernel/acpi/*.c src/kernel/udi/*.c src/kernel/arch/x86/*.c src/libk/*.c src/libk/string/*.c src/libk/stdio/*.c src/libk/stdlib/*.c)
+ASM_SOURCES = $(wildcard src/kernel/*.asm src/kernel/mm/*.asm src/kernel/Deer/*.asm src/kernel/types/*.asm src/kernel/fs/*.asm src/kernel/security/*.asm src/kernel/multitasking/*.asm src/kernel/pwr/*.asm src/kernel/user/*.asm src/kernel/arch/x86/drivers/*.asm src/kernel/arch/x86/*.asm src/kernel/acpi/*.asm src/kernel/udi/*.asm src/libk/*.asm src/libk/string/*.asm src/libk/stdio/*.asm src/libk/stdlib/*.asm src/kernel/*.s src/kernel/mm/*.s src/kernel/Deer/*.s src/kernel/types/*.s src/kernel/fs/*.s src/kernel/security/*.s src/kernel/multitasking/*.s src/kernel/pwr/*.s src/kernel/user/*.s src/kernel/arch/x86/drivers/*.s src/kernel/arch/x86/*.s src/kernel/acpi/*.s src/kernel/udi/*.s src/libk/*.s src/libk/string/*.s src/libk/stdio/*.s src/libk/stdlib/*.s)
 
 C_OBJ = ${C_SOURCES:.c=.o}
 ASM_OBJ = ${ASM_SOURCES:.asm=.o}
@@ -52,7 +52,7 @@ bochs: rhino.iso
 
 clean:
 	rm -rf *.bin *.o *.iso *.img
-	rm -rf src/kernel/*.o src/kernel/mm/*.o src/kernel/Deer/*.o src/kernel/types/*.o src/kernel/fs/*.o src/kernel/security/*.o src/kernel/multitasking/*.o src/kernel/pwr/*.o src/kernel/user/*.o src/kernel/arch/x86/drivers/*.o src/kernel/arch/x86/*.o src/kernel/acpi/*.o src/libk/*.o src/libk/string/*.o src/libk/stdio/*.o src/libk/stdlib/*.o
+	rm -rf src/kernel/*.o src/kernel/mm/*.o src/kernel/Deer/*.o src/kernel/types/*.o src/kernel/fs/*.o src/kernel/security/*.o src/kernel/multitasking/*.o src/kernel/pwr/*.o src/kernel/user/*.o src/kernel/arch/x86/drivers/*.o src/kernel/arch/x86/*.o src/kernel/acpi/*.o src/kernel/udi/*.o src/libk/*.o src/libk/string/*.o src/libk/stdio/*.o src/libk/stdlib/*.o
 	rm -rf build/sys
 	rm -rf build/log/*
 	rm -f snapshot.txt

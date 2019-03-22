@@ -20,6 +20,8 @@
 
 #include <rhino/Deer/deer.h>
 
+#include <rhino/udi/udi.h>
+
 #include <rhino/user/program.h>
 
 #include <rhino/pwr/power.h>
@@ -126,6 +128,8 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   init_heap();
 
   kprint("Initializing drivers\n");
+
+  udi_initialize();
 
   init_acpi();
   irq_install();

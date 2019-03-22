@@ -15,16 +15,22 @@ void deer_clear_screen_col(uint8_t r, uint8_t g, uint8_t b){
 }
 
 void deer_start(){
-    if(bga_is_active()){
+    udi_graphics_driver_t* driver = udi_get_active_graphics_driver();;
+    if(driver){
         udi_video_mode_set_t mode;
         mode.width = SCREEN_WIDTH;
         mode.height = SCREEN_HEIGHT;
         mode.bpp = 24;
         mode.clearFramebuffer = true;
-        bga_set_video_mode(&mode);
-        framebuffer = bga_get_lfb();
+        
+        driver->set_video_mode(&mode);
+
+        if(!mode.success) PANIC_M("[DEER]: Failed set video mode\n");
+
+
+        framebuffer = (size_t)driver->get_framebuffer();
     } else {
-        PANIC_M("[DEER] No BGA device found");
+        PANIC_M("[DEER] No Graphics Device found");
     }
 
     deer_clear_screen();

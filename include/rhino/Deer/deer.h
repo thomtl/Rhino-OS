@@ -3,8 +3,7 @@
 #include <rhino/Deer/deertext.h>
 #include <rhino/Deer/deergui.h>
 
-// Set via interface
-#include <rhino/arch/x86/drivers/bga.h>
+#include <rhino/udi/udi.h>
 
 #define deer_clear_screen() (deer_clear_screen_col(0, 0, 0))
 

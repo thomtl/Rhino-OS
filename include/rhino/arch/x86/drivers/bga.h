@@ -44,7 +44,7 @@
 
 void init_bga(uint8_t bus, uint8_t device, uint8_t function);
 uint32_t bga_get_id();
-void bga_set_video_mode(udi_video_mode_set_t* mode);
+bool bga_set_video_mode(udi_video_mode_set_t* mode);
 void bga_switch_banks(uint32_t bank);
 bool bga_is_active();
-uint32_t bga_get_lfb();
+void* bga_get_lfb();
