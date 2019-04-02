@@ -1,0 +1,6 @@
+label: dos
+label-id: 0x523b3b4e
+device: rhino.img
+unit: sectors
+
+rhino.img1 : start=        4096, size=      995904, type=83, bootable

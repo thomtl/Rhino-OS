@@ -26,6 +26,8 @@
 
 #include <rhino/pwr/power.h>
 
+#include <rhino/fs/fat32.h>
+
 #include <rhino/arch/x86/isr.h>
 #include <rhino/arch/x86/pci.h>
 #include <rhino/arch/x86/gdt.h>
@@ -144,10 +146,22 @@ void kernel_main(multiboot_info_t* mbd, unsigned int magic) {
   
   pci_check_all_buses();
 
-
-
   kprint("Initializing Multitasking\n");
   initTasking();
+
+  fs_node_t* node = kopen("/dev/hda", O_RDWR);
+  uint8_t bfuf[512] = "";
+  read_fs(node, 0, 512, bfuf);
+  uint32_t lba = 0;
+
+  for(int i = 0x1BE; i < (0x1EE + 16); i += 16){
+
+    if(BIT_IS_SET(bfuf[i], 7)) lba = *((uint32_t*)(bfuf + i + 8));
+  }
+
+
+
+  init_fat32(node, lba);
 
   time_t date = read_rtc_time();
   kprint("Date: ");

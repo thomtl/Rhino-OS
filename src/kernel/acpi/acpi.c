@@ -52,7 +52,7 @@ static bool doChecksum(SDTHeader *tableHeader)
 }
 
 RSDP* find_rsdp(){
-    RSDP* rsdpval;
+    RSDP* rsdpval = NULL;
     for(int i = 0; i < (0x000FFFFF); i += 0x1000) vmm_map_page((void*)i, (void*)i, 0);
     uint8_t* ebda = get_ebda_base();
 
@@ -68,6 +68,11 @@ RSDP* find_rsdp(){
         }
         
     }
+
+    if(!rsdpval){
+        kprint_err("[ACPI]: Could not find RSDP\n");
+        return 0;
+    } 
 
     if(rsdpval != 0){
         uint8_t *bptr = (uint8_t*)rsdpval;

@@ -8,12 +8,14 @@ CC = i686-elf-gcc
 AS = yasm
 QEMU = qemu-system-x86_64
 # -fda flp.flp 
-QEMUFLAGS = -m 256M -hda rhino.iso -d cpu_reset -D build/log/qemu.log -rtc base=localtime -monitor stdio -soundhw pcspk -vga std -serial file:/dev/stdout -drive id=disk,file=flp.flp,if=none -device ahci,id=ahci -device ide-drive,drive=disk,bus=ahci.0 
+QEMUFLAGS_ISO = -m 256M -hda rhino.iso -d cpu_reset -D build/log/qemu.log -rtc base=localtime -monitor stdio -soundhw pcspk -vga std -serial file:/dev/stdout -drive id=disk,file=flp.flp,if=none -device ahci,id=ahci -device ide-drive,drive=disk,bus=ahci.0 
+QEMUFLAGS_IMG = -m 256M -hda rhino.img -d cpu_reset -D build/log/qemu.log -rtc base=localtime -monitor stdio -soundhw pcspk -vga std -serial file:/dev/stdout -drive id=disk,file=flp.flp,if=none -device ahci,id=ahci -device ide-drive,drive=disk,bus=ahci.0 
+
 
 CFLAGS = -g -m32 -fno-builtin -fno-stack-protector -nostartfiles -nodefaultlibs \
 					-Wall -Wextra -Werror -std=gnu99 -I include/
 					
-.PHONY: all clean run bochs initrd
+.PHONY: all clean run bochs initrd run_iso
 
 all: run
 
@@ -29,18 +31,49 @@ rhino.iso: kernel.bin initrd
 	cp build/grub.cfg build/sys/boot/grub/grub.cfg
 	grub-mkrescue -o ./rhino.iso build/sys
 
+rhino.img: kernel.bin initrd
+	dd if=/dev/zero of=./rhino.img bs=1048576 count=1024
+	sudo losetup --partscan /dev/loop0 rhino.img
+	sudo sfdisk /dev/loop0 < img.sfdisk
+	sudo losetup -d /dev/loop0
+	sudo losetup --partscan /dev/loop0 rhino.img
+
+
+	sudo mkdosfs -F 32 -f 2 /dev/loop0p1
+	
+	sudo mount /dev/loop0p1 /mnt
+	sudo mkdir -p /mnt/boot/grub
+	sudo touch /mnt/test.txt
+
+	sudo sh -c 'echo "Hello FAT32" > /mnt/test.txt'
+
+	sudo cp build/grub.cfg /mnt/boot/grub
+	sudo cp kernel.bin /mnt/boot
+	sudo cp initrd.img /mnt/boot
+	sudo grub-install --root-directory=/mnt rhino.img --target=i386-pc
+	sudo umount /mnt
+	sudo losetup -d /dev/loop0
+
 kernel.bin: ${ASM_OBJ} ${C_OBJ}
 	${CC} -T build/linker.ld -o $@ -ffreestanding -O2 -nostdlib $^ -lgcc
 
-run: rhino.iso
+run_iso: rhino.iso
 	rm -rf build/log/*
-	DISPLAY=:0 QEMU_AUDIO_DRV=pa ${QEMU} ${QEMUFLAGS}
+	DISPLAY=:0 QEMU_AUDIO_DRV=pa ${QEMU} ${QEMUFLAGS_ISO}
+	rm -rf build/sys
+
+run: rhino.img
+	rm -rf build/log/*
+	DISPLAY=:0 QEMU_AUDIO_DRV=pa ${QEMU} ${QEMUFLAGS_IMG}
 	rm -rf build/sys
 
 bochs: rhino.iso
 	rm -rf build/log/*
 	DISPLAY=:0 bochs -f build/.bochsrc -q
 	rm -rf build/sys
+
+lint: 
+	cppcheck --enable=warning,performance,information,style,portability,missingInclude . -Iinclude/ -j4 --platform=unix32 --std=c99 --std=posix --language=c -q
 
 %.o: %.c
 	${CC} ${CFLAGS} -ffreestanding -c $< -o $@
