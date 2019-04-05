@@ -4,7 +4,8 @@
 #include <rhino/fs/vfs.h>
 #include <libk/stdio.h>
 
-struct fat32_bpb {
+struct fat32_bpb
+{
     uint8_t jump_instruction[3];
     char OEM_name[8];
     uint16_t bytes_per_sector;
@@ -34,7 +35,8 @@ struct fat32_bpb {
     char system_type[8];
 } __attribute__((packed));
 
-struct fat32_info_sector{
+struct fat32_info_sector
+{
     uint32_t signature1;
     uint8_t reserved[480];
     uint32_t signature2;
@@ -62,7 +64,8 @@ struct fat32_info_sector{
 #define FAT_MEDIA_DESCRIPTOR_FLOPPY_180K 0xFE
 #define FAT_MEDIA_DESCRIPTOR_FLOPPY_320K 0xFF
 
-struct fat32_directory_entry {
+struct fat32_directory_entry
+{
     char file_name[8];
     char file_extension[3];
     uint8_t attribute;
@@ -85,4 +88,4 @@ struct fat32_directory_entry {
 #define FAT_DIRECTORY_ENTRY_ATTRIBUTE_DIRECTORY 4
 #define FAT_DIRECTORY_ENTRY_ATTRIBUTE_ARCHIVE 5
 
-void init_fat32(fs_node_t* file_node, uint64_t lba);
+void init_fat32(fs_node_t *file_node, uint64_t lba);
