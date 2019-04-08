@@ -143,8 +143,8 @@ void kernel_main(multiboot_info_t *mbd, unsigned int magic)
 
     initialise_initrd(initrd_location);
 
-    if (!fs_root)
-        map_vfs_directory("/");
+    /*if (!fs_root)
+        map_vfs_directory("/");*/
 
     udi_initialize();
 
@@ -169,6 +169,19 @@ void kernel_main(multiboot_info_t *mbd, unsigned int magic)
     }
 
     init_fat32(node, lba);
+
+    /*fs_node_t *t = kopen("TEST.TXT", O_RDWR);
+    if (t)
+    {
+        uint8_t buff[15];
+
+        read_fs(t, 0, 5, buff);
+
+        for (uint32_t i = 0; i < 5; i++)
+            putchar(buff[i]);
+
+        close_fs(t);
+    }*/
 
     time_t date = read_rtc_time();
     kprint("Date: ");

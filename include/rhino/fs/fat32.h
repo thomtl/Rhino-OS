@@ -89,3 +89,5 @@ struct fat32_directory_entry
 #define FAT_DIRECTORY_ENTRY_ATTRIBUTE_ARCHIVE 5
 
 void init_fat32(fs_node_t *file_node, uint64_t lba);
+
+struct fat32_directory_entry fat32_get_entry_by_name(char *name);

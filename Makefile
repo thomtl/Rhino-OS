@@ -22,7 +22,7 @@ all: run
 initrd:
 	rm -f initrd.img
 	./user/makeall.sh
-	./utils/initrdgen/genrd ./utils/initrdgen/test.txt test.txt ./utils/initrdgen/test1.txt test1.txt ./user/init/init init ./user/TSH/tsh tsh ./user/ls/ls ls # ./user/example/example example ./user/cat/cat cat
+	./utils/initrdgen/genrd ./utils/initrdgen/test.txt test.txt ./utils/initrdgen/test1.txt test1.txt ./user/init/init init ./user/TSH/tsh tsh ./user/ls/ls ls ./user/cat/cat cat
 
 rhino.iso: kernel.bin initrd
 	mkdir -p build/sys/boot/grub
@@ -43,10 +43,12 @@ rhino.img: kernel.bin initrd
 	
 	sudo mount /dev/loop0p1 /mnt
 	sudo mkdir -p /mnt/boot/grub
+	sudo touch /mnt/cat.elf
 	sudo touch /mnt/test.txt
+	
 
 	sudo sh -c 'echo "Hello FAT32" > /mnt/test.txt'
-
+	sudo sh -c 'cp user/cat/cat /mnt/cat.elf'
 	sudo cp build/grub.cfg /mnt/boot/grub
 	sudo cp kernel.bin /mnt/boot
 	sudo cp initrd.img /mnt/boot
@@ -67,7 +69,7 @@ run: rhino.img
 	DISPLAY=:0 QEMU_AUDIO_DRV=pa ${QEMU} ${QEMUFLAGS_IMG}
 	rm -rf build/sys
 
-bochs: rhino.iso
+bochs: rhino.img
 	rm -rf build/log/*
 	DISPLAY=:0 bochs -f build/.bochsrc -q
 	rm -rf build/sys
