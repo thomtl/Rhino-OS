@@ -552,15 +552,15 @@ bool fnmatch(const char *wild, const char *tame, const uint32_t flags)
     bool match = true;
     char *last_wild = NULL;
     char *last_tame = NULL;
-    char t, w;
 
     while (1)
     {
+        char t, w;
         t = *tame;
         w = *wild;
-        if (!t || (t == '\0'))
+        if (t == '\0')
         {
-            if (!w || (w == '\0'))
+            if (w == '\0')
                 break;
             else if (w == '*')
             {
@@ -569,7 +569,7 @@ bool fnmatch(const char *wild, const char *tame, const uint32_t flags)
             }
             else if (last_tame)
             {
-                if (!(*last_tame) || (*last_tame == '\0'))
+                if (*last_tame == '\0')
                 {
                     match = false;
                     break;
@@ -600,7 +600,7 @@ bool fnmatch(const char *wild, const char *tame, const uint32_t flags)
 
                     w = *wild;
 
-                    if (!w || (w == '\0'))
+                    if (w == '\0')
                         break;
                     continue;
                 }

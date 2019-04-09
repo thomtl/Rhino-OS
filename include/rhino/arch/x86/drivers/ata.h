@@ -86,14 +86,16 @@
 #define ATA_SECTOR_SIZE 512
 #define ATAPI_SECTOR_SIZE 2048
 
-typedef struct {
+typedef struct
+{
     uint32_t physical_base; // 4byte aligned base addr bit0 should stay clear
     uint16_t transfer_size; // in bytes, 0 is UINT16_MAX
     uint16_t reserved : 15;
     uint8_t end_of_transfer : 1;
 } __attribute__((packed)) prdt_t;
 
-typedef struct{
+typedef struct
+{
     char name[5];
     char dev_char;
     uint16_t cmd_addr, cntrl_addr, bus_master_addr;
@@ -103,35 +105,35 @@ typedef struct{
     uint64_t lba_max_sectors;
 } ata_device;
 
-typedef struct {
+typedef struct
+{
     uint32_t cylinder, head, sector;
 } ata_chs_t;
 
 void ata_init(uint16_t bus, uint8_t device, uint8_t function);
 
-uint32_t read_ata_bytes(fs_node_t* node, uint64_t offset, uint32_t size, uint8_t* buffer);
+uint32_t read_ata_bytes(fs_node_t *node, uint64_t offset, uint32_t size, uint8_t *buffer);
 
-bool ata_read(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf);
-bool ata_write(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf);
+bool ata_read(ata_device dev, uint64_t start_sector, uint64_t sectors, void *buf);
+bool ata_write(ata_device dev, uint64_t start_sector, uint64_t sectors, void *buf);
 
-bool ata_init_device(ata_device* dev);
+bool ata_init_device(ata_device *dev);
 
-bool ata_identify_16(ata_device dev, uint16_t* buf, bool atapi);
-bool ata_identify_32(ata_device dev, uint16_t* buf, bool atapi);
+bool ata_identify_16(ata_device dev, uint16_t *buf, bool atapi);
+bool ata_identify_32(ata_device dev, uint16_t *buf, bool atapi);
 bool ata_check_identity(ata_device dev);
 
-bool ata_read_pio_16(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf);
-bool ata_read_pio_32(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf);
-bool ata_write_pio_16(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf);
-bool ata_write_pio_32(ata_device dev, uint64_t start_sector, uint64_t sectors, void* buf);
+bool ata_read_pio_16(ata_device dev, uint64_t start_sector, uint64_t sectors, void *buf);
+bool ata_read_pio_32(ata_device dev, uint64_t start_sector, uint64_t sectors, void *buf);
+bool ata_write_pio_16(ata_device dev, uint64_t start_sector, uint64_t sectors, void *buf);
+bool ata_write_pio_32(ata_device dev, uint64_t start_sector, uint64_t sectors, void *buf);
 
-bool ata_read_dma(ata_device dev, uint64_t lba, uint8_t* buf);
-bool ata_write_dma(ata_device dev, uint64_t lba, uint8_t* buf);
+bool ata_read_dma(ata_device dev, uint64_t lba, uint8_t *buf);
+bool ata_write_dma(ata_device dev, uint64_t lba, uint8_t *buf);
 
+bool atapi_send_packet(ata_device dev, uint8_t *packet, uint8_t *return_buffer, uint64_t return_buffer_len);
 
-bool atapi_send_packet(ata_device dev, uint8_t* packet, uint8_t* return_buffer, uint64_t return_buffer_len);
-
-bool ata_init_dma(ata_device dev, void* addr, uint32_t sector_size, uint8_t direction);
+bool ata_init_dma(ata_device dev, void *addr, uint32_t sector_size, uint8_t direction);
 bool ata_start_dma(ata_device dev);
 bool ata_stop_dma(ata_device dev);
 

@@ -50,10 +50,9 @@ void hex_to_ascii(int n, char str[])
 }
 void reverse(char s[])
 {
-    int c;
     for (int i = 0, j = (int)(strlen(s) - 1); i < j; i++, j--)
     {
-        c = s[i];
+        int c = s[i];
         s[i] = s[j];
         s[j] = c;
     }

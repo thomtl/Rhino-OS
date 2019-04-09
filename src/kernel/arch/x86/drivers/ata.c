@@ -476,9 +476,10 @@ bool ata_init_device(ata_device *dev)
 bool ata_check_identity(ata_device dev)
 {
     uint8_t *p = (uint8_t *)dev.identity;
-    uint8_t crc = 0;
+
     if (p[510] == 0xA5)
     {
+        uint8_t crc = 0;
         for (uint32_t i = 0; i < 511; i++)
             crc += p[i];
         return ((uint8_t)(-crc) == p[511]);
@@ -1163,7 +1164,7 @@ bool ata_init_dma(ata_device dev, void *addr, uint32_t sector_size, uint8_t dire
         return false;
     }
 
-    prdt_t *prdt = (dev.secondary) ? (&ata_secondary_prdt) : (&ata_secondary_prdt);
+    prdt_t *prdt = (dev.secondary) ? (&ata_secondary_prdt) : (&ata_primary_prdt);
     uint32_t prdt_phys = (uint32_t)vmm_virt_to_phys((void *)prdt);
     uint32_t page_phys = (uint32_t)vmm_virt_to_phys(addr);
 
@@ -1173,18 +1174,20 @@ bool ata_init_dma(ata_device dev, void *addr, uint32_t sector_size, uint8_t dire
 
     if (dev.secondary)
     {
-        uint8_t reg = inb(dev.bus_master_addr + BM1_COMMAND);
-        BIT_CLEAR(reg, BM_COMMAND_START);
+        uint8_t reg = 0; //inb(dev.bus_master_addr + BM1_COMMAND);
         reg = (direction << BM_COMMAND_DIRECTION);
+        BIT_CLEAR(reg, BM_COMMAND_START);
+
         outb(dev.bus_master_addr + BM1_COMMAND, reg);
         outd(dev.bus_master_addr + BM1_ADDRESS, prdt_phys);
         outb(dev.bus_master_addr + BM1_STATUS, 0x6); // 00000110b Clear bit 1 and 2
     }
     else
     {
-        uint8_t reg = inb(dev.bus_master_addr + BM0_COMMAND);
-        BIT_CLEAR(reg, BM_COMMAND_START);
+        uint8_t reg = 0; //inb(dev.bus_master_addr + BM0_COMMAND);
         reg = (direction << BM_COMMAND_DIRECTION);
+        BIT_CLEAR(reg, BM_COMMAND_START);
+
         outb(dev.bus_master_addr + BM0_COMMAND, reg);
         outd(dev.bus_master_addr + BM0_ADDRESS, prdt_phys);
         outb(dev.bus_master_addr + BM0_STATUS, 0x6); // 00000110b Clear bit 1 and 2
